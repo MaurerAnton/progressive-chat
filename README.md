@@ -1,0 +1,70 @@
+# progressive-chat
+
+A chat client: the conversations of one account, the messages in one of them,
+and the appearance of both. It is a **new front end for the Agora look**,
+written from nothing on the stack [mux](https://github.com/j4niwzis/mux) uses
+-- C++26 modules, clang, CMake, Ninja, SDL3 and Skia through skiff -- so that
+it builds for the desktop, for the web and for Android from one set of files.
+
+The back end is not here yet. What the screens show today is a sample, kept in
+`src/app/sample.cc`, and every change the screens ask for is answered in
+memory until a client answers them instead.
+
+## What it is made of
+
+```
+src/core.cc              the model: ids, accounts, conversations, messages
+src/config.cc            what is kept on disk: the looks, the account
+src/theme*.cc            eight preset palettes, in Material's own terms
+src/logic/*.cc           what the screens read out of the model
+src/app/*.cc             the program, the screens, and today's sample
+src/ui.cc, src/ui/*.cc   the window: every screen, drawn with skiff
+```
+
+Three targets, one program:
+
+| target  | how it is built                             | what it is                     |
+| ------- | ------------------------------------------- | ------------------------------ |
+| desktop | `cmake` + Ninja, clang 23, SDL3             | a window of its own            |
+| web     | the same cmake through Emscripten           | a page served by GitHub Pages  |
+| android | the same cmake through a self-built NDK     | an APK                         |
+
+## To build it
+
+What has to be on the machine is what mux asks for: **clang 23** with its
+libc++ (there is no `import std` without one), **CMake 4.3.4 or newer**,
+**Ninja**, and **gn** for Skia. `.github/actions/desktop-setup` is what the
+check builds itself with, and says each of them.
+
+```sh
+cmake -S . -B build -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_CXX_COMPILER=clang++ \
+  -DCMAKE_CXX_FLAGS="-stdlib=libc++"
+cmake --build build --target progressive-chat
+```
+
+The web and the APK cross-compile from the same cmake: `-DCMAKE_TOOLCHAIN_FILE`
+of Emscripten's own for the page (which `.github/workflows/web.yml` does, and
+serves from `web/index.html`), and of a clang-23 NDK made from
+`minimal-android-ndk.cpp` for Android (which `.github/workflows/android.yml`
+does).
+
+## License
+
+Two licenses, said file by file in every one's first line:
+
+- **`AGPL-3.0-only`** -- the infrastructure of this repository: the model, the
+  settings, the palettes, the program, the build and its scripts (`LICENSE`).
+- **`GPL-3.0-only`** -- the files that draw the interface as Agora draws it
+  (`LICENSE-GPL-3.0`), which follow Agora's own terms.
+
+The whole is therefore **GPL v3**, and only GPL v3: nothing here may be used
+under any later version of either, and nothing here is dual-licensed.
+
+## Thanks
+
+The stack is [mux](https://github.com/j4niwzis/mux)'s, and the way this build
+is written -- the modules, their partitions, cmake-everywhere, one `std` in
+the whole build -- is learned from it. The interface is drawn from
+[Agora](https://github.com/MaurerAnton/agora)'s.
