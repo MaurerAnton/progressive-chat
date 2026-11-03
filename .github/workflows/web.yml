@@ -1,0 +1,56 @@
+name: web
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# The same program, for a browser: Emscripten compiles it, and GitHub Pages
+# serves it. Pages sets no headers of its own, so cross-origin isolation --
+# which shared memory needs -- is not available, and this build is asked for
+# no threads.
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/desktop-setup
+      - uses: ./.github/actions/web-setup
+      - name: Configure
+        run: |
+          emcmake cmake -S . -B build-web -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_CXX_FLAGS_DEBUG="-Os -g0" \
+            -DCMAKE_C_FLAGS_DEBUG="-Os -g0" \
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++" \
+            -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS="$(dirname "$(command -v clang-scan-deps || command -v clang)")/clang-scan-deps" \
+            -DPCHAT_TESTS=OFF
+      - name: Build
+        run: cmake --build build-web --target progressive-chat -- -k 0
+      - name: Say how big it came out
+        run: ls -l build-web/*.wasm build-web/*.js 2>/dev/null || true
+      - name: Upload the page
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: build-web/web
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

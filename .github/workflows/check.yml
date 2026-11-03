@@ -1,0 +1,87 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+# The same build in four steps, as the family builds it: the modules first,
+# then the program, each step having the one before it. One step in one job,
+# because a machine that can build all of it at once is not what runs here --
+# Skia and these modules together are more than a runner's memory will hold
+# twice.
+jobs:
+  modules:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/desktop-setup
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++" \
+            -DPCHAT_TESTS=ON
+      - name: Build the model's modules
+        run: cmake --build build --target pchat_core -- -k 0
+
+  tests:
+    needs: modules
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/desktop-setup
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++" \
+            -DPCHAT_TESTS=ON
+      - name: Build and run the tests
+        run: |
+          cmake --build build --target pchat-core-test pchat-theme-test pchat-logic-test -- -k 0
+          ctest --test-dir build --output-on-failure
+
+  program:
+    needs: tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/desktop-setup
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++" \
+            -DPCHAT_TESTS=OFF
+      - name: Build the window and the program
+        run: cmake --build build --target progressive-chat -- -k 0
+
+  tidy:
+    needs: program
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: No license left unsaid
+        run: |
+          missing=$(git ls-files '*.cc' '*.cmake' '*.txt' 'CMakeLists.txt' \
+            | xargs grep -L "SPDX-License-Identifier" || true)
+          if [ -n "$missing" ]; then
+            echo "These files say no license:"
+            echo "$missing"
+            exit 1
+          fi

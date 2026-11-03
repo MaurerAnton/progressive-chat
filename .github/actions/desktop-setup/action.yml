@@ -1,0 +1,42 @@
+name: Setup — clang 23, CMake 4, Ninja
+
+description: >-
+  The toolchain a build of progressive-chat has to have: clang 23 with its
+  libc++ (there is no other way to `import std` here), CMake 4.3.4 or newer,
+  and Ninja, which is the only generator CMake scans modules under.
+
+runs:
+  using: composite
+  steps:
+    - name: clang 23
+      shell: bash
+      run: |
+        set -euo pipefail
+        wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key \
+          | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc >/dev/null
+        echo "deb http://apt.llvm.org/$(. /etc/os-release && echo "${UBUNTU_CODENAME:-noble}")/ llvm-toolchain-$(. /etc/os-release && echo "${UBUNTU_CODENAME:-noble}")-23 main" \
+          | sudo tee /etc/apt/sources.list.d/llvm23.list
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          clang-23 lld-23 libc++-23-dev libc++abi-23-dev llvm-23 ninja-build
+        sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-23/bin/clang 100
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-23/bin/clang++ 100
+        sudo update-alternatives --install /usr/bin/llvm-config llvm-config /usr/lib/llvm-23/bin/llvm-config 100
+
+    - name: CMake 4
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd /tmp
+        curl -fsSL -o cmake.tar.gz \
+          https://github.com/Kitware/CMake/releases/download/v4.4.4/cmake-4.4.4-linux-x86_64.tar.gz
+        sudo tar xzf cmake.tar.gz -C /opt
+        sudo ln -sf /opt/cmake-4.4.4-linux-x86_64/bin/cmake /usr/local/bin/cmake
+        sudo ln -sf /opt/cmake-4.4.4-linux-x86_64/bin/ctest /usr/local/bin/ctest
+
+    - name: Say the toolchain
+      shell: bash
+      run: |
+        clang++ --version
+        cmake --version
+        ninja --version

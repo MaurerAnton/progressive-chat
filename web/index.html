@@ -1,0 +1,78 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<!--
+  The page the program is drawn into: one canvas, the size of the window, and
+  the loader Emscripten's linker writes into this file for it.
+
+  There is no cross-origin isolation here. It would buy shared memory and
+  threads, which this build is not asking for, and GitHub Pages sets no
+  headers to pay for it with.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#0c160c" />
+    <title>progressive-chat</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #0c160c;
+        color: #dee6dc;
+        font-family: system-ui, sans-serif;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #screen {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        touch-action: none;
+      }
+      #waiting {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: 15px;
+        letter-spacing: 0.01em;
+        transition: opacity 200ms ease;
+      }
+      #waiting.gone {
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="screen" tabindex="0"></canvas>
+    <div id="waiting">Starting progressive-chat…</div>
+    <script>
+      // The canvas is handed to the program as soon as it asks, and the
+      // "starting" line is put away once something is on it.
+      const waiting = document.getElementById("waiting");
+      addEventListener(
+        "load",
+        () => {
+          const gone = () => waiting.classList.add("gone");
+          if (window.__pchat_started) gone();
+          else addEventListener("pchat-started", gone, { once: true });
+        },
+        { once: true }
+      );
+      Module = {};
+      Module.canvas = document.getElementById("screen");
+      Module.print = (text) => console.log(text);
+      Module.printErr = (text) => console.error(text);
+      Module.onRuntimeInitialized = () => {
+        window.__pchat_started = true;
+        dispatchEvent(new Event("pchat-started"));
+      };
+    </script>
+    {{{ SCRIPT }}}
+  </body>
+</html>

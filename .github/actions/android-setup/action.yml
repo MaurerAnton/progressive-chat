@@ -1,0 +1,38 @@
+name: Setup — an Android toolchain made of this clang
+
+description: >-
+  The NDK Android's own builds will not give: `import std` and modules need
+  clang 23, and no released NDK has one. So the toolchain is built from
+  source, from the pinned minimal NDK, and its target file is what the build
+  is configured with.
+
+inputs:
+  abi:
+    description: Which ABI to build a toolchain for
+    required: false
+    default: arm64-v8a
+
+runs:
+  using: composite
+  steps:
+    - name: The minimal NDK
+      shell: bash
+      run: |
+        set -euo pipefail
+        ABI="${{ inputs.abi }}"
+        mkdir -p "$HOME/pchat-tools"
+        git clone --depth 1 https://github.com/j4niwzis/minimal-android-ndk.cpp.git \
+          "$HOME/pchat-tools/ndk-tool"
+        cd "$HOME/pchat-tools/ndk-tool"
+        git checkout 517d2f85f613dc07c71b98bad79e424a46e1a4c3
+        cmake -S . -B build -G Ninja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_C_COMPILER=clang \
+          -DCMAKE_CXX_COMPILER=clang++ \
+          -DCMAKE_INSTALL_PREFIX="$HOME/.cache/pchat-android-$ABI"
+        cmake --build build --parallel 2
+        cmake --install build
+    - name: Say the toolchain
+      shell: bash
+      run: |
+        ls "$HOME/.cache/pchat-android-${{ inputs.abi }}/cmake" || true

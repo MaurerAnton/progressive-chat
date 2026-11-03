@@ -1,0 +1,30 @@
+name: Setup — Emscripten
+
+description: >-
+  The Emscripten SDK, at one pinned revision. The program is compiled by the
+  same clang the desktop build uses; the SDK supplies the sysroot, the
+  loader and the bindings a browser gives it.
+
+runs:
+  using: composite
+  steps:
+    - name: The SDK
+      shell: bash
+      run: |
+        set -euo pipefail
+        git clone --depth 1 --branch 4.0.13 https://github.com/emscripten-core/emsdk.git "$HOME/emsdk" \
+          || git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$HOME/emsdk"
+        cd "$HOME/emsdk"
+        ./emsdk install latest
+        ./emsdk activate latest
+        echo "$HOME/emsdk" >> "$GITHUB_PATH"
+        echo "$HOME/emsdk/upstream/emscripten" >> "$GITHUB_PATH"
+        echo "$HOME/emsdk/node/*/bin" >> "$GITHUB_PATH"
+        echo "EMSDK=$HOME/emsdk" >> "$GITHUB_ENV"
+        echo "EMSDK_NODE=$HOME/emsdk/node/latest/bin/node" >> "$GITHUB_ENV"
+
+    - name: Say the SDK
+      shell: bash
+      run: |
+        export PATH="$HOME/emsdk:$HOME/emsdk/upstream/emscripten:$PATH"
+        emcc --version | head -2
