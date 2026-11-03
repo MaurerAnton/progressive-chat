@@ -31,6 +31,19 @@ runs:
         done
         clang++ --version
 
+    # What the window is made through: X11, Wayland and the GL that draws
+    # into them. SDL3 will not configure -- and so will not be found -- on a
+    # machine that has none of them, even though nothing here is shown.
+    - name: SDL3's own
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev \
+          libxss-dev libxtst-dev libwayland-dev libxkbcommon-dev libdbus-1-dev libudev-dev \
+          libgl1-mesa-dev libegl1-mesa-dev libasound2-dev libpulse-dev
+
     - name: CMake 4
       shell: bash
       run: |
