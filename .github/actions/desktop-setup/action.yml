@@ -1,9 +1,11 @@
-name: Setup — clang 23, CMake 4, Ninja
+# SPDX-License-Identifier: AGPL-3.0-only
+name: Setup — clang 23, CMake 4, Ninja, gn
 
 description: >-
   The toolchain a build of progressive-chat has to have: clang 23 with its
   libc++ (there is no other way to `import std` here), CMake 4.3.4 or newer,
-  and Ninja, which is the only generator CMake scans modules under.
+  Ninja, which is the only generator CMake scans modules under, and gn, which
+  is what Skia itself is built with.
 
 runs:
   using: composite
@@ -12,16 +14,22 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
+        codename="$(. /etc/os-release && echo "${UBUNTU_CODENAME:-noble}")"
         wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key \
           | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc >/dev/null
-        echo "deb http://apt.llvm.org/$(. /etc/os-release && echo "${UBUNTU_CODENAME:-noble}")/ llvm-toolchain-$(. /etc/os-release && echo "${UBUNTU_CODENAME:-noble}")-23 main" \
+        echo "deb http://apt.llvm.org/${codename}/ llvm-toolchain-${codename}-23 main" \
           | sudo tee /etc/apt/sources.list.d/llvm23.list
         sudo apt-get update
         sudo apt-get install -y --no-install-recommends \
-          clang-23 lld-23 libc++-23-dev libc++abi-23-dev llvm-23 ninja-build
-        sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-23/bin/clang 100
-        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-23/bin/clang++ 100
-        sudo update-alternatives --install /usr/bin/llvm-config llvm-config /usr/lib/llvm-23/bin/llvm-config 100
+          clang-23 lld-23 libc++-23-dev libc++abi-23-dev llvm-23 ninja-build python3
+        # The runner's own clang is a file in /usr/bin, not an alternative:
+        # taken out of the way, so that the links below are what every step
+        # finds -- an alternative installed beside a file is not the one used.
+        sudo rm -f /usr/bin/clang /usr/bin/clang++ /usr/bin/llvm-config /usr/bin/clang-scan-deps
+        for tool in clang clang++ llvm-config clang-scan-deps; do
+          sudo ln -sf "/usr/lib/llvm-23/bin/${tool}" "/usr/bin/${tool}"
+        done
+        clang++ --version
 
     - name: CMake 4
       shell: bash
@@ -34,9 +42,23 @@ runs:
         sudo ln -sf /opt/cmake-4.4.4-linux-x86_64/bin/cmake /usr/local/bin/cmake
         sudo ln -sf /opt/cmake-4.4.4-linux-x86_64/bin/ctest /usr/local/bin/ctest
 
+    # Skia is a GN project: gn is what turns its BUILD.gn files into ninja
+    # rules. No distribution keeps a release of it, so it comes from
+    # Chromium's own package store, as the latest one there.
+    - name: gn
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd /tmp
+        curl -fsSL -o gn.zip https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest
+        python3 -c "import zipfile; zipfile.ZipFile('gn.zip').extract('gn', 'gn-unpacked')"
+        sudo install -m 755 gn-unpacked/gn /usr/local/bin/gn
+        gn --version
+
     - name: Say the toolchain
       shell: bash
       run: |
         clang++ --version
         cmake --version
         ninja --version
+        gn --version
