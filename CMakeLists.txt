@@ -141,6 +141,15 @@ target_sources(pchat_core PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
 target_compile_features(pchat_core PUBLIC cxx_std_26)
 target_compile_options(pchat_core PUBLIC ${pchat_std_flags})
 
+# What a control asks the program for: said before the screens are, as they
+# are built out of what asks it.
+add_library(pchat_requests)
+target_sources(pchat_requests PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
+  FILES src/app/requests.cc)
+target_compile_features(pchat_requests PUBLIC cxx_std_26)
+target_compile_options(pchat_requests PUBLIC ${pchat_std_flags})
+target_link_libraries(pchat_requests PUBLIC pchat_core)
+
 if(PCHAT_UI)
   pchat_find_package(skiff 0.1.0 COMPONENTS ${pchat_skiff_components} REQUIRED)
   pchat_find_package(SDL3 REQUIRED)
@@ -214,16 +223,16 @@ if(PCHAT_UI)
           src/ui/window.cc)
   target_compile_features(pchat_ui PUBLIC cxx_std_26)
   target_compile_options(pchat_ui PUBLIC ${pchat_std_flags})
-  target_link_libraries(pchat_ui PUBLIC pchat_core SDL3::SDL3 skiff::skiff skiff::widgets skiff::window)
+  target_link_libraries(pchat_ui PUBLIC pchat_core pchat_requests SDL3::SDL3 skiff::skiff skiff::widgets skiff::window)
 
   # The program's own part: what fills the screens from the model, and what a
   # control asks for.
   add_library(pchat_app OBJECT)
   target_sources(pchat_app PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
-    FILES src/app/requests.cc src/app/screens.cc src/app/sample.cc)
+    FILES src/app/screens.cc src/app/sample.cc)
   target_compile_features(pchat_app PUBLIC cxx_std_26)
   target_compile_options(pchat_app PUBLIC ${pchat_std_flags})
-  target_link_libraries(pchat_app PUBLIC pchat_ui)
+  target_link_libraries(pchat_app PUBLIC pchat_ui pchat_requests)
 
   # The program itself.
   if(PCHAT_BROWSER)
