@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+SPDX-License-Identifier: AGPL-3.0-only
+The application, as Android asks to be told about it: the activity that
+starts the program, in whose own class a loader of the library is made
+(no Java is compiled here: that class is written out below), and what the
+program is allowed to do.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="chat.progressive.app">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-feature android:glEsVersion="0x00020000" android:required="false" />
+    <application android:label="Progressive Chat" android:allowBackup="false"
+        android:hasCode="true" android:extractNativeLibs="true"
+        android:theme="@android:style/Theme.Material.NoActionBar"
+        android:icon="@android:drawable/sym_def_app_icon">
+        <!-- The keyboard changes the window's size: the conversation is
+             drawn again for it, not stretched, and the card at the foot
+             stays above what the keys cover. -->
+        <activity android:name="org.libsdl.nativeapp.NativeActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboard|keyboardHidden|density|uiMode|smallestScreenSize|fontScale"
+            android:exported="true" android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data android:name="android.app.lib_name" android:value="progressive-chat" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

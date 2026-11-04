@@ -42,6 +42,31 @@ runs:
           -DCMAKE_CXX_FLAGS='-stdlib=libc++'
         cmake --build build --parallel 4
 
+    - name: What packages an APK
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo apt-get update
+        # aapt2 links the resources and zipalign lines the archive up; the
+        # signer is Java, so its javac and jar, and the runtime that runs
+        # it, are here too.
+        sudo apt-get install -y --no-install-recommends aapt zipalign openjdk-17-jdk-headless
+        aapt2 version
+        zipalign
+        java -version
+        javac -version
+
+    - name: The activity's classes, written by the fork's own script
+      shell: bash
+      run: |
+        set -euo pipefail
+        git init "$HOME/pchat-tools/sdl-dex"
+        cd "$HOME/pchat-tools/sdl-dex"
+        git remote add origin https://github.com/j4niwzis/SDL.git
+        git fetch --depth 1 origin 91c08de87b43fdecc824464fcce15499ccbc7101
+        git checkout --depth 1 FETCH_HEAD
+        test -f build-scripts/native-activity/dex/CMakeLists.txt
+
     - name: Every source at its commit
       shell: bash
       run: |
@@ -64,15 +89,17 @@ runs:
           --llvm-bin /usr/lib/llvm-23/bin \
           --api ${{ inputs.api }} \
           --jobs 4 \
-          build runtimes toolchain-file
+          build runtimes toolchain-file framework-res apksigner
 
-    - name: A whole sysroot, or nothing cached
+    - name: A whole sysroot, and what packages an APK, or nothing cached
       shell: bash
       run: |
         set -euo pipefail
         root="$HOME/.cache/pchat-android-${{ inputs.abi }}"
         test -f "$root/cmake/target.cmake"
         test -f "$root/sysroot/usr/lib/libc++.modules.json"
+        test -f "$root/tools/framework-res.apk"
+        test -f "$root/tools/apksigner.jar"
         find "$root" -exec touch -h -d "@1000000000" {} +
 
     # This tree is read by clang 23 against a libc++ of AOSP's, which is one

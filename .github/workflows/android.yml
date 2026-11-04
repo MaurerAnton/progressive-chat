@@ -39,12 +39,20 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE="$HOME/.cache/pchat-android-${{ inputs.abi || 'arm64-v8a' }}/cmake/target.cmake" \
             -DANDROID_ABI=${{ inputs.abi || 'arm64-v8a' }} \
             -DANDROID_PLATFORM=android-28 \
+            -DPCHAT_ANDROID_SDL_DEX_DIR="$HOME/pchat-tools/sdl-dex/build-scripts/native-activity/dex" \
             -DPCHAT_TESTS=OFF
       - name: Build
         run: cmake --build build-android --target progressive-chat -- -k 0
+      # The same library, packaged: resources against the platform's own, the
+      # activity's classes, the archive lined up and signed.
+      - name: Package
+        run: cmake --build build-android --target progressive-chat-apk-out
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: progressive-chat-android-${{ inputs.abi || 'arm64-v8a' }}-${{ github.sha }}
-          path: build-android/libprogressive-chat.so
+          path: |
+            build-android/progressive-chat-${{ inputs.abi || 'arm64-v8a' }}.apk
+            build-android/progressive-chat-${{ inputs.abi || 'arm64-v8a' }}-unsigned.apk
+            build-android/libprogressive-chat.so
           if-no-files-found: error
