@@ -2,7 +2,10 @@
 name: android
 
 on:
-  workflow_dispatch:  # only while the desktop check is being brought green
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: android-${{ github.ref }}-${{ inputs.abi || 'arm64-v8a' }}

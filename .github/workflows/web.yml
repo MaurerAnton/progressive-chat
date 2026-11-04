@@ -2,7 +2,10 @@
 name: web
 
 on:
-  workflow_dispatch:  # only while the desktop check is being brought green
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: web-${{ github.ref }}
