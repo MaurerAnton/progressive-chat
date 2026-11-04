@@ -52,7 +52,8 @@ struct app_window : scene::Node {
   }
 
   // What the messages are called, from the model: the title the bar shows.
-  [[nodiscard]] static std::string title_of(const chats_root &root, const std::string &opened) {
+  [[nodiscard]] static std::string title_of(const chats_root &root,
+                                            const std::string &opened) {
     for (const conversation &chat : root.conversations)
       if (chat.id.value == opened)
         return chat.title;
@@ -60,13 +61,15 @@ struct app_window : scene::Node {
   }
 
   // Everything drawn again from the model, for this size of window.
-  void again(const paints &look, const chats_root &root, const looks &shown, bool dark,
-               bool settings_open, bool drawer_open, float width, float height, app::requests *asked) {
+  void again(const paints &look, const chats_root &root, const looks &shown,
+             bool dark, bool settings_open, bool drawer_open, float width,
+             float height, app::requests *asked) {
     // The conversation the window has open, as it is named: none of them,
     // where none is open.
     const std::string opened = root.opened ? root.opened->value : std::string{};
     const bool wide = width >= side_by_side_from;
-    const float breadth = std::min(drawer_width, std::max(width * 0.32f, 280.0f));
+    const float breadth =
+        std::min(drawer_width, std::max(width * 0.32f, 280.0f));
     const bool in_chat = wide || !drawer_open;
     const float column = in_chat ? width - (wide ? breadth : 0.0f) : width;
     const bool aside = wide || drawer_open;
@@ -75,42 +78,87 @@ struct app_window : scene::Node {
     // The messages' own ground, beside the drawer.
     // A size in pixels, not a share: what these were made to fill once is
     // said again here as nothing, or the number is read as parts of one.
-    fMessages.apply({.anchor = scene::anchor::kTopLeft, .x = left, .y = 0.0f, .relativeSize = scene::axes::kNone,
-                     .width = column, .height = height, .background = look.paper, .visible = in_chat});
+    fMessages.apply({.anchor = scene::anchor::kTopLeft,
+                     .x = left,
+                     .y = 0.0f,
+                     .relativeSize = scene::axes::kNone,
+                     .width = column,
+                     .height = height,
+                     .background = look.paper,
+                     .visible = in_chat});
     // The drawer: beside the messages when the window is wide, out of the way
     // when it is not.
     const float drawer_breadth = wide ? breadth : width;
-    fDrawer.apply({.anchor = scene::anchor::kTopLeft, .x = 0.0f, .y = 0.0f, .relativeSize = scene::axes::kNone,
-                   .width = drawer_breadth, .height = height, .visible = aside, .background = look.drawer});
+    fDrawer.apply({.anchor = scene::anchor::kTopLeft,
+                   .x = 0.0f,
+                   .y = 0.0f,
+                   .relativeSize = scene::axes::kNone,
+                   .width = drawer_breadth,
+                   .height = height,
+                   .visible = aside,
+                   .background = look.drawer});
     if (aside) {
-      fDrawer.apply({.anchor = scene::anchor::kTopLeft, .x = 0.0f, .y = 0.0f, .relativeSize = scene::axes::kNone,
-                     .width = drawer_breadth, .height = height, .visible = true, .background = look.drawer});
+      fDrawer.apply({.anchor = scene::anchor::kTopLeft,
+                     .x = 0.0f,
+                     .y = 0.0f,
+                     .relativeSize = scene::axes::kNone,
+                     .width = drawer_breadth,
+                     .height = height,
+                     .visible = true,
+                     .background = look.drawer});
       fDrawer.again(look, root, opened, asked);
     }
     // The bar, over the top of the messages.
-    fTop.apply({.anchor = scene::anchor::kTopLeft, .x = left, .y = 0.0f, .relativeSize = scene::axes::kNone,
-                .width = column, .height = top_scrim, .visible = in_chat});
+    fTop.apply({.anchor = scene::anchor::kTopLeft,
+                .x = left,
+                .y = 0.0f,
+                .relativeSize = scene::axes::kNone,
+                .width = column,
+                .height = top_scrim,
+                .visible = in_chat});
     // The pill that opens the drawer is there where a drawer can be opened:
     // a window wide enough to keep it beside the messages has none to open.
-    fTop.again(asked, look, !wide, title_of(root, opened));
+    const conversation *open_chat = nullptr;
+    for (const conversation &one : root.conversations)
+      if (one.id.value == opened)
+        open_chat = &one;
+    // The bar says what the chat has been worth; the card under it names the
+    // model that answers in it and how full its window this chat has made it.
+    fTop.again(asked, look, !wide, title_of(root, opened),
+               open_chat ? open_chat->tokens : 0u);
     // Over what the messages were, where the drawer has come over them:
     // pressed, it puts the drawer away again.
-    fShade.apply({.anchor = scene::anchor::kTopLeft, .x = 0.0f, .y = 0.0f, .relativeSize = scene::axes::kNone,
-                  .width = width, .height = height, .visible = !wide && drawer_open});
+    fShade.apply({.anchor = scene::anchor::kTopLeft,
+                  .x = 0.0f,
+                  .y = 0.0f,
+                  .relativeSize = scene::axes::kNone,
+                  .width = width,
+                  .height = height,
+                  .visible = !wide && drawer_open});
     fShade.again(asked, app::toggle_drawer{}, look.scrim);
     // The messages, in what scrolls, between the bar and the card.
     auto &messages = std::get<0>(fList.fChildren);
-    messages.again(look, root, opened, column, shown.font_scale);
-    fList.apply({.anchor = scene::anchor::kTopLeft, .x = left, .y = top_bar_height, .relativeSize = scene::axes::kNone,
-                 .width = column, .height = std::max(height - top_bar_height - 56.0f - 2.0f * edge, 40.0f),
-                 .visible = in_chat});
+    messages.again(asked, look, root, opened, column, shown.font_scale);
+    fList.apply(
+        {.anchor = scene::anchor::kTopLeft,
+         .x = left,
+         .y = top_bar_height,
+         .relativeSize = scene::axes::kNone,
+         .width = column,
+         .height = std::max(
+             height - top_bar_height - composer_height - 2.0f * edge, 40.0f),
+         .visible = in_chat});
     // The card at the foot.
-    fComposer.apply({.anchor = scene::anchor::kBottomLeft, .origin = scene::anchor::kBottomLeft, .x = left,
-                     .y = 0.0f, .relativeSize = scene::axes::kNone, .width = column,
-                     .height = 56.0f + 2.0f * edge, .visible = in_chat});
-    for (const conversation &chat : root.conversations)
-      if (chat.id.value == opened)
-        fComposer.again(look, chat.id, asked);
+    fComposer.apply({.anchor = scene::anchor::kBottomLeft,
+                     .origin = scene::anchor::kBottomLeft,
+                     .x = left,
+                     .y = 0.0f,
+                     .relativeSize = scene::axes::kNone,
+                     .width = column,
+                     .height = composer_height + 2.0f * edge,
+                     .visible = in_chat});
+    if (open_chat)
+      fComposer.again(look, *open_chat, asked);
     // The settings page, over everything, when it is opened.
     if (settings_open)
       fSettings.again(look, shown, dark, std::min(width, 720.0f));
@@ -133,4 +181,4 @@ struct app_window : scene::Node {
 // The type a Scene holds: this one's root.
 using window_type = app_window;
 
-}  // namespace pchat::ui
+} // namespace pchat::ui

@@ -14,24 +14,67 @@ import pchat.config;
 
 export namespace pchat::app {
 
-struct open_conversation { conversation_id chat; };
-struct send_message { conversation_id chat; std::string text; };
-struct edit_draft { conversation_id chat; std::string text; };
-struct set_query { std::string text; };
+struct open_conversation {
+  conversation_id chat;
+};
+struct send_message {
+  conversation_id chat;
+  std::string text;
+};
+// A new chat, asked for at the top of the messages: nothing in it but the
+// one that asked.
+struct new_chat {};
+// What one answer is asked for, down at its foot: taken whole onto the
+// clipboard, thought again, taken into a chat of its own, given away,
+// asked about, or rubbed out.
+struct copy_answer {
+  conversation_id chat;
+  message_id said;
+};
+struct regenerate_answer {
+  conversation_id chat;
+  message_id said;
+};
+struct fork_answer {
+  conversation_id chat;
+  message_id said;
+};
+struct share_answer {
+  conversation_id chat;
+  message_id said;
+};
+struct delete_answer {
+  conversation_id chat;
+  message_id said;
+};
+struct edit_draft {
+  conversation_id chat;
+  std::string text;
+};
+struct set_query {
+  std::string text;
+};
 struct toggle_drawer {};
 struct open_settings {};
 struct close_settings {};
-struct set_looks { looks shown; };
-struct set_amoled { bool enabled; };
+struct set_looks {
+  looks shown;
+};
+struct set_amoled {
+  bool enabled;
+};
 
-using request = std::variant<open_conversation, send_message, edit_draft, set_query,
-                             toggle_drawer, open_settings, close_settings, set_looks,
-                             set_amoled>;
+using request =
+    std::variant<open_conversation, send_message, new_chat, copy_answer,
+                 regenerate_answer, fork_answer, share_answer, delete_answer,
+                 edit_draft, set_query, toggle_drawer, open_settings,
+                 close_settings, set_looks, set_amoled>;
 
 class requests {
- public:
-  template <class asking>
-  void ask(asking&& one) { pending_.emplace_back(std::forward<asking>(one)); }
+public:
+  template <class asking> void ask(asking &&one) {
+    pending_.emplace_back(std::forward<asking>(one));
+  }
 
   // What has been asked since the last frame: drained whole, as the program
   // reads each one in the order it was asked for.
@@ -39,17 +82,16 @@ class requests {
 
   [[nodiscard]] bool empty() const { return pending_.empty(); }
 
- private:
+private:
   std::vector<request> pending_;
 };
 
 // One callable per kind of request: `std::visit(app::overloaded{...}, one)`,
 // so that every kind is handled and a new one cannot be forgotten.
-template <class... callables>
-struct overloaded : callables... {
+template <class... callables> struct overloaded : callables... {
   using callables::operator()...;
 };
 template <class... callables>
 overloaded(callables...) -> overloaded<callables...>;
 
-}  // namespace pchat::app
+} // namespace pchat::app

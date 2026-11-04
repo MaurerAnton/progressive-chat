@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // pchat.ui:message_list -- The messages of one conversation, one under the
-// other in a view that scrolls: a bubble rounded on every corner, on the
-// right when it went out and on the left when it came in, the time under
-// what was said, and the name above the first of a run of one speaker's.
+// other in a view that scrolls: what the reader wrote in a bubble on the
+// right, its corner at the bottom right squarer than its other three, and
+// what a model answered in text the whole breadth of the room, with what it
+// thought first folded above it and six things to do with it at its foot.
 //
 // Nothing here says how tall anything is. A bubble is as wide as the words in
-// it wrap to -- never wider than its share of the room -- and as tall as the
-// lines they made and the time under them; the row is its name over its
-// bubble; the list is the rows stacked, one under the last at the height it
-// came to, which is also the reach the scroll view measures. Three flows, and
-// skiff's own measurement of the words in each: no window counts characters,
-// and no bubble is ever the wrong size for what it says.
+// it wrap to -- never wider than three quarters of the room -- and as tall as
+// the lines they made and the time under them; an answer is as tall as its
+// folded history, its words and the row under them; the list is the rows
+// stacked, one under the last at the height it came to, which is also the
+// reach the scroll view measures. Three flows, and skiff's own measurement of
+// the words in each: no window counts characters, and no bubble is ever the
+// wrong size for what it says.
 export module pchat.ui:message_list;
 
 import std;
@@ -18,8 +20,10 @@ import skiff.scene;
 import skiff.nodes;
 import pchat.core;
 import pchat.logic.lists;
+import pchat.app.requests;
 import :theme;
 import :base;
+import :icons;
 
 export namespace pchat::ui {
 
@@ -28,18 +32,52 @@ namespace nodes = skiff::nodes;
 
 // How many messages the list keeps room for.
 inline constexpr std::size_t max_messages = 32;
-// What goes between a bubble and its words, and between two bubbles.
+// What goes between a bubble and its words, and between two messages.
 inline constexpr float bubble_pad_x = 14.0f;
 inline constexpr float bubble_pad_y = 10.0f;
-inline constexpr float bubble_gap = 6.0f;
-// Left above the first bubble of a run, where the name goes.
-inline constexpr float run_gap = 10.0f;
-// The share of the room a bubble may take before it wraps.
-inline constexpr float widest_share = 0.62f;
+inline constexpr float bubble_gap = 10.0f;
+// Above the first message of a run by one speaker.
+inline constexpr float run_gap = 14.0f;
+// The share of the room a bubble may take before it wraps: three of its
+// four quarters, and no wider than a line is comfortable to read.
+inline constexpr float widest_share = 0.75f;
+// What stands between an answer, its folded history and the row under it.
+inline constexpr float answer_gap = 8.0f;
+// The six things asked for at an answer's foot.
+inline constexpr std::size_t foot_count = 6;
 
-// A message's bubble: its own colour and corners behind two lines -- what was
-// said, and when -- which are the flow that gives it its size. Wide as its
-// words wrap to, and no wider than it is allowed.
+// ---- what the numbers read as --------------------------------------------
+
+// The clock as it is read in this window: the hour of the day and the minute
+// in it, out of a moment kept as it is in the model. No zone of its own to
+// ask, because what a chat is written in is whatever its reader's is.
+[[nodiscard]] inline std::string clock_of(moment at) {
+  const std::int64_t minutes = (at / 60'000) % (24 * 60);
+  const std::int64_t hour = minutes / 60;
+  const std::int64_t minute = minutes % 60;
+  std::string out;
+  out += hour < 10 ? "0" : "";
+  out += std::to_string(hour);
+  out += ":";
+  out += minute < 10 ? "0" : "";
+  out += std::to_string(minute);
+  return out;
+}
+// How long a thought took, as it is said under it: its seconds where it took
+// more than one, its milliseconds where it did not.
+[[nodiscard]] inline std::string took_of(std::int64_t took_ms) {
+  if (took_ms >= 1'000) {
+    const std::int64_t tenths = (took_ms / 100) % 10;
+    return std::to_string(took_ms / 1'000) + "." + std::to_string(tenths) +
+           " s";
+  }
+  return std::to_string(took_ms) + " ms";
+}
+// ---- the reader's bubble --------------------------------------------------
+
+// A bubble: its own colour and corners behind two lines -- what was said, and
+// when -- which are the flow that gives it its size. Wide as its words wrap
+// to, and no wider than three quarters of the room.
 struct bubble : nodes::Stack {
   nodes::Text fBody{"", 15.0f, 0u};
   nodes::Text fTime{"", 11.0f, 0u};
@@ -50,11 +88,14 @@ struct bubble : nodes::Stack {
     // measured, has to be put out of their flow, and out of the flow it is
     // then over them -- a colour where the words are, in the browser, which
     // draws what is out of the flow above what still is in it.
-    this->apply({.autoSize = scene::axes::kBoth, .cornerRadius = bubble_radius,
-                 .padding = scene::Margin{bubble_pad_y, bubble_pad_x, bubble_pad_y, bubble_pad_x}});
+    this->apply({.autoSize = scene::axes::kBoth,
+                 .cornerRadius = bubble_radius,
+                 .padding = scene::Margin{bubble_pad_y, bubble_pad_x,
+                                          bubble_pad_y, bubble_pad_x}});
     fStack = {.direction = nodes::direction::vertical{}, .spacingY = 2.0f};
     fBody.apply({.autoSize = scene::axes::kBoth});
-    fTime.apply({.autoSize = scene::axes::kBoth, .alignSelf = scene::align::kEnd});
+    fTime.apply(
+        {.autoSize = scene::axes::kBoth, .alignSelf = scene::align::kEnd});
   }
 
   void blank() {
@@ -63,16 +104,26 @@ struct bubble : nodes::Stack {
     fTime.setText("");
   }
 
-  void again(const paints &look, std::string_view said, bool outgoing, float widest) {
+  void again(const paints &look, std::string_view said, std::string_view when,
+             float widest) {
     this->setVisible(true);
-    this->apply({.autoSize = scene::axes::kBoth, .maxWidth = widest,
-                 .cornerRadius = bubble_radius, .background = outgoing ? look.sent : look.bubble});
+    // Two ways at once that this one is the reader's: it stands on the right,
+    // and the corner of it on that side, at its foot, is squarer than the
+    // three it turns away from them.
+    this->apply({.autoSize = scene::axes::kBoth,
+                 .maxWidth = widest,
+                 .background = look.sent,
+                 .corners = scene::Corners{.topLeft = bubble_radius,
+                                           .topRight = bubble_radius,
+                                           .bottomRight = bubble_corner,
+                                           .bottomLeft = bubble_radius}});
     fBody.setText(std::string(said));
-    fBody.setColour(outgoing ? look.on_sent : look.on_bubble);
+    fBody.setColour(look.on_sent);
     fBody.setFontSize(look.size);
-    fBody.apply({.autoSize = scene::axes::kBoth, .maxWidth = widest - 2.0f * bubble_pad_x});
-    fTime.setText("12:40");
-    fTime.setColour(outgoing ? look.on_sent : look.faint);
+    fBody.apply({.autoSize = scene::axes::kBoth,
+                 .maxWidth = widest - 2.0f * bubble_pad_x});
+    fTime.setText(std::string(when));
+    fTime.setColour(look.on_sent & 0xb0ffffffu);
   }
 
   void forEachChild(auto &&f) {
@@ -81,41 +132,310 @@ struct bubble : nodes::Stack {
   }
 };
 
-// One message: the name where a run begins, and under it the bubble, put on
-// the right or the left of the room the row has.
-struct message_row : nodes::Stack {
-  nodes::Text fName{"", 13.0f, 0u, true};
+// ---- what an answer is asked for at its foot ------------------------------
+
+// One of the six: a plate, its mark and what it is called, pressed either to
+// ask the program for something or to be left down -- which is what the one
+// that tells about an answer is, and no asking at all.
+struct foot_chip : scene::Node {
+  nodes::Box<> fPlate{0u};
+  nodes::Icon fMark{shape::copy(), 0u};
+  nodes::Text fLabel{"", 11.0f, 0u};
+  app::requests *fSink = nullptr;
+  app::request fAsk{app::copy_answer{conversation_id{}, pchat::message_id{}}};
+  bool fAsks = true;
+  bool fDown = false;
+
+  foot_chip() {
+    this->apply({.autoSize = scene::axes::kBoth,
+                 .cornerRadius = 9.0f,
+                 .padding = scene::Margin{4.0f, 8.0f, 4.0f, 6.0f}});
+    fPlate.apply({.fill = true});
+    fMark.apply({.width = 14.0f,
+                 .height = 14.0f,
+                 .anchor = scene::anchor::kCentreLeft,
+                 .origin = scene::anchor::kCentreLeft,
+                 .x = 7.0f});
+    fLabel.apply({.anchor = scene::anchor::kCentreLeft,
+                  .origin = scene::anchor::kCentreLeft,
+                  .x = 24.0f,
+                  .autoSize = scene::axes::kBoth});
+  }
+
+  [[nodiscard]] bool acceptsInput() const { return true; }
+  [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+  [[nodiscard]] bool onClick(float, float) {
+    if (fAsks) {
+      if (fSink)
+        fSink->ask(fAsk);
+    } else {
+      fDown = !fDown;
+    }
+    return true;
+  }
+  // Left down or not: what the one that tells about an answer answers with,
+  // and what its row reads to know whether to show what it knows.
+  [[nodiscard]] bool down() const noexcept { return fDown; }
+
+  void again(app::requests *sink, app::request asking, const paints &look,
+             nodes::IconShape mark, std::string_view label) {
+    fSink = sink;
+    fAsk = std::move(asking);
+    fAsks = true;
+    fDown = false;
+    fMark.setShape(std::move(mark));
+    fMark.setColour(look.faint);
+    fMark.setVisible(true);
+    fLabel.setText(std::string(label));
+    fLabel.setColour(look.faint);
+    fPlate.setColour(0u);
+  }
+
+  // The one that only tells: left down, it is drawn as the plate under it.
+  void told(app::requests *, const paints &look, nodes::IconShape mark,
+            std::string_view label) {
+    fAsks = false;
+    fMark.setShape(std::move(mark));
+    fMark.setColour(fDown ? look.primary : look.faint);
+    fMark.setVisible(true);
+    fLabel.setText(std::string(label));
+    fLabel.setColour(fDown ? look.primary : look.faint);
+    fPlate.setColour(fDown ? look.field : 0u);
+  }
+
+  void forEachChild(auto &&f) {
+    f(fPlate);
+    f(fMark);
+    f(fLabel);
+  }
+};
+
+// The six of them in a row: Copy, Ask again, Fork, Give away, About, Rub out.
+struct foot_row : nodes::Stack {
+  std::array<foot_chip, foot_count> fChips;
+
+  foot_row() {
+    this->apply({.fillX = true, .autoSize = scene::axes::kY});
+    fStack = {.direction = nodes::direction::horizontal{},
+              .spacingX = 6.0f,
+              .spacingY = 6.0f,
+              .wrap = true};
+    for (auto &one : fChips)
+      one.apply({.autoSize = scene::axes::kBoth});
+  }
+
+  void again(app::requests *sink, const paints &look, const message &said) {
+    const conversation_id chat = said.chat;
+    const message_id which = said.id;
+    fChips[0].again(sink, app::copy_answer{chat, which}, look, shape::copy(),
+                    "Copy");
+    fChips[1].again(sink, app::regenerate_answer{chat, which}, look,
+                    shape::again(), "Again");
+    fChips[2].again(sink, app::fork_answer{chat, which}, look, shape::fork(),
+                    "Fork");
+    fChips[3].again(sink, app::share_answer{chat, which}, look, shape::share(),
+                    "Share");
+    fChips[4].told(sink, look, shape::info(), "Info");
+    fChips[5].again(sink, app::delete_answer{chat, which}, look, shape::bin(),
+                    "Delete");
+  }
+
+  void forEachChild(auto &&f) {
+    for (auto &one : fChips)
+      f(one);
+  }
+};
+
+// ---- what was thought before an answer -----------------------------------
+
+// Folded above an answer: how long it was thinking, how many tool calls it
+// made, and -- once it is pressed open -- what it wrote to itself while it
+// was, in green, the way a thread writes it.
+struct history_fold : nodes::Stack {
+  nodes::Text fSummary{"", 12.0f, 0u};
+  nodes::Text fThought{"", 12.0f, 0u};
+  bool fOpen = false;
+
+  history_fold() {
+    this->apply({.autoSize = scene::axes::kBoth,
+                 .cornerRadius = 10.0f,
+                 .padding = scene::Margin{8.0f, 12.0f, 8.0f, 12.0f}});
+    fStack = {.direction = nodes::direction::vertical{}, .spacingY = 6.0f};
+    fSummary.apply({.autoSize = scene::axes::kBoth});
+    fThought.apply({.autoSize = scene::axes::kBoth});
+    fThought.setVisible(false);
+  }
+
+  [[nodiscard]] bool acceptsInput() const { return true; }
+  [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+  [[nodiscard]] bool onClick(float, float) {
+    fOpen = !fOpen;
+    return true;
+  }
+
+  void blank() {
+    this->setVisible(false);
+    fSummary.setText("");
+    fThought.setText("");
+    fOpen = false;
+    fThought.setVisible(false);
+  }
+
+  void again(const paints &look, const thought &before, float widest) {
+    this->setVisible(true);
+    this->apply({.autoSize = scene::axes::kBoth,
+                 .maxWidth = widest,
+                 .background = fOpen ? look.field : look.field & 0x80ffffffu});
+    fSummary.setText("Thought for " + took_of(before.took_ms) + " · " +
+                     std::to_string(before.tool_calls) +
+                     (before.tool_calls == 1 ? " tool call" : " tool calls"));
+    fSummary.setColour(look.dim);
+    fSummary.apply(
+        {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
+    // What it wrote to itself, greentext: shown while it is pressed open.
+    fThought.setText(before.said);
+    fThought.setColour(look.primary);
+    fThought.setMonospace(true);
+    fThought.setVisible(fOpen && !before.said.empty());
+    fThought.apply(
+        {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
+  }
+
+  void forEachChild(auto &&f) {
+    f(fSummary);
+    f(fThought);
+  }
+};
+
+// ---- the two rows --------------------------------------------------------
+
+// What the reader wrote: one bubble, put on the right of the room and no
+// wider than three of its four quarters. No name over it, because whose it is
+// is what standing there says.
+struct reader_row : nodes::Stack {
   bubble fBubble;
 
-  message_row() {
+  reader_row() {
     this->apply({.fillX = true, .autoSize = scene::axes::kY});
     fStack = {.direction = nodes::direction::vertical{}, .spacingY = 2.0f};
-    fName.apply({.autoSize = scene::axes::kBoth, .x = bubble_pad_x, .alignSelf = scene::align::kStart});
+    fBubble.apply({.alignSelf = scene::align::kEnd});
     this->blank();
   }
 
   void blank() {
     this->setVisible(false);
-    fName.setText("");
     fBubble.blank();
   }
 
-  void again(const paints &look, const message &said, bool head, float breadth) {
-    const float widest = std::min(bubble_max, widest_share * std::max(0.0f, breadth - 2.0f * edge));
+  void again(const paints &look, const message &said, bool head,
+             float breadth) {
+    const float widest =
+        std::min(bubble_max, widest_share * std::max(0.0f, breadth));
     this->setVisible(true);
-    this->apply({.fillX = true, .autoSize = scene::axes::kY,
-                 .margin = scene::Margin{head ? run_gap : 0.0f, 0.0f, 0.0f, 0.0f}});
-    fName.setVisible(head && !said.outgoing);
-    fName.setText(said.author);
-    fName.setColour(look.primary);
-    fName.apply({.maxWidth = widest});
-    fBubble.again(look, said.text, said.outgoing, widest);
-    fBubble.apply({.alignSelf = said.outgoing ? scene::align::kEnd : scene::align::kStart});
+    this->apply(
+        {.fillX = true,
+         .autoSize = scene::axes::kY,
+         .margin = scene::Margin{head ? run_gap : 0.0f, 0.0f, 0.0f, 0.0f}});
+    fBubble.again(look, said.text, clock_of(said.sent), widest);
+  }
+
+  void forEachChild(auto &&f) { f(fBubble); }
+};
+
+// What a model answered: no bubble, no name and no model over it -- text the
+// whole breadth of the room, what it thought folded over it, and the six
+// things at its foot.
+struct answer_row : nodes::Stack {
+  history_fold fFold;
+  nodes::Text fBody{"", 15.0f, 0u};
+  nodes::Text fInfo{"", 11.0f, 0u};
+  foot_row fFoot;
+
+  answer_row() {
+    this->apply({.fillX = true, .autoSize = scene::axes::kY});
+    fStack = {.direction = nodes::direction::vertical{},
+              .spacingY = answer_gap};
+    fFoot.apply({.fillX = true, .autoSize = scene::axes::kY});
+    fInfo.apply({.autoSize = scene::axes::kBoth});
+    fInfo.setVisible(false);
+    this->blank();
+  }
+
+  void blank() {
+    this->setVisible(false);
+    fFold.blank();
+    fBody.setText("");
+    fInfo.setText("");
+  }
+
+  void again(app::requests *sink, const paints &look, const message &said,
+             float breadth) {
+    const float widest = std::max(0.0f, breadth);
+    this->setVisible(true);
+    this->apply({.fillX = true,
+                 .autoSize = scene::axes::kY,
+                 .margin = scene::Margin{run_gap, 0.0f, 0.0f, 0.0f}});
+    if (said.before)
+      fFold.again(look, *said.before, widest);
+    else
+      fFold.blank();
+    fBody.setText(said.text);
+    fBody.setColour(look.text);
+    fBody.setFontSize(look.size);
+    fBody.apply({.autoSize = scene::axes::kY, .fillX = true});
+    fFoot.again(sink, look, said);
+    // What About tells: no name and no model, only what this answer came to.
+    fInfo.setText(
+        std::string(said.before ? took_of(said.before->took_ms) + " · " : "") +
+        std::to_string(said.before ? said.before->tool_calls : 0u) +
+        " tool calls · " + tokens_said(said.tokens) + " tokens · " +
+        clock_of(said.sent));
+    fInfo.setColour(look.faint);
+    fInfo.setVisible(fFoot.fChips[4].down());
   }
 
   void forEachChild(auto &&f) {
-    f(fName);
-    f(fBubble);
+    f(fFold);
+    f(fBody);
+    f(fFoot);
+    f(fInfo);
+  }
+};
+
+// One row of either kind, kept in the same place in the list: which of the
+// two it is has nothing to do with the order they come in.
+struct message_row : nodes::Stack {
+  reader_row fReader;
+  answer_row fAnswer;
+
+  message_row() {
+    this->apply({.fillX = true, .autoSize = scene::axes::kY});
+    fStack = {.direction = nodes::direction::vertical{}, .wrap = false};
+    this->blank();
+  }
+
+  void blank() {
+    this->setVisible(false);
+    fReader.blank();
+    fAnswer.blank();
+  }
+
+  void again(app::requests *sink, const paints &look, const message &said,
+             bool head, float breadth) {
+    this->setVisible(true);
+    this->apply({.fillX = true, .autoSize = scene::axes::kY});
+    if (said.outgoing) {
+      fAnswer.setVisible(false);
+      fReader.again(look, said, head, breadth);
+    } else {
+      fReader.setVisible(false);
+      fAnswer.again(sink, look, said, breadth);
+    }
+  }
+
+  void forEachChild(auto &&f) {
+    f(fReader);
+    f(fAnswer);
   }
 };
 
@@ -128,20 +448,25 @@ struct message_screen : nodes::Stack {
     // What is said begins below the band the bar fades out in: the band is
     // over the top of the column, so the first thing said would otherwise
     // stand under it, dimmed by the paper's own colour over it.
-    this->apply({.fillX = true, .autoSize = scene::axes::kY,
-                 .padding = scene::Margin{top_scrim - top_bar_height + edge, edge, edge, edge}});
-    fStack = {.direction = nodes::direction::vertical{}, .spacingY = bubble_gap, .wrap = false};
+    this->apply({.fillX = true,
+                 .autoSize = scene::axes::kY,
+                 .padding = scene::Margin{top_scrim - top_bar_height + edge,
+                                          edge, edge, edge}});
+    fStack = {.direction = nodes::direction::vertical{},
+              .spacingY = bubble_gap,
+              .wrap = false};
     for (auto &row : fRows)
       row.blank();
   }
 
   // Called by the program whenever what is shown moved.
-  void again(const paints &look, const chats_root &root, const std::string &opened, float breadth, float) {
+  void again(app::requests *sink, const paints &look, const chats_root &root,
+             const std::string &opened, float breadth, float) {
     std::vector<const message *> said;
     for (const message &one : root.messages)
       if (one.chat.value == opened)
         said.push_back(&one);
-    std::string last_author;
+    const float room = std::max(0.0f, breadth - 2.0f * edge);
     bool last_outgoing = false;
     for (std::size_t at = 0; at < max_messages; ++at) {
       if (at >= said.size()) {
@@ -149,9 +474,9 @@ struct message_screen : nodes::Stack {
         continue;
       }
       const message &one = *said[at];
-      const bool head = one.author != last_author || one.outgoing != last_outgoing;
-      fRows[at].again(look, one, head, breadth);
-      last_author = one.author;
+      // Left above it: room, where it is an answer, or where it follows one.
+      const bool head = !one.outgoing || last_outgoing;
+      fRows[at].again(sink, look, one, head, room);
       last_outgoing = one.outgoing;
     }
   }
@@ -162,4 +487,4 @@ struct message_screen : nodes::Stack {
   }
 };
 
-}  // namespace pchat::ui
+} // namespace pchat::ui

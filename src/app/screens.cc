@@ -30,41 +30,89 @@ using window_scene = scene::Scene<ui::window_type>;
 
 // Everything shown, and what is done with what was asked for.
 class screens {
- public:
-  screens() : root_(sample_chats()), shown_(default_looks), look_(ui::paints_of(colors_of(shown_, true), true)) {}
+public:
+  screens()
+      : root_(sample_chats()), shown_(default_looks),
+        look_(ui::paints_of(colors_of(shown_, true), true)) {}
 
   [[nodiscard]] window_scene &window() noexcept { return scene_; }
 
   // Answered between frames: what the controls asked for, oldest first.
   void take(const request &one) {
-    std::visit(overloaded{
-                   [&](const open_conversation &asking) {
-                      root_.opened = asking.chat;
-                      // A drawer that came over the messages has been used:
-                      // put away, leaving the conversation it opened.
-                      if (width_ < ui::side_by_side_from)
-                        drawer_ = false;
-                    },
-                   [&](const send_message &asking) {
-                     const logic::sent_message said =
-                         logic::send(logic::sending_request{asking.chat, asking.text, {}, std::nullopt},
-                                     "Reader", static_cast<moment>(said_count_++));
-                     root_.messages.push_back(said.said);
-                   },
-                   [&](const edit_draft &) {},
-                   [&](const set_query &asking) { query_ = asking.text; },
-                   [&](const toggle_drawer &) { drawer_ = !drawer_; },
-                   [&](const open_settings &) { settings_ = true; },
-                   [&](const close_settings &) { settings_ = false; },
-                   [&](const set_looks &asking) {
-                     shown_ = asking.shown;
-                     recolour();
-                   },
-                   [&](const set_amoled &asking) {
-                     shown_.amoled = asking.enabled;
-                     recolour();
-                   }},
-               one);
+    std::visit(
+        overloaded{
+            [&](const open_conversation &asking) {
+              root_.opened = asking.chat;
+              // A drawer that came over the messages has been used:
+              // put away, leaving the conversation it opened.
+              if (width_ < ui::side_by_side_from)
+                drawer_ = false;
+            },
+            [&](const send_message &asking) {
+              const logic::sent_message said = logic::send(
+                  logic::sending_request{
+                      asking.chat, asking.text, {}, std::nullopt},
+                  "Reader", static_cast<moment>(said_count_++));
+              root_.messages.push_back(said.said);
+            },
+
+            [&](const new_chat &) {
+              const conversation_id made{"chat-" +
+                                         std::to_string(++chat_count_)};
+              conversation fresh{
+                  made,
+                  root_.accounts.empty() ? account_id{}
+                                         : root_.accounts.front().id,
+                  "New chat", conversation_kind::direct, ++said_count_};
+              fresh.model =
+                  root_.opened ? model_of(*root_.opened) : std::string{};
+              root_.conversations.insert(root_.conversations.begin(),
+                                         std::move(fresh));
+              root_.opened = made;
+              if (width_ < ui::side_by_side_from)
+                drawer_ = false;
+            },
+            [&](const copy_answer &asking) {
+              copied_ = text_of(asking.said);
+            }, // Asked again: what answered is taken away -- this one and every
+               // one                   // after it -- and the question above it
+               // left open to be answered again.                   [&](const
+               // regenerate_answer &asking) { cut_away(asking.said); },
+               // [&](const fork_answer &asking) {                     // Into a
+               // chat of its own: everything asked and answered up to this //
+               // answer, and no answer after it.                     const
+               // conversation_id made{"chat-" + std::to_string(++chat_count_)};
+               // conversation forked{made, root_.accounts.empty() ?
+               // account_id{} : root_.accounts.front().id, "Forked chat",
+               // conversation_kind::direct, ++said_count_}; forked.model =
+               // model_of(asking.chat);                     forked.tokens =
+               // tokens_up_to(asking.chat, asking.said);
+               // root_.conversations.insert(root_.conversations.begin(),
+               // std::move(forked));                     const std::size_t
+               // up_to = said_at(asking.said);                     for
+               // (std::size_t at = 0; at + 1 < up_to; ++at) { message copy =
+               // root_.messages[at];                       if (copy.chat !=
+               // asking.chat)                         continue; copy.chat =
+               // made;                       copy.id = message_id{made.value +
+               // "-" + copy.id.value};
+               // root_.messages.push_back(std::move(copy)); } root_.opened =
+               // made;                   },                   [&](const
+               // share_answer &) {},                   [&](const delete_answer
+               // &asking) { cut_away(asking.said); }, [&](const edit_draft &)
+               // {},
+            [&](const set_query &asking) { query_ = asking.text; },
+            [&](const toggle_drawer &) { drawer_ = !drawer_; },
+            [&](const open_settings &) { settings_ = true; },
+            [&](const close_settings &) { settings_ = false; },
+            [&](const set_looks &asking) {
+              shown_ = asking.shown;
+              recolour();
+            },
+            [&](const set_amoled &asking) {
+              shown_.amoled = asking.enabled;
+              recolour();
+            }},
+        one);
   }
 
   // The window's own size, as the layout of the last frame left it.
@@ -78,15 +126,68 @@ class screens {
   void before_frame(double) {
     for (const request &one : asked_.drain())
       take(one);
-    scene_.root().again(look_, root_, shown_, dark_, settings_, drawer_, width_, height_, &asked_);
+    scene_.root().again(look_, root_, shown_, dark_, settings_, drawer_, width_,
+                        height_, &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
   [[nodiscard]] const chats_root &root() const noexcept { return root_; }
   [[nodiscard]] bool dark() const noexcept { return dark_; }
 
- private:
+private:
   void recolour() { look_ = ui::paints_of(colors_of(shown_, true), dark_); }
+
+  // Where in the messages one said is -- one past its own place, so that a
+  // fork copies everything said before it.
+  [[nodiscard]] std::size_t said_at(const message_id &said) const {
+    for (std::size_t at = 0; at < root_.messages.size(); ++at)
+      if (root_.messages[at].id == said)
+        return at + 1;
+    return 0;
+  }
+  // What one said reads, or nothing where there is no such said.
+  [[nodiscard]] std::string text_of(const message_id &said) const {
+    for (const message &one : root_.messages)
+      if (one.id == said)
+        return one.text;
+    return {};
+  }
+  // Which model answers in a chat, as the model keeps it.
+  [[nodiscard]] std::string model_of(const conversation_id &chat) const {
+    for (const conversation &one : root_.conversations)
+      if (one.id == chat)
+        return one.model;
+    return {};
+  }
+  // What one said and everything before it in its chat was worth.
+  [[nodiscard]] std::uint32_t tokens_up_to(const conversation_id &chat,
+                                           const message_id &said) const {
+    std::uint32_t out = 0;
+    for (const message &one : root_.messages) {
+      if (one.chat != chat)
+        continue;
+      out += one.tokens;
+      if (one.id == said)
+        break;
+    }
+    return out;
+  }
+  // This one away, and every one after it in its chat: what rub out and ask
+  // again both come down to, the one leaving the question above it to be
+  // answered again.
+  void cut_away(const message_id &said) {
+    const std::size_t found = said_at(said);
+    if (found == 0)
+      return;
+    const std::size_t at = found - 1;
+    const conversation_id chat = root_.messages[at].chat;
+    std::vector<message> kept;
+    kept.reserve(root_.messages.size());
+    for (std::size_t one = 0; one < root_.messages.size(); ++one)
+      if (one < at || root_.messages[one].chat != chat)
+        kept.push_back(root_.messages[one]);
+    root_.messages = std::move(kept);
+  }
 
   window_scene scene_{std::in_place};
   chats_root root_;
@@ -98,8 +199,12 @@ class screens {
   bool settings_ = false;
   bool drawer_ = true;
   moment said_count_ = 1;
+  std::size_t chat_count_ = 0;
+  // What copy last took whole: said nowhere yet, because what a host's
+  // clipboard is asked through is not written here.
+  std::string copied_;
   float width_ = 1100.0f;
   float height_ = 720.0f;
 };
 
-}  // namespace pchat::app
+} // namespace pchat::app
