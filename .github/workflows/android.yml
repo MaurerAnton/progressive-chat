@@ -4,7 +4,28 @@ name: android
 on:
   push:
     branches: [main]
+    # Only what the APK is made of. A build takes three quarters of an hour
+    # for each machine it is made for, and every push ran one for the last
+    # one's own sake -- for a note written down, a workflow of its own, a
+    # page's words -- until the ones before it were put out by hand. What
+    # changes nothing in the APK asks nothing of either line.
+    paths:
+      - 'src/**'
+      - 'android/**'
+      - 'cmake/**'
+      - 'tools/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/android.yml'
+      - '.github/actions/**'
   pull_request:
+    paths:
+      - 'src/**'
+      - 'android/**'
+      - 'cmake/**'
+      - 'tools/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/android.yml'
+      - '.github/actions/**'
   workflow_dispatch:
 
 permissions:
