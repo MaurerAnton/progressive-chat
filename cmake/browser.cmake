@@ -19,7 +19,10 @@ target_link_options(progressive-chat PRIVATE
   -sASYNCIFY_STACK_SIZE=2097152
   -sALLOW_MEMORY_GROWTH=1
   -sINITIAL_MEMORY=64MB
-  -sSTACK_SIZE=1MB
+  # A megabyte is what a thread that asked for none is given, and a window
+  # built of a column of rows does not fit in it: it went before anything was
+  # drawn, and what the page said was only that its renderer had gone.
+  -sSTACK_SIZE=4MB
   -sPTHREAD_POOL_SIZE=4
   -sENVIRONMENT=web,worker
   -sEXIT_RUNTIME=0

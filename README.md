@@ -95,6 +95,17 @@ cannot say. `tools/package_web.py` puts the four and the client together into
 one directory, named by what the client is made of so that a page left open
 does not keep one that has been replaced.
 
+## Where it stands
+
+Said again every day this has been a program, newest first: what it was on
+that day, not what it is meant to be one day.
+
+### 2026-11-04
+
+Thousands of lines of code were written in 24 hours. The build is almost
+fully debugged across desktop, web, and Android. We are near a runnable
+app.
+
 ## License
 
 Two licenses, said file by file in every one's first line:
@@ -107,9 +118,10 @@ Two licenses, said file by file in every one's first line:
 The whole is therefore **GPL v3**, and only GPL v3: nothing here may be used
 under any later version of either, and nothing here is dual-licensed.
 
-The icon the app carries, and the one the page carries with it
-(`android/res`, `web/icon.svg`), is progressive-chat's own: the bubble with
-what grows in it, as `progressive-chat/progressive-android` ships it.
+The icon the app carries (`android/icon-source.png`, cut to every density and
+both shapes by `tools/make_icons.py`) is progressive-chat's own: the picture
+`progressive-chat/progressive-android` ships. The one the page carries with it
+(`web/icon.svg`) is not it yet.
 
 The one thing here that is neither is `fonts/`: Open Sans, regular and
 semibold, embedded in the binary as every piece of text in the window is

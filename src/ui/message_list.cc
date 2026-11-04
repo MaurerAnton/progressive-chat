@@ -442,7 +442,14 @@ struct message_row : nodes::Stack {
 // The messages of one conversation, in a column of their own: the rows' own
 // flow, so each begins under the height the one before it came to.
 struct message_screen : nodes::Stack {
-  std::array<message_row, max_messages> fRows;
+  // Kept on the heap, and not as a member of this node: a column of
+  // thirty-two rows is a third of a thousand nodes, which is not a thing a
+  // machine's stack was asked to hold. As a member it was, twice over --
+  // once where it was made, once where it was moved to -- and what it is
+  // built on, a browser's megabyte and an activity's thread alike, went
+  // before the first frame was drawn.
+  std::unique_ptr<std::array<message_row, max_messages>> fRows =
+      std::make_unique<std::array<message_row, max_messages>>();
 
   message_screen() {
     // What is said begins below the band the bar fades out in: the band is
@@ -455,7 +462,7 @@ struct message_screen : nodes::Stack {
     fStack = {.direction = nodes::direction::vertical{},
               .spacingY = bubble_gap,
               .wrap = false};
-    for (auto &row : fRows)
+    for (auto &row : *fRows)
       row.blank();
   }
 
@@ -470,19 +477,19 @@ struct message_screen : nodes::Stack {
     bool last_outgoing = false;
     for (std::size_t at = 0; at < max_messages; ++at) {
       if (at >= said.size()) {
-        fRows[at].blank();
+        (*fRows)[at].blank();
         continue;
       }
       const message &one = *said[at];
       // Left above it: room, where it is an answer, or where it follows one.
       const bool head = !one.outgoing || last_outgoing;
-      fRows[at].again(sink, look, one, head, room);
+      (*fRows)[at].again(sink, look, one, head, room);
       last_outgoing = one.outgoing;
     }
   }
 
   void forEachChild(auto &&f) {
-    for (auto &row : fRows)
+    for (auto &row : *fRows)
       f(row);
   }
 };
