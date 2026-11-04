@@ -24,6 +24,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/desktop-setup
+      # Skia and SDL3 are built here, and only here: kept between runs, so
+      # that a check is the program's own build and nothing else.
+      - uses: actions/cache@v4
+        with:
+          path: build
+          key: check-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake', '.github/workflows/check.yml', '.github/actions/desktop-setup/action.yml') }}
       - name: Configure
         run: |
           cmake -S . -B build -G Ninja \
