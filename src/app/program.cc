@@ -19,7 +19,7 @@ struct program {
   screens view;
   skiff::scene::detail::PlainPaint paint;
 
-  [[nodiscard]] skiff::scene::Scene<ui::window_type> &window() noexcept { return view.window(); }
+  [[nodiscard]] window_scene &window() noexcept { return view.window(); }
   [[nodiscard]] skiff::scene::detail::PlainPaint &painting() noexcept { return paint; }
 
   // Between events: what was asked for, done, and what the window shows drawn

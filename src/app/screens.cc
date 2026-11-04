@@ -24,12 +24,16 @@ namespace scene = skiff::scene;
 
 export namespace pchat::app {
 
+// The tree the host draws, and what a Scene holds it as: said here, so that
+// the program needs nothing of the screens but these.
+using window_scene = scene::Scene<ui::window_type>;
+
 // Everything shown, and what is done with what was asked for.
 class screens {
  public:
   screens() : root_(sample_chats()), shown_(default_looks), look_(ui::paints_of(colors_of(shown_, true), true)) {}
 
-  [[nodiscard]] scene::Scene<ui::window_type> &window() noexcept { return scene_; }
+  [[nodiscard]] window_scene &window() noexcept { return scene_; }
 
   // Answered between frames: what the controls asked for, oldest first.
   void take(const request &one) {
@@ -78,7 +82,7 @@ class screens {
  private:
   void recolour() { look_ = ui::paints_of(colors_of(shown_, true), dark_); }
 
-  scene::Scene<ui::window_type> scene_{std::in_place};
+  window_scene scene_{std::in_place};
   chats_root root_;
   looks shown_;
   ui::paints look_;
