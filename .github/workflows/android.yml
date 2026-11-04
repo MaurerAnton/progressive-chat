@@ -7,10 +7,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-concurrency:
-  group: android-${{ github.ref }}-${{ matrix.abi }}
-  cancel-in-progress: false
-
 permissions:
   contents: read
 
@@ -22,6 +18,11 @@ jobs:
   library:
     runs-on: ubuntu-24.04
     timeout-minutes: 350
+    # One ABI does not take the other with it: each keeps its own line of
+    # builds, and neither's own wait is cancelled by the other's.
+    concurrency:
+      group: android-${{ github.ref }}-${{ matrix.abi }}
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:
