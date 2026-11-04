@@ -121,7 +121,12 @@ if(PCHAT_GL)
 endif()
 set(pchat_skiff_options)
 if(PCHAT_BROWSER)
-  list(APPEND pchat_skiff_options "SKIFF_WEB ON" "SKIFF_EMSCRIPTEN_THREADS ON")
+  # No threads on a page: shared memory needs COOP and COEP, and a host that
+  # serves files says neither. skiff is asked for none, and so is
+  # skiff-widgets, which reads the same option and would otherwise build
+  # against a std module made with them.
+  list(APPEND pchat_skiff_options "SKIFF_WEB ON" "SKIFF_EMSCRIPTEN_THREADS OFF")
+  cme_options(skiff-widgets "SKIFF_EMSCRIPTEN_THREADS OFF")
 endif()
 list(APPEND pchat_skiff_options "SKIFF_WEB_DOM memory")
 if(NOT PCHAT_UI)

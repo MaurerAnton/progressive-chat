@@ -50,16 +50,21 @@ jobs:
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_CXX_FLAGS_DEBUG="-Os -g0" \
             -DCMAKE_C_FLAGS_DEBUG="-Os -g0" \
-            -DCMAKE_C_FLAGS="-pthread -msimd128" \
-            -DCMAKE_CXX_FLAGS="-stdlib=libc++ -fexceptions -pthread -msimd128" \
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++ -fexceptions" \
             -DCMAKE_CXX_STDLIB_MODULES_JSON="$PCHAT_MODULES_JSON" \
-            -DCMAKE_EXE_LINKER_FLAGS="-pthread -msimd128" \
             -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS="$HOME/.cache/pchat-emsdk/upstream/bin/clang-scan-deps" \
             -DPCHAT_TESTS=OFF
       - name: Build
         run: cmake --build build-web --target progressive-chat -- -k 0
       - name: Say how big it came out
         run: ls -l build-web/*.wasm build-web/*.js 2>/dev/null || true
+      - name: The page, in one directory
+        run: |
+          set -euo pipefail
+          mkdir -p build-web/web
+          cp build-web/progressive-chat.html build-web/progressive-chat.js \
+             build-web/progressive-chat.wasm build-web/web/
+          ls -l build-web/web
       - name: Upload the page
         uses: actions/upload-pages-artifact@v4
         with:
