@@ -8,7 +8,7 @@ build and the next.
 
 - [x] **The icon is wrong** -- done 2026-11-04: what every density and both
       shapes of it are made of now is progressive-android's own 512x512
-      picture (`android/res/icon-source.png`), cut by `tools/make_icons.py`.
+      picture (`android/icon-source.png`), cut by `tools/make_icons.py`.
       The same picture has still not been given to the browser's tab
       (`web/icon.svg`) or to a desktop window, which nobody has looked at.
 

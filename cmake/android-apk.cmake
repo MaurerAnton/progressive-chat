@@ -12,17 +12,28 @@
 function(pchat_add_android_apk target)
   # The icon the launcher shows, in every form a phone may ask for it in: an
   # adaptive one -- its plate and its figure apart -- since API 26, and a
-  # plate of each size for what is older than that.
+  # plate of each size, square and round, for what is older than that. What
+  # is named here is named because a build must not go on without it; aapt2
+  # is given the whole tree, so what is in it besides these needs no saying.
   set(PCHAT_ANDROID_RESOURCES
     drawable/ic_launcher_background.xml
-    drawable/ic_launcher_foreground.xml
+    drawable-mdpi/ic_launcher_foreground.png
+    drawable-hdpi/ic_launcher_foreground.png
+    drawable-xhdpi/ic_launcher_foreground.png
+    drawable-xxhdpi/ic_launcher_foreground.png
+    drawable-xxxhdpi/ic_launcher_foreground.png
     mipmap-anydpi-v26/ic_launcher.xml
     mipmap-anydpi-v26/ic_launcher_round.xml
     mipmap-mdpi/ic_launcher.png
+    mipmap-mdpi/ic_launcher_round.png
     mipmap-hdpi/ic_launcher.png
+    mipmap-hdpi/ic_launcher_round.png
     mipmap-xhdpi/ic_launcher.png
+    mipmap-xhdpi/ic_launcher_round.png
     mipmap-xxhdpi/ic_launcher.png
+    mipmap-xxhdpi/ic_launcher_round.png
     mipmap-xxxhdpi/ic_launcher.png
+    mipmap-xxxhdpi/ic_launcher_round.png
     values/colors.xml
     CACHE STRING "The files of android/res compiled and linked into the APK")
   set(PCHAT_ANDROID_FRAMEWORK_RES_APK "${MANDK_ROOT}/tools/framework-res.apk" CACHE FILEPATH
