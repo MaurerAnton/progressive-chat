@@ -73,38 +73,41 @@ struct app_window : scene::Node {
     const float left = aside ? breadth : 0.0f;
     fPaper.setColour(look.paper);
     // The messages' own ground, beside the drawer.
-    fMessages.apply({.anchor = scene::anchor::kTopLeft, .x = left, .y = 0.0f, .width = column,
-                     .height = height, .background = look.paper, .visible = in_chat});
+    // A size in pixels, not a share: what these were made to fill once is
+    // said again here as nothing, or the number is read as parts of one.
+    fMessages.apply({.anchor = scene::anchor::kTopLeft, .x = left, .y = 0.0f, .relativeSize = scene::axes::kNone,
+                     .width = column, .height = height, .background = look.paper, .visible = in_chat});
     // The drawer: beside the messages when the window is wide, out of the way
     // when it is not.
     const float drawer_breadth = wide ? breadth : width;
-    fDrawer.apply({.anchor = scene::anchor::kTopLeft, .x = 0.0f, .y = 0.0f, .width = drawer_breadth,
-                   .height = height, .visible = aside, .background = look.drawer});
+    fDrawer.apply({.anchor = scene::anchor::kTopLeft, .x = 0.0f, .y = 0.0f, .relativeSize = scene::axes::kNone,
+                   .width = drawer_breadth, .height = height, .visible = aside, .background = look.drawer});
     if (aside) {
-      fDrawer.apply({.anchor = scene::anchor::kTopLeft, .x = 0.0f, .y = 0.0f, .width = drawer_breadth,
-                     .height = height, .visible = true, .background = look.drawer});
+      fDrawer.apply({.anchor = scene::anchor::kTopLeft, .x = 0.0f, .y = 0.0f, .relativeSize = scene::axes::kNone,
+                     .width = drawer_breadth, .height = height, .visible = true, .background = look.drawer});
       fDrawer.again(look, root, opened, asked);
     }
     // The bar, over the top of the messages.
-    fTop.apply({.anchor = scene::anchor::kTopLeft, .x = left, .y = 0.0f, .width = column, .height = top_scrim,
-                .visible = in_chat});
+    fTop.apply({.anchor = scene::anchor::kTopLeft, .x = left, .y = 0.0f, .relativeSize = scene::axes::kNone,
+                .width = column, .height = top_scrim, .visible = in_chat});
     // The pill that opens the drawer is there where a drawer can be opened:
     // a window wide enough to keep it beside the messages has none to open.
     fTop.again(asked, look, !wide, title_of(root, opened));
     // Over what the messages were, where the drawer has come over them:
     // pressed, it puts the drawer away again.
-    fShade.apply({.anchor = scene::anchor::kTopLeft, .x = 0.0f, .y = 0.0f, .width = width, .height = height,
-                  .visible = !wide && drawer_open});
+    fShade.apply({.anchor = scene::anchor::kTopLeft, .x = 0.0f, .y = 0.0f, .relativeSize = scene::axes::kNone,
+                  .width = width, .height = height, .visible = !wide && drawer_open});
     fShade.again(asked, app::toggle_drawer{}, look.scrim);
     // The messages, in what scrolls, between the bar and the card.
     auto &messages = std::get<0>(fList.fChildren);
     messages.again(look, root, opened, column, shown.font_scale);
-    fList.apply({.anchor = scene::anchor::kTopLeft, .x = left, .y = top_bar_height, .width = column,
-                 .height = std::max(height - top_bar_height - 56.0f - 2.0f * edge, 40.0f),
+    fList.apply({.anchor = scene::anchor::kTopLeft, .x = left, .y = top_bar_height, .relativeSize = scene::axes::kNone,
+                 .width = column, .height = std::max(height - top_bar_height - 56.0f - 2.0f * edge, 40.0f),
                  .visible = in_chat});
     // The card at the foot.
     fComposer.apply({.anchor = scene::anchor::kBottomLeft, .origin = scene::anchor::kBottomLeft, .x = left,
-                     .y = 0.0f, .width = column, .height = 56.0f + 2.0f * edge, .visible = in_chat});
+                     .y = 0.0f, .relativeSize = scene::axes::kNone, .width = column,
+                     .height = 56.0f + 2.0f * edge, .visible = in_chat});
     for (const conversation &chat : root.conversations)
       if (chat.id.value == opened)
         fComposer.again(look, chat.id, asked);

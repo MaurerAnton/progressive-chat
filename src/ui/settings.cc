@@ -106,27 +106,30 @@ struct settings_screen : scene::Node {
     fHeading.setColour(look.text);
     fLooks.setColour(look.dim);
     fDivider.setColour(look.outline);
+    // Sizes in pixels: a row made to take the whole of its column when the
+    // page was built is told again here how wide it is to be, not how much
+    // of its parent it fills.
     fDivider.apply({.anchor = scene::anchor::kTopLeft, .x = 20.0f, .y = 76.0f + 48.0f * static_cast<float>(max_seeds),
-                    .width = breadth - 40.0f, .height = 1.0f});
+                    .relativeSize = scene::axes::kNone, .width = breadth - 40.0f, .height = 1.0f});
     for (std::size_t at = 0; at < max_seeds; ++at) {
       const bool chosen = seeds_offered[at].preset == shown.preset;
       const color_scheme scheme = scheme_for(seeds_offered[at].preset, shown.style, dark);
-      const scene::Spec spec{.anchor = scene::anchor::kTopLeft, .x = 16.0f,
+      const scene::Spec spec{.anchor = scene::anchor::kTopLeft, .x = 16.0f, .relativeSize = scene::axes::kNone,
                              .y = 108.0f + static_cast<float>(at) * 52.0f, .width = breadth - 32.0f,
                              .height = 48.0f, .cornerRadius = 14.0f};
       fSeeds[at].again(spec, look, scheme.primary, seeds_offered[at].name, chosen);
     }
     const float top = 108.0f + 52.0f * static_cast<float>(max_seeds) + 16.0f;
-    const scene::Spec row{.anchor = scene::anchor::kTopLeft, .x = 16.0f, .width = breadth - 32.0f, .height = 48.0f,
-                          .cornerRadius = 14.0f};
-    fBlack.again({.anchor = row.anchor, .x = row.x, .y = top, .width = row.width, .height = row.height,
-                    .cornerRadius = row.cornerRadius},
+    const scene::Spec row{.anchor = scene::anchor::kTopLeft, .x = 16.0f, .relativeSize = scene::axes::kNone,
+                          .width = breadth - 32.0f, .height = 48.0f, .cornerRadius = 14.0f};
+    fBlack.again({.anchor = row.anchor, .x = row.x, .y = top, .relativeSize = scene::axes::kNone, .width = row.width,
+                    .height = row.height, .cornerRadius = row.cornerRadius},
                    look, "Pure black", shown.amoled);
-    fLarge.again({.anchor = row.anchor, .x = row.x, .y = top + 52.0f, .width = row.width, .height = row.height,
-                    .cornerRadius = row.cornerRadius},
+    fLarge.again({.anchor = row.anchor, .x = row.x, .y = top + 52.0f, .relativeSize = scene::axes::kNone,
+                    .width = row.width, .height = row.height, .cornerRadius = row.cornerRadius},
                    look, "Larger type", shown.font_scale > 1.0f);
-    fSystemFont.again({.anchor = row.anchor, .x = row.x, .y = top + 104.0f, .width = row.width,
-                         .height = row.height, .cornerRadius = row.cornerRadius},
+    fSystemFont.again({.anchor = row.anchor, .x = row.x, .y = top + 104.0f, .relativeSize = scene::axes::kNone,
+                         .width = row.width, .height = row.height, .cornerRadius = row.cornerRadius},
                         look, "System font", shown.font == font_choice::system);
   }
 
