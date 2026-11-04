@@ -14,18 +14,17 @@ build and the next.
 
 ## Known not to be done
 
-- [ ] **The program goes as soon as it starts**, on an android and in a
-      browser both, since the design was drawn (9e989cb) -- every build
-      since it. Where it goes on a desktop is known now
-      (`.github/workflows/crash.yml`, address and undefined sanitizers):
-      inside Skia, asking GL what it knows -- `GrGLExtensions::init`, given
-      a pointer that is nothing because the window behind it had no GL at
-      all. Whether an android's going is the same going has not been said
-      anywhere yet: what it wants is `adb logcat -b crash` off the phone.
-      Two things are guessed at meanwhile, neither shown true: the window's
-      tree of nodes being too tall for a thread given a megabyte (rows are
-      on the heap now, and the APK asks for sixteen megabytes), and what is
-      behind the window being no GL rather than GL.
+- [ ] **The program goes as soon as it starts -- on an android.** In a
+      browser it does not any more: the page paints, 1532 nodes of it, and
+      what it says to be read out of it is the whole of the design. What
+      had gone was the probe's own browser, told `--disable-gpu`, which is
+      told to have no WebGL at all -- and Skia asking GL what it knows is
+      given nothing, which is the same going a desktop with no window has
+      (`.github/workflows/crash.yml`, address and undefined sanitizers,
+      `GrGLExtensions::init`). So: where there is no GL, in any of the
+      three, this program goes before its first frame. Whether the phone
+      is one of those places has not been said yet -- `adb logcat -b crash`
+      off it would say it in one line.
 
 - [ ] The back end: `src/app/sample.cc` answers for now, so nothing that
       is counted -- tokens, tool calls, how long an answer took -- is
@@ -33,5 +32,8 @@ build and the next.
 - [ ] Copy to the clipboard only keeps the text in the program
       (`copied_`); nothing carries it to the host's own clipboard.
 - [ ] Search does nothing yet.
-- [ ] The probe (`.github/workflows/probe.yml`) has not yet come back with
-      a picture: its renderer goes before the page has started.
+- [x] **The probe** -- done 2026-11-04: it asks for SwiftShader now and so
+      has a WebGL to draw through, and it came back with 1532 nodes and the
+      page's whole text. What it still comes back without is the narrow
+      page: 390x844 with the worker blocked does not start, and nobody has
+      looked at why.
