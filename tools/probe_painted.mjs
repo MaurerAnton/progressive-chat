@@ -18,21 +18,38 @@ const shoot = async (browser, name, viewport, wants_touch) => {
     console.log(`started[${name}]: no -- still saying it is starting`);
   }
   // Long enough for the first frames to be painted and the words to be shaped.
-  await page.waitForTimeout(15000);
-  const said = await page.evaluate(() => {
-    const host = document.getElementById('skiff');
-    return {
-      children: host ? host.querySelectorAll('*').length : 0,
-      text: (host?.innerText ?? host?.textContent ?? '').replace(/\s+/g, ' ').slice(0, 4000),
-    };
-  });
-  console.log(`nodes[${name}]: ${said.children}`);
-  console.log(`text[${name}]: ${said.text}`);
-  await page.screenshot({ path: `${name}.png` });
-  await context.close();
+  // Said before anything else, and everything after it said even if the page
+  // is afterwards taken: a browser given this much to draw has been known to
+  // go, and what it said before going is what answers the question.
+  try {
+    await page.waitForTimeout(6000);
+    const said = await page.evaluate(() => {
+      const host = document.getElementById('skiff');
+      return {
+        children: host ? host.querySelectorAll('*').length : 0,
+        text: (host?.innerText ?? host?.textContent ?? '').replace(/\s+/g, ' ').slice(0, 4000),
+      };
+    });
+    console.log(`nodes[${name}]: ${said.children}`);
+    console.log(`text[${name}]: ${said.text}`);
+    await page.screenshot({ path: `${name}.png` });
+  } catch (error) {
+    console.log(`gone[${name}]: ${String(error).slice(0, 300)}`);
+  }
+  await context.close().catch(() => {});
 };
 
-const browser = await chromium.launch({ args: ['--enable-features=SharedArrayBuffer'] });
+// Nothing of a GPU is here to draw with, and a renderer that asks the one a
+// runner has not got goes rather than draws: said so to Chromium instead.
+const browser = await chromium.launch({
+  args: [
+    '--no-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--use-gl=swiftshader',
+    '--enable-features=SharedArrayBuffer',
+  ],
+});
 await shoot(browser, 'painted-wide', { width: 1280, height: 900 }, false);
 await shoot(browser, 'painted-narrow', { width: 390, height: 844 }, true);
 await browser.close();
