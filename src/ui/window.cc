@@ -57,6 +57,9 @@ struct app_window : scene::Node {
   // Everything drawn again from the model, for this size of window.
   void refresh(const paints &look, const chats_root &root, const looks &shown, bool dark,
                bool settings_open, bool drawer_open, float width, float height, app::requests *asked) {
+    // The conversation the window has open, as it is named: none of them,
+    // where none is open.
+    const std::string opened = root.opened ? root.opened->value : std::string{};
     const bool wide = width >= side_by_side_from;
     const float breadth = std::min(drawer_width, std::max(width * 0.32f, 280.0f));
     const bool in_chat = wide || !drawer_open;
@@ -75,15 +78,15 @@ struct app_window : scene::Node {
     if (aside) {
       fDrawer.apply({.anchor = scene::anchor::kTopLeft, .x = 0.0f, .y = 0.0f, .width = drawer_breadth,
                      .height = height, .visible = true, .background = look.drawer});
-      fDrawer.refresh(look, root, root.opened.value, asked);
+      fDrawer.refresh(look, root, opened, asked);
     }
     // The bar, over the top of the messages.
     fTop.apply({.anchor = scene::anchor::kTopLeft, .x = left, .y = 0.0f, .width = column, .height = top_scrim,
                 .visible = in_chat});
-    fTop.refresh(look, title_of(root, root.opened.value));
+    fTop.refresh(look, title_of(root, opened));
     // The messages, in what scrolls, between the bar and the card.
     auto &messages = std::get<0>(fList.fChildren);
-    messages.refresh(look, root, root.opened.value, column, shown.font_scale);
+    messages.refresh(look, root, opened, column, shown.font_scale);
     fList.apply({.anchor = scene::anchor::kTopLeft, .x = left, .y = top_bar_height, .width = column,
                  .height = std::max(height - top_bar_height - 56.0f - 2.0f * edge, 40.0f),
                  .visible = in_chat});
@@ -92,7 +95,7 @@ struct app_window : scene::Node {
     fComposer.apply({.anchor = scene::anchor::kBottomLeft, .origin = scene::anchor::kBottomLeft, .x = left,
                      .y = 0.0f, .width = column, .height = 56.0f + 2.0f * edge, .visible = in_chat});
     for (const conversation &chat : root.conversations)
-      if (chat.id.value == root.opened.value)
+      if (chat.id.value == opened)
         fComposer.refresh(look, chat.id, asked);
     // The settings page, over everything, when it is opened.
     if (settings_open)
