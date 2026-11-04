@@ -6,6 +6,8 @@ written from nothing on the stack [mux](https://github.com/j4niwzis/mux) uses
 -- C++26 modules, clang, CMake, Ninja, SDL3 and Skia through skiff -- so that
 it builds for the desktop, for the web and for Android from one set of files.
 
+Started **3 November 2026, 21:07 UTC** -- the repository's first commit.
+
 The back end is not here yet. What the screens show today is a sample, kept in
 `src/app/sample.cc`, and every change the screens ask for is answered in
 memory until a client answers them instead.

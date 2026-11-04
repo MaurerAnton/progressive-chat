@@ -70,9 +70,22 @@ function(pchat_add_android_apk target)
   # What the dex is written by is a program of this machine's own, and of
   # modules too -- that asks for clang 23 and its libc++, and not for the
   # default compiler, which is a gcc with no `import std` to give.
-  find_program(CME_BUILD_MACHINE_CXX_COMPILER NAMES clang++-23 clang++
-    HINTS "${llvm_bin}" REQUIRED)
-  set(CME_BUILD_MACHINE_CXX_FLAGS "-stdlib=libc++")
+  # cmake-everywhere asks for it by name, and keeps it in its own cache
+  # entry -- which a find_program of the same name may not overwrite.
+  if(CME_BUILD_MACHINE_CXX_COMPILER STREQUAL "")
+    find_program(pchat_host_cxx NAMES clang++-23 clang++ HINTS "${llvm_bin}")
+    if(pchat_host_cxx)
+      get_filename_component(pchat_host_cxx "${pchat_host_cxx}" NAME)
+    else()
+      set(pchat_host_cxx "clang++-23")
+    endif()
+    set(CME_BUILD_MACHINE_CXX_COMPILER "${pchat_host_cxx}" CACHE STRING
+      "C++ compiler for programs this build runs rather than ships" FORCE)
+  endif()
+  if(CME_BUILD_MACHINE_CXX_FLAGS STREQUAL "")
+    set(CME_BUILD_MACHINE_CXX_FLAGS "-stdlib=libc++" CACHE STRING
+      "Flags for programs this build runs rather than ships" FORCE)
+  endif()
   cme_declare_port(NAME sdl-native-dex PROVIDES sdl-native-dex VERSION 1.0
     SOURCE_DIR "${dex_source}" MACHINE build
     PROGRAMS "sdl-native-dex=sdl::native-dex" TARGETS sdl::native-dex)
