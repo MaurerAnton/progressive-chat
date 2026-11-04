@@ -125,5 +125,9 @@ gh(f'repos/{repo}/git/refs/heads/{branch}', '--method', 'PATCH',
    '-f', f'sha={commit["sha"]}')
 print(f'[{branch} {commit["sha"][:12]}] {args.message.splitlines()[0]}')
 # What is up and what is here are one now, and the branch is where it is.
+# Kept mixed and not soft: soft moves what git thinks HEAD is and leaves
+# what git thinks is staged behind it, so that what it says is next to be
+# committed is what the commit before this one said -- a whole round of
+# it seen as undone.
 git('fetch', '-q', 'origin', branch)
-git('reset', '-q', '--soft', f'origin/{branch}')
+git('reset', '-q', '--mixed', f'origin/{branch}')

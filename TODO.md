@@ -24,7 +24,10 @@ build and the next.
       `GrGLExtensions::init`). So: where there is no GL, in any of the
       three, this program goes before its first frame. Whether the phone
       is one of those places has not been said yet -- `adb logcat -b crash`
-      off it would say it in one line.
+      off it would say it in one line -- or off nothing but the phone itself
+      now, for the APK says its own going: signal, code and where, written
+      to the log before it goes, and read with `adb logcat -d -s
+      progressive-chat`.
 
 - [ ] The back end: `src/app/sample.cc` answers for now, so nothing that
       is counted -- tokens, tool calls, how long an answer took -- is
