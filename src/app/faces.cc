@@ -3,7 +3,7 @@
 // as the window takes a program's (skiff.platform.fonts): Open Sans, its
 // regular and its semibold, so that bold text is drawn with the semibold
 // rather than one thickened. Open Sans is SIL Open Font License 1.1
-// (fonts/OFL.txt).
+// (fonts/OFL).
 //
 // Without these a build in a browser draws plates, rows and bubbles and not
 // one word in them: there is no system whose fonts could be asked instead,

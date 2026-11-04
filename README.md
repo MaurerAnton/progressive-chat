@@ -88,7 +88,7 @@ under any later version of either, and nothing here is dual-licensed.
 The one thing here that is neither is `fonts/`: Open Sans, regular and
 semibold, embedded in the binary as every piece of text in the window is
 drawn with them, and licensed to anyone under the SIL Open Font License 1.1
-(`fonts/OFL.txt`), which is compatible with both.
+(`fonts/OFL`), which is compatible with both.
 
 ## Thanks
 
