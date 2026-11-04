@@ -7,7 +7,9 @@
 #include <android/native_activity.h>
 
 #include <csignal>
+#include <cstddef>
 #include <cstdint>
+#include <initializer_list>
 #include <pthread.h>
 
 int pchat_main();
