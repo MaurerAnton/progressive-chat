@@ -27,10 +27,10 @@ Three targets, one program:
 | ------- | ------------------------------------------- | ------------------------------ |
 | desktop | `cmake` + Ninja, clang 23, SDL3             | a window of its own            |
 | web     | the same cmake through Emscripten           | a page served by GitHub Pages  |
+| android | the same cmake through a self-built NDK     | an APK                         |
 
 The page is built and published by `web.yml`, and is served at
 <https://progressive-chat.github.io/progressive-chat/>.
-| android | the same cmake through a self-built NDK     | an APK                         |
 
 ## To build it
 
@@ -50,7 +50,14 @@ cmake --build build --target progressive-chat
 The web and the APK cross-compile from the same cmake: `-DCMAKE_TOOLCHAIN_FILE`
 of Emscripten's own for the page, and of a clang-23 NDK made from
 `minimal-android-ndk.cpp` for Android (which `.github/workflows/android.yml`
-does).
+does). The APK is the artifact that build publishes: `cmake/android-apk.cmake`
+links the manifest of `android/AndroidManifest.xml` against the platform's own
+resource package, and has the activity's classes written out by a script of the
+SDL fork's -- no Java is compiled here, that script emits a dex itself --
+`tools/android_apk.py` puts those two and every library they load with into an
+archive, which `zipalign` lines up and `apksigner` signs. One key of this
+build's own is made for it, so that what an Android refuses -- an APK no key
+was put to -- is not what comes out.
 
 The page is four files of its own beside the linked client: `web/index.html`,
 the element skiff writes the window into, `web/bootstrap.js`, which isolates
