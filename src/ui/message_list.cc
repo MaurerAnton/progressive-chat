@@ -125,7 +125,11 @@ struct message_screen : nodes::Stack {
   std::array<message_row, max_messages> fRows;
 
   message_screen() {
-    this->apply({.fillX = true, .autoSize = scene::axes::kY, .padding = scene::Margin::all(edge)});
+    // What is said begins below the band the bar fades out in: the band is
+    // over the top of the column, so the first thing said would otherwise
+    // stand under it, dimmed by the paper's own colour over it.
+    this->apply({.fillX = true, .autoSize = scene::axes::kY,
+                 .padding = scene::Margin{top_scrim - top_bar_height + edge, edge, edge, edge}});
     fStack = {.direction = nodes::direction::vertical{}, .spacingY = bubble_gap, .wrap = false};
     for (auto &row : fRows)
       row.blank();
