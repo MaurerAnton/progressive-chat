@@ -59,7 +59,10 @@ SDL fork's -- no Java is compiled here, that script emits a dex itself --
 `tools/android_apk.py` puts those two and every library they load with into an
 archive, which `zipalign` lines up and `apksigner` signs. One key of this
 build's own is made for it, so that what an Android refuses -- an APK no key
-was put to -- is not what comes out.
+was put to -- is not what comes out. The one installable is the
+`progressive-chat-android-arm64-v8a-*` artifact of the newest android run:
+
+<https://github.com/progressive-chat/progressive-chat/actions/workflows/android.yml>
 
 The page is four files of its own beside the linked client: `web/index.html`,
 the element skiff writes the window into, `web/bootstrap.js`, which isolates
