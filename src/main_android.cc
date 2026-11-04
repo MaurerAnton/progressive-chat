@@ -2,7 +2,7 @@
 // progressive-chat as an APK: SDL3's own activity, which starts the run once
 // the machine has given us our own directory tree.
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_system.h>
+#include <SDL3/SDL_nativeactivity.h>
 #include <android/native_activity.h>
 #include <jni.h>
 
