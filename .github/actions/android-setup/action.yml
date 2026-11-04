@@ -71,24 +71,6 @@ runs:
         git checkout FETCH_HEAD
         test -f build-scripts/native-activity/dex/CMakeLists.txt
 
-    # The tool's own manifest says one architecture, and says which: 64-bit
-    # ARM, which is what every toolchain anyone using it has asked for. The
-    # 32-bit ARM of the phones still about is the same sources said another
-    # way, and tools/manifest_abi.py says them so over the tool's own copy:
-    # the triple the compiler is given, the one the sysroot's directories
-    # have, the name the ABI goes by inside an APK, and what Clang will not
-    # assume for 32-bit ARM unless it is told -- neon, and not soft float,
-    # which everything built for it would otherwise emulate.
-    - name: The manifest, said for this ABI
-      shell: bash
-      run: |
-        set -euo pipefail
-        python3 "${{ github.workspace }}/tools/manifest_abi.py" \
-          --manifest "$HOME/pchat-tools/ndk-tool/manifest/sources.json" \
-          --abi "${{ inputs.abi }}" \
-          --out "$HOME/pchat-tools/manifest-${{ inputs.abi }}.json"
-        python3 -c 'import sys; print(open(sys.argv[1]).read()[:400])' \
-          "$HOME/pchat-tools/manifest-${{ inputs.abi }}.json"
     - name: Every source at its commit
       shell: bash
       run: |
@@ -96,7 +78,7 @@ runs:
         "$HOME/pchat-tools/ndk-tool/build/minimal-android-ndk" \
           --root "$HOME/.cache/pchat-android-${{ inputs.abi }}" \
           --build-root "$HOME/pchat-tools/ndk-${{ inputs.abi }}" \
-          --manifest "$HOME/pchat-tools/manifest-${{ inputs.abi }}.json" \
+          --manifest "$HOME/pchat-tools/ndk-tool/manifest/sources.json" \
           pin --platform "${{ inputs.platform }}"
 
     - name: Headers, stubs, builtins and the C++ standard library
@@ -106,7 +88,7 @@ runs:
         "$HOME/pchat-tools/ndk-tool/build/minimal-android-ndk" \
           --root "$HOME/.cache/pchat-android-${{ inputs.abi }}" \
           --build-root "$HOME/pchat-tools/ndk-${{ inputs.abi }}" \
-          --manifest "$HOME/pchat-tools/manifest-${{ inputs.abi }}.json" \
+          --manifest "$HOME/pchat-tools/ndk-tool/manifest/sources.json" \
           --clang /usr/lib/llvm-23/bin/clang \
           --llvm-bin /usr/lib/llvm-23/bin \
           --api ${{ inputs.api }} \
