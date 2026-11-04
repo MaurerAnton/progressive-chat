@@ -80,8 +80,9 @@ SDL fork's -- no Java is compiled here, that script emits a dex itself --
 `tools/android_apk.py` puts those two and every library they load with into an
 archive, which `zipalign` lines up and `apksigner` signs. One key of this
 build's own is made for it, so that what an Android refuses -- an APK no key
-was put to -- is not what comes out. The one installable is the
-`progressive-chat-android-arm64-v8a-*` artifact of the newest android run:
+was put to -- is not what comes out. There is one installable per ABI, and
+each named with the commit it was built from: 64-bit ARM, and the 32-bit ARM
+a great many phones still are. They are the `progressive-chat-android-*` artifact of the newest android run:
 
 <https://github.com/progressive-chat/progressive-chat/actions/workflows/android.yml>
 
