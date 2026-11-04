@@ -14,7 +14,8 @@ program is allowed to do.
     <application android:label="Progressive Chat" android:allowBackup="false"
         android:hasCode="true" android:extractNativeLibs="true"
         android:theme="@android:style/Theme.Material.NoActionBar"
-        android:icon="@android:drawable/sym_def_app_icon">
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round">
         <!-- The keyboard changes the window's size: the conversation is
              drawn again for it, not stretched, and the card at the foot
              stays above what the keys cover. -->

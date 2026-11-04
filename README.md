@@ -85,6 +85,10 @@ Two licenses, said file by file in every one's first line:
 The whole is therefore **GPL v3**, and only GPL v3: nothing here may be used
 under any later version of either, and nothing here is dual-licensed.
 
+The icon the app carries, and the one the page carries with it
+(`android/res`, `web/icon.svg`), is progressive-chat's own: the bubble with
+what grows in it, as `progressive-chat/progressive-android` ships it.
+
 The one thing here that is neither is `fonts/`: Open Sans, regular and
 semibold, embedded in the binary as every piece of text in the window is
 drawn with them, and licensed to anyone under the SIL Open Font License 1.1

@@ -10,6 +10,21 @@
 # writes a dex out directly, which is built for this machine and run here.
 
 function(pchat_add_android_apk target)
+  # The icon the launcher shows, in every form a phone may ask for it in: an
+  # adaptive one -- its plate and its figure apart -- since API 26, and a
+  # plate of each size for what is older than that.
+  set(PCHAT_ANDROID_RESOURCES
+    drawable/ic_launcher_background.xml
+    drawable/ic_launcher_foreground.xml
+    mipmap-anydpi-v26/ic_launcher.xml
+    mipmap-anydpi-v26/ic_launcher_round.xml
+    mipmap-mdpi/ic_launcher.png
+    mipmap-hdpi/ic_launcher.png
+    mipmap-xhdpi/ic_launcher.png
+    mipmap-xxhdpi/ic_launcher.png
+    mipmap-xxxhdpi/ic_launcher.png
+    values/colors.xml
+    CACHE STRING "The files of android/res compiled and linked into the APK")
   set(PCHAT_ANDROID_FRAMEWORK_RES_APK "${MANDK_ROOT}/tools/framework-res.apk" CACHE FILEPATH
       "AOSP framework resource APK")
   set(PCHAT_ANDROID_APKSIGNER_JAR "${MANDK_ROOT}/tools/apksigner.jar" CACHE FILEPATH
@@ -136,13 +151,43 @@ function(pchat_add_android_apk target)
     COMMAND "${sdl-native-dex_PROGRAM}" --out "${out}/classes.dex"
       --library "$<TARGET_FILE_BASE_NAME:${target}>"
     DEPENDS "${sdl-native-dex_PROGRAM}" VERBATIM)
-  # The resources: this manifest, against the platform's own.
+  # The resources: this manifest, against the platform's own, and the tree of
+  # icons beside it -- each compiled to its own flat file first, which is how
+  # a link is given resources that are not yet in a table of them.
+  set(res "${PROJECT_SOURCE_DIR}/android/res")
+  set(res_outs)
+  set(res_inputs)
+  foreach(one IN LISTS PCHAT_ANDROID_RESOURCES)
+    if(NOT EXISTS "${res}/${one}")
+      message(FATAL_ERROR "android/res/${one} is named for the icon, but is not there")
+    endif()
+    list(APPEND res_inputs "${res}/${one}")
+    # Named as aapt2 names what it compiles: one file per resource, its
+    # directory and its file said apart by an underscore, and a values
+    # directory's table not a drawing but an arsc.
+    get_filename_component(res_dir "${one}" DIRECTORY)
+    get_filename_component(res_file "${one}" NAME)
+    if(res_dir STREQUAL "values")
+      get_filename_component(res_stem "${res_file}" NAME_WE)
+      list(APPEND res_outs "${out}/${res_dir}_${res_stem}.arsc.flat")
+    else()
+      list(APPEND res_outs "${out}/${res_dir}_${res_file}.flat")
+    endif()
+  endforeach()
+  add_custom_command(OUTPUT ${res_outs}
+    COMMAND "${PCHAT_AAPT2}" compile --dir "${res}" -o "${out}"
+    DEPENDS ${res_inputs} "${PCHAT_AAPT2}" VERBATIM)
+  set(res_flat_args)
+  foreach(flat IN LISTS res_outs)
+    list(APPEND res_flat_args -R "${flat}")
+  endforeach()
   add_custom_command(OUTPUT "${out}/progressive-chat-resources.apk"
     COMMAND "${PCHAT_AAPT2}" link -o "${out}/progressive-chat-resources.apk"
       --manifest "${manifest}" -I "${PCHAT_ANDROID_FRAMEWORK_RES_APK}"
+      ${res_flat_args} --auto-add-overlay
       --min-sdk-version "${PCHAT_ANDROID_MIN_API}" --target-sdk-version "${PCHAT_ANDROID_TARGET_API}"
       --version-code "${PCHAT_ANDROID_VERSION_CODE}" --version-name "${PROJECT_VERSION}"
-    DEPENDS "${manifest}" "${PCHAT_ANDROID_FRAMEWORK_RES_APK}" VERBATIM)
+    DEPENDS "${manifest}" "${PCHAT_ANDROID_FRAMEWORK_RES_APK}" ${res_outs} VERBATIM)
   # The archive, of those two and every library they load with.
   # Two archives come of one command: the packager writes the unaligned one,
   # and zipalign writes the aligned one out of it -- named here as well, or
