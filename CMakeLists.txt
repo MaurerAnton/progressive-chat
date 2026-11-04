@@ -86,13 +86,16 @@ cmake_dependent_option(PCHAT_TESTS "Build the tests" ${PROJECT_IS_TOP_LEVEL} "NO
 # The window: SDL3 and skiff, with Skia on GL.
 option(PCHAT_UI "Build the window, and the progressive-chat program" ON)
 
-# Full BMIs outside a release build: a reduced BMI leaves out the definition
-# of a function that is not inline -- also one whose deduced type is a class
-# local to it, as every view's is -- and clang 23 then recursed without end
-# looking up names over that class in a unit importing it through another
-# module. A full BMI keeps the definitions.
+# Full BMIs, in every build: a reduced BMI leaves out the definition of a
+# function that is not inline -- also one whose deduced type is a class local
+# to it, as every view's is -- and clang 23 then recursed without end looking
+# up names over that class in a unit importing it through another module. A
+# full BMI keeps the definitions. Kept outside a release build it made a
+# release build a different program: one 0.1 built that way went as soon as
+# it started. So nothing here is built as a release -- which is also what mux
+# asks, asking Debug for all of its own builds and -O3 over it.
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options($<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CONFIG:Release>>>:-fno-modules-reduced-bmi>)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-modules-reduced-bmi>)
 endif()
 
 set(PCHAT_CONSTEXPR_STEPS 300000000 CACHE STRING
