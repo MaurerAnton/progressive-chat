@@ -45,6 +45,10 @@ struct app_window : scene::Node {
     this->apply({.fill = true});
     fPaper.apply({.fill = true});
     fMessages.apply({.background = 0u});
+    // A conversation is read at its foot: the messages are shown from their
+    // last one, and stay there as they grow -- until the reader scrolls away,
+    // which the list keeps instead.
+    fList.scrollToEnd(false);
   }
 
   // What the messages are called, from the model: the title the bar shows.
@@ -98,7 +102,6 @@ struct app_window : scene::Node {
     fList.apply({.anchor = scene::anchor::kTopLeft, .x = left, .y = top_bar_height, .width = column,
                  .height = std::max(height - top_bar_height - 56.0f - 2.0f * edge, 40.0f),
                  .visible = in_chat});
-    fList.scrollToEnd(false);
     // The card at the foot.
     fComposer.apply({.anchor = scene::anchor::kBottomLeft, .origin = scene::anchor::kBottomLeft, .x = left,
                      .y = 0.0f, .width = column, .height = 56.0f + 2.0f * edge, .visible = in_chat});
