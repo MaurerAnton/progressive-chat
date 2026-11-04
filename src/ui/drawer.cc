@@ -27,13 +27,18 @@ namespace widgets = skiff::widgets;
 // many of them shown as there are conversations.
 inline constexpr std::size_t max_rows = 24;
 
+// What the field is told through: the field is made once, so what it asks for
+// goes by this -- which the drawer keeps -- and not by anything of its own.
+struct search_sink {
+  app::requests *asked = nullptr;
+};
 // What the field gives back when Enter is pressed in it: the search asked
 // for, as a request.
 struct search_given {
-  app::requests *asked = nullptr;
+  std::shared_ptr<search_sink> sink;
   void operator()(std::string_view text) const {
-    if (asked)
-      asked->ask(app::set_query{std::string(text)});
+    if (sink && sink->asked)
+      sink->asked->ask(app::set_query{std::string(text)});
   }
 };
 
@@ -109,7 +114,8 @@ struct conversation_row : scene::Node {
 struct drawer_screen : scene::Node {
   nodes::Box<> fPaper{0u};
   nodes::Text fHeading{"Chats", 21.0f, 0u, true};
-  widgets::TextArea<search_given> fSearch{widgets::Theme{}, "Search conversations", search_given{}};
+  std::shared_ptr<search_sink> fSink = std::make_shared<search_sink>();
+  widgets::TextArea<search_given> fSearch{widgets::Theme{}, "Search conversations", search_given{fSink}};
   std::array<conversation_row, max_rows> fRows;
 
   explicit drawer_screen(float breadth) {
@@ -130,7 +136,7 @@ struct drawer_screen : scene::Node {
   void refresh(const paints &look, const chats_root &root, const std::string &opened, app::requests *asked) {
     fPaper.setColour(look.drawer);
     fHeading.setColour(look.text);
-    fSearch.onSubmit().asked = asked;
+    fSink->asked = asked;
     const auto rows = logic::ordered(root);
     for (std::size_t at = 0; at < max_rows; ++at) {
       if (at >= rows.size()) {

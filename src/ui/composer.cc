@@ -20,25 +20,31 @@ namespace scene = skiff::scene;
 namespace nodes = skiff::nodes;
 namespace widgets = skiff::widgets;
 
-// What Enter in the field asks for: the message sent. The conversation it
-// goes to is set whenever the open conversation changes.
-struct message_given {
+// What the field is told through: kept by the composer, and read as Enter is
+// pressed in it. The field is made once -- with nothing of a conversation in
+// it -- so what it asks for goes by this, not by anything of its own.
+struct message_sink {
   app::requests *asked = nullptr;
-  app::conversation_id chat;
+  conversation_id chat;
+};
+// What Enter in the field asks for: the message sent, of the conversation the
+// sink has been given.
+struct message_given {
+  std::shared_ptr<message_sink> sink;
   void operator()(std::string_view text) const {
-    if (asked && !text.empty())
-      asked->ask(app::send_message{chat, std::string(text)});
+    if (sink && sink->asked && !text.empty())
+      sink->asked->ask(app::send_message{sink->chat, std::string(text)});
   }
 };
 
 struct composer : scene::Node {
   nodes::Box<> fCard{0u};
-  widgets::TextArea<message_given> fField{widgets::Theme{}, "Message", message_given{}};
+  std::shared_ptr<message_sink> fSink = std::make_shared<message_sink>();
+  widgets::TextArea<message_given> fField{widgets::Theme{}, "Message", message_given{fSink}};
   nodes::Icon fClip{shape::clip(), 0u};
   nodes::Icon fFace{shape::smile(), 0u};
   nodes::Box<> fSendPlate{0u};
   nodes::Icon fSendMark{shape::send(), 0u};
-  message_given fGiven{};
 
   composer() {
     this->apply({.fillX = true, .height = 56.0f + 2.0f * edge, .padding = scene::Margin::all(edge)});
@@ -57,9 +63,8 @@ struct composer : scene::Node {
   }
 
   void refresh(const paints &look, const conversation_id &chat, app::requests *asked) {
-    (void)chat;
-    fGiven = message_given{asked, chat};
-    fField.onSubmit() = fGiven;
+    fSink->asked = asked;
+    fSink->chat = chat;
     fCard.setColour(look.card);
     fClip.setColour(look.faint);
     fFace.setColour(look.faint);
