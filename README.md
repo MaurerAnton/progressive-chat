@@ -23,10 +23,11 @@ a **model** -- an agentic one, meant to be used on a phone, so small and
 friendly enough to be opened there. Work on the chat client stopped.
 
 Months later, looking for what may have been written since, there was mux:
-found in a conversation with a model that had the web to search, and kept for
-what it is made of rather than for what it is -- C++26 modules, clang, Skia
-through skiff, one program built for a window, for a page and for a phone.
-Its stack is the stack here; it is what made starting again worth it.
+[found in a conversation with a model](docs/how-mux-was-found.md) that had the
+web to search, and kept for what it is made of rather than for what it is --
+C++26 modules, clang, Skia through skiff, one program built for a window, for
+a page and for a phone. Its stack is the stack here; it is what made starting
+again worth it.
 
 So what this repository is, now, is that client in its beginning: the look of
 [Agora](https://github.com/MaurerAnton/agora) drawn again on it, and no back
