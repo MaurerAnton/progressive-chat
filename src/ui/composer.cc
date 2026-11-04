@@ -33,7 +33,7 @@ struct message_given {
 
 struct composer : scene::Node {
   nodes::Box<> fCard{0u};
-  widgets::TextArea<message_given> fField{{}, "Message", {}};
+  widgets::TextArea<message_given> fField{widgets::Theme{}, "Message", message_given{}};
   nodes::Icon fClip{shape::clip(), 0u};
   nodes::Icon fFace{shape::smile(), 0u};
   nodes::Box<> fSendPlate{0u};

@@ -29,7 +29,8 @@ inline std::size_t &checks() {
 inline void note_check() { ++checks(); }
 
 inline void failed(std::string_view said, std::source_location where = std::source_location::current()) {
-  failures().push_back(std::format("{}:{}: {}", where.file_name(), where.line(), said));
+  failures().push_back(std::string{where.file_name()} + ":" + std::to_string(where.line()) + ": " +
+                       std::string{said});
 }
 
 // One test: the function it was written as, and the name it was given.

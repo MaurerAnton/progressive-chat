@@ -109,7 +109,7 @@ struct conversation_row : scene::Node {
 struct drawer_screen : scene::Node {
   nodes::Box<> fPaper{0u};
   nodes::Text fHeading{"Chats", 21.0f, 0u, true};
-  widgets::TextArea<search_given> fSearch{{}, "Search conversations", {}};
+  widgets::TextArea<search_given> fSearch{widgets::Theme{}, "Search conversations", search_given{}};
   std::array<conversation_row, max_rows> fRows;
 
   explicit drawer_screen(float breadth) {
