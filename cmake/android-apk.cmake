@@ -67,6 +67,12 @@ function(pchat_add_android_apk target)
   endif()
   # Built for this machine -- it is what writes a dex, and neither dex nor
   # the script that makes one is anything the NDK's own toolchain builds.
+  # What the dex is written by is a program of this machine's own, and of
+  # modules too -- that asks for clang 23 and its libc++, and not for the
+  # default compiler, which is a gcc with no `import std` to give.
+  find_program(CME_BUILD_MACHINE_CXX_COMPILER NAMES clang++-23 clang++
+    HINTS "${llvm_bin}" REQUIRED)
+  set(CME_BUILD_MACHINE_CXX_FLAGS "-stdlib=libc++")
   cme_declare_port(NAME sdl-native-dex PROVIDES sdl-native-dex VERSION 1.0
     SOURCE_DIR "${dex_source}" MACHINE build
     PROGRAMS "sdl-native-dex=sdl::native-dex" TARGETS sdl::native-dex)
