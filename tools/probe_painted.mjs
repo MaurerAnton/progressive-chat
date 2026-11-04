@@ -3,6 +3,7 @@
 // and not from what the code seems to say.
 import { chromium } from 'playwright';
 
+let webgl = 'not asked';
 const url = process.env.PCHAT_PAGE ?? 'https://progressive-chat.github.io/progressive-chat/';
 
 // Two kinds of page: one the worker isolates and so draws on more than one
@@ -23,6 +24,16 @@ const shoot = async (browser, name, viewport, alone) => {
   page.on('console', message => console.log(`console[${name}] ${message.type()}: ${String(message.text()).slice(0, 400)}`));
   page.on('pageerror', error => console.log(`pageerror[${name}]: ${String(error).slice(0, 600)}`));
   await page.goto(url, { waitUntil: 'load' });
+  // What the client can draw through: it draws through WebGL, and a machine
+  // that has none of it is not one that can be asked what the page painted
+  // -- it goes inside Skia asking GL what it knows, which is asked of a
+  // browser too and not only of a phone.
+  webgl = await page.evaluate(() => {
+    const one = document.createElement('canvas');
+    const gl = one.getContext('webgl2') ?? one.getContext('webgl');
+    return gl ? gl.getParameter(gl.VERSION) : 'none';
+  });
+  console.log(`webgl[${name}]: ${webgl}`);
   try {
     await page.waitForFunction(() => window.__pchat_started === true, null, { timeout: 180000 });
     console.log(`started[${name}]: yes`);
@@ -51,14 +62,19 @@ const shoot = async (browser, name, viewport, alone) => {
   await context.close().catch(() => {});
 };
 
-// Nothing of a GPU is here to draw with, and a renderer that asks the one a
-// runner has not got goes rather than draws: said so to Chromium instead.
+// Nothing of a GPU is here to draw with, so Chromium is told to draw with
+// SwiftShader, its own GL in software -- and not told to have no GPU at all,
+// which is what it was told before: what the client draws through is WebGL,
+// and a renderer asked for none of it asked Skia to ask GL what it knows.
+// That is where this program went on a desktop with no window either, and
+// it is a browser's answer and not an answer about the page.
 const browser = await chromium.launch({
   args: [
     '--no-sandbox',
     '--disable-dev-shm-usage',
-    '--disable-gpu',
-    '--single-process',
+    '--use-gl=angle',
+    '--use-angle=swiftshader',
+    '--enable-unsafe-swiftshader',
     '--js-flags=--max-old-space-size=3072',
   ],
 });
