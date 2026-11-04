@@ -21,6 +21,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/desktop-setup
+      # What the sanitizers run on: clang 23 from apt.llvm.org comes without
+      # the runtime they link (libclang_rt.asan.a), and a build asking for
+      # them without it does not even get as far as its first test program.
+      - name: The sanitizers' runtime
+        run: sudo apt-get install -y --no-install-recommends libclang-rt-23-dev
       # Kept between runs too: nothing here is a check of the build, only of
       # what the built program does.
       - uses: actions/cache@v4
@@ -45,11 +50,19 @@ jobs:
       # printed whether it ended well or badly.
       - name: Run it, and say where it went
         env:
-          SDL_VIDEODRIVER: dummy
           SDL_AUDIODRIVER: dummy
-          ASAN_OPTIONS: detect_leaks=0:abort_on_error=0:log_path=stderr
-          UBSAN_OPTIONS: print_stacktrace=1:log_path=stderr
+          ASAN_OPTIONS: detect_leaks=0:abort_on_error=0
+          UBSAN_OPTIONS: print_stacktrace=1
         run: |
-          if ! timeout 90 ./build-crash/progressive-chat; then
+          # A window of its own, rather than none: SDL_VIDEODRIVER=dummy is
+          # a video driver no GL ever comes out of, and what is asked here
+          # is what happens in a window that is really there.
+          runner=()
+          if command -v xvfb-run >/dev/null; then
+            runner=(xvfb-run -a)
+          else
+            export SDL_VIDEODRIVER=dummy
+          fi
+          if ! timeout 90 "${runner[@]}" ./build-crash/progressive-chat; then
             echo "progressive-chat went: $?"
           fi
