@@ -52,9 +52,9 @@ runs:
         # it, are here too.
         sudo apt-get install -y --no-install-recommends aapt zipalign openjdk-17-jdk-headless
         aapt2 version
-        zipalign
         java -version
         javac -version
+        command -v aapt2 zipalign java javac keytool
 
     - name: The activity's classes, written by the fork's own script
       shell: bash
