@@ -15,9 +15,14 @@ inputs:
     required: false
     default: arm64-v8a
   platform:
+    # 16, and not an older release: 14's own headers spell one of
+    # AHardwareBuffer's usages "1UL << 32", which is not a constant where
+    # long is 32 bits wide -- so Skia's hardware buffers, SDL's activity
+    # and this program's own entry do not compile for 32-bit ARM. Android
+    # wrote "1ULL" in a later release, which is what 16 resolves to.
     description: The AOSP release every source is resolved through
     required: false
-    default: android-14.0.0_r75
+    default: android-16.0.0_r4
   api:
     description: The Android API level the runtimes are built for
     required: false
