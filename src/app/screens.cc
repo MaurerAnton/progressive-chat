@@ -72,34 +72,41 @@ public:
               if (width_ < ui::side_by_side_from)
                 drawer_ = false;
             },
-            [&](const copy_answer &asking) {
-              copied_ = text_of(asking.said);
-            }, // Asked again: what answered is taken away -- this one and every
-               // one                   // after it -- and the question above it
-               // left open to be answered again.                   [&](const
-               // regenerate_answer &asking) { cut_away(asking.said); },
-               // [&](const fork_answer &asking) {                     // Into a
-               // chat of its own: everything asked and answered up to this //
-               // answer, and no answer after it.                     const
-               // conversation_id made{"chat-" + std::to_string(++chat_count_)};
-               // conversation forked{made, root_.accounts.empty() ?
-               // account_id{} : root_.accounts.front().id, "Forked chat",
-               // conversation_kind::direct, ++said_count_}; forked.model =
-               // model_of(asking.chat);                     forked.tokens =
-               // tokens_up_to(asking.chat, asking.said);
-               // root_.conversations.insert(root_.conversations.begin(),
-               // std::move(forked));                     const std::size_t
-               // up_to = said_at(asking.said);                     for
-               // (std::size_t at = 0; at + 1 < up_to; ++at) { message copy =
-               // root_.messages[at];                       if (copy.chat !=
-               // asking.chat)                         continue; copy.chat =
-               // made;                       copy.id = message_id{made.value +
-               // "-" + copy.id.value};
-               // root_.messages.push_back(std::move(copy)); } root_.opened =
-               // made;                   },                   [&](const
-               // share_answer &) {},                   [&](const delete_answer
-               // &asking) { cut_away(asking.said); }, [&](const edit_draft &)
-               // {},
+            // Taken whole, so that it can be put down somewhere else.
+            [&](const copy_answer &asking) { copied_ = text_of(asking.said); },
+            // Asked again: this answer taken away, and every one after it, so
+            // that the question above it is open to be answered again.
+            [&](const regenerate_answer &asking) { cut_away(asking.said); },
+            // Into a chat of its own: everything asked and answered up to this
+            // answer, and nothing said after it.
+            [&](const fork_answer &asking) {
+              const conversation_id made{"chat-" +
+                                         std::to_string(++chat_count_)};
+              conversation forked{
+                  made,
+                  root_.accounts.empty() ? account_id{}
+                                         : root_.accounts.front().id,
+                  "Forked chat", conversation_kind::direct, ++said_count_};
+              forked.model = model_of(asking.chat);
+              forked.tokens = tokens_up_to(asking.chat, asking.said);
+              root_.conversations.insert(root_.conversations.begin(),
+                                         std::move(forked));
+              const std::size_t up_to = said_at(asking.said);
+              for (std::size_t at = 0; at < up_to; ++at) {
+                message copy = root_.messages[at];
+                if (copy.chat != asking.chat)
+                  continue;
+                copy.chat = made;
+                copy.id = message_id{made.value + "-" + copy.id.value};
+                root_.messages.push_back(std::move(copy));
+              }
+              root_.opened = made;
+            },
+            // Given away as it reads, until the program has somewhere to give
+            // it to.
+            [&](const share_answer &asking) { copied_ = text_of(asking.said); },
+            [&](const delete_answer &asking) { cut_away(asking.said); },
+            [&](const edit_draft &) {},
             [&](const set_query &asking) { query_ = asking.text; },
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
             [&](const open_settings &) { settings_ = true; },
