@@ -41,4 +41,5 @@ set(pchat_web_dir "${CMAKE_CURRENT_BINARY_DIR}/web")
 add_custom_command(TARGET progressive-chat POST_BUILD
   COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tools/package_web.py"
     --build "${CMAKE_CURRENT_BINARY_DIR}" --output "${pchat_web_dir}"
+    --said "${PCHAT_VERSION_SAID}"
   VERBATIM)

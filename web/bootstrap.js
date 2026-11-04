@@ -41,6 +41,9 @@
     const response = await fetch('./build.json', { cache: 'no-store' });
     if (!response.ok) throw new Error('Could not load progressive-chat. Please reload.');
     const build = await response.json(), base = new URL('./', location.href);
+    // Which build it is, said while it starts: a page that never starts is a
+    // page someone has to say which build of it they were looking at.
+    if (build.version) waiting.textContent = `Starting progressive-chat… ${build.version}`;
     const asset = name => {
       const url = new URL(name, base);
       url.searchParams.set('v', build.revision);

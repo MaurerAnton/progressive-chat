@@ -16,6 +16,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--build', type=Path, required=True)
 parser.add_argument('--output', type=Path, required=True)
 parser.add_argument('--program', default='progressive-chat')
+# Which build this page is: its version and the commit it was made of, which
+# nothing else in what the page holds says.
+parser.add_argument('--said', default='')
 args = parser.parse_args()
 source = Path(__file__).resolve().parents[1]
 args.output.mkdir(parents=True, exist_ok=True)
@@ -34,6 +37,8 @@ for asset in sorted(args.output.glob(args.program + '.*')):
     with asset.open('rb') as stream:
         while chunk := stream.read(1024 * 1024):
             digest.update(chunk)
-(args.output / 'build.json').write_text(
-    json.dumps({'program': args.program, 'revision': digest.hexdigest()[:20]}) + '\n')
+said = {'program': args.program, 'revision': digest.hexdigest()[:20]}
+if args.said:
+    said['version'] = args.said
+(args.output / 'build.json').write_text(json.dumps(said) + '\n')
 (args.output / '.nojekyll').touch()
