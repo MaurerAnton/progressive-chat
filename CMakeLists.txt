@@ -229,7 +229,7 @@ if(PCHAT_UI)
   # control asks for.
   add_library(pchat_app OBJECT)
   target_sources(pchat_app PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
-    FILES src/app/screens.cc src/app/sample.cc)
+    FILES src/app/screens.cc src/app/sample.cc src/app/faces.cc)
   target_compile_features(pchat_app PUBLIC cxx_std_26)
   target_compile_options(pchat_app PUBLIC ${pchat_std_flags})
   target_link_libraries(pchat_app PUBLIC pchat_ui pchat_requests)

@@ -12,12 +12,16 @@ import std;
 import skiff.scene;
 import skiff.platform.events;
 import pchat.app.screens;
+import pchat.app.faces;
 
 export namespace pchat::app {
 
 struct program {
   screens view;
   skiff::scene::detail::PlainPaint paint;
+  // The faces every piece of text in the window is drawn with: Open Sans,
+  // shipped in this binary, because a browser has no system to ask.
+  using faces = pchat::app::faces;
 
   [[nodiscard]] window_scene &window() noexcept { return view.window(); }
   [[nodiscard]] skiff::scene::detail::PlainPaint &painting() noexcept { return paint; }

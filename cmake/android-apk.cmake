@@ -17,6 +17,8 @@ function(pchat_add_android_apk target)
   set(PCHAT_ANDROID_TARGET_API 34 CACHE STRING "APK target API")
   set(PCHAT_ANDROID_MIN_API 5 CACHE STRING "APK minimum API")
   set(PCHAT_ANDROID_VERSION_CODE 1 CACHE STRING "Monotonic APK version code")
+  set(PCHAT_ANDROID_REVISION "" CACHE STRING
+      "What an APK made here is named after: its commit, where one is known")
   set(PCHAT_ANDROID_SDL_DEX_DIR "" CACHE PATH
       "Directory of the SDL fork's native-activity/dex script")
   option(PCHAT_ANDROID_TEST_KEY "Sign the APK with a generated test key" ON)
@@ -106,7 +108,28 @@ function(pchat_add_android_apk target)
     list(APPEND search --library-dir "${dir}")
   endforeach()
   set(abi "${ANDROID_ABI}")
-  set(name "progressive-chat-${abi}")
+  # Which commit of the program it is, said in the file's own name: an APK
+  # is taken out of any build tree and out of any archive of one, and out
+  # there nothing else says which build it came from. Asked of git here
+  # because this build is of a checkout; set it where it is known already.
+  if(NOT PCHAT_ANDROID_REVISION)
+    find_package(Git QUIET)
+    if(Git_FOUND)
+      execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse --short=12 HEAD
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        OUTPUT_VARIABLE pchat_revision OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET)
+      if(pchat_revision)
+        set(PCHAT_ANDROID_REVISION "${pchat_revision}" CACHE STRING
+          "What an APK made here is named after: its commit, where one is known" FORCE)
+      endif()
+    endif()
+  endif()
+  if(PCHAT_ANDROID_REVISION)
+    set(name "progressive-chat-${abi}-${PCHAT_ANDROID_REVISION}")
+  else()
+    set(name "progressive-chat-${abi}")
+  endif()
 
   # The classes: NativeActivity itself, taken for what its callbacks are.
   add_custom_command(OUTPUT "${out}/classes.dex"
