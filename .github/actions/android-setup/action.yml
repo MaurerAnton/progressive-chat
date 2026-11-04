@@ -64,7 +64,7 @@ runs:
         cd "$HOME/pchat-tools/sdl-dex"
         git remote add origin https://github.com/j4niwzis/SDL.git
         git fetch --depth 1 origin 91c08de87b43fdecc824464fcce15499ccbc7101
-        git checkout --depth 1 FETCH_HEAD
+        git checkout FETCH_HEAD
         test -f build-scripts/native-activity/dex/CMakeLists.txt
 
     - name: Every source at its commit
