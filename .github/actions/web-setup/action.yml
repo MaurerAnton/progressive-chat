@@ -30,6 +30,16 @@ runs:
         echo "$sdk/upstream/bin" >> "$GITHUB_PATH"
         echo "EM_CONFIG=$sdk/.emscripten" >> "$GITHUB_ENV"
 
+    # What the SDK's libc++ is one release short of: `views::enumerate`, read
+    # by this tree and by the libraries the window is made of.
+    - name: The SDK's libc++, given what libc++ 23 added
+      shell: bash
+      run: |
+        set -euo pipefail
+        python3 "${{ github.workspace }}/tools/prepare_emscripten.py" \
+          --emscripten "$HOME/.cache/pchat-emsdk/upstream/emscripten" \
+          --libcxx /usr/lib/llvm-23/include/c++/v1
+
     - name: Say the SDK
       shell: bash
       run: |
