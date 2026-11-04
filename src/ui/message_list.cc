@@ -37,21 +37,22 @@ inline constexpr float run_gap = 10.0f;
 // The share of the room a bubble may take before it wraps.
 inline constexpr float widest_share = 0.62f;
 
-// A message's bubble: its plate behind two lines -- what was said, and when
-// -- which are the flow that gives it its size. Wide as its words wrap to,
-// and no wider than it is allowed.
+// A message's bubble: its own colour and corners behind two lines -- what was
+// said, and when -- which are the flow that gives it its size. Wide as its
+// words wrap to, and no wider than it is allowed.
 struct bubble : nodes::Stack {
-  nodes::Box<> fPlate{0u};
   nodes::Text fBody{"", 15.0f, 0u};
   nodes::Text fTime{"", 11.0f, 0u};
 
   bubble() {
-    this->apply({.autoSize = scene::axes::kBoth,
+    // The colour is the bubble's own, not a plate's behind its lines: a
+    // plate, to be the size they came to without being one of the things
+    // measured, has to be put out of their flow, and out of the flow it is
+    // then over them -- a colour where the words are, in the browser, which
+    // draws what is out of the flow above what still is in it.
+    this->apply({.autoSize = scene::axes::kBoth, .cornerRadius = bubble_radius,
                  .padding = scene::Margin{bubble_pad_y, bubble_pad_x, bubble_pad_y, bubble_pad_x}});
     fStack = {.direction = nodes::direction::vertical{}, .spacingY = 2.0f};
-    // Behind both lines, and out of the flow that sizes the bubble: filled
-    // to whatever they came to, never one of the things measured.
-    fPlate.apply({.fill = true, .cornerRadius = bubble_radius, .place = scene::anchor::kTopLeft});
     fBody.apply({.autoSize = scene::axes::kBoth});
     fTime.apply({.autoSize = scene::axes::kBoth, .alignSelf = scene::align::kEnd});
   }
@@ -64,8 +65,8 @@ struct bubble : nodes::Stack {
 
   void again(const paints &look, std::string_view said, bool outgoing, float widest) {
     this->setVisible(true);
-    this->apply({.autoSize = scene::axes::kBoth, .maxWidth = widest});
-    fPlate.setColour(outgoing ? look.sent : look.bubble);
+    this->apply({.autoSize = scene::axes::kBoth, .maxWidth = widest,
+                 .cornerRadius = bubble_radius, .background = outgoing ? look.sent : look.bubble});
     fBody.setText(std::string(said));
     fBody.setColour(outgoing ? look.on_sent : look.on_bubble);
     fBody.setFontSize(look.size);
@@ -75,7 +76,6 @@ struct bubble : nodes::Stack {
   }
 
   void forEachChild(auto &&f) {
-    f(fPlate);
     f(fBody);
     f(fTime);
   }
