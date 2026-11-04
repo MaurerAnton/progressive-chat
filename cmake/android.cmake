@@ -14,4 +14,5 @@ set(SDL_CAMERA OFF CACHE BOOL "" FORCE)
 # unresolved in a library loaded by ART, and every part of the C++ runtime
 # the NDK's build does not add by itself is named here.
 set(PCHAT_ANDROID_LINK_OPTIONS
+  -Wl,--no-undefined
   -Wl,-z,max-page-size=16384)
