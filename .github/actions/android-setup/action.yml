@@ -3,20 +3,30 @@ name: Setup — an Android toolchain made of this clang
 
 description: >-
   The NDK Android's own builds will not give: `import std` and modules need
-  clang 23, and no released NDK has one. So the toolchain is built from
-  source, from the pinned minimal NDK, and its target file is what the build
-  is configured with.
+  clang 23, and no released NDK has one. So the toolchain is made here, from
+  Android's own sources, by the pinned minimal NDK: first its sources are
+  resolved to commits, then the headers, the link stubs, the builtins and a
+  C++ standard library with its `libc++.modules.json` are built, and what
+  comes out is a CMake toolchain file the client is configured with.
 
 inputs:
   abi:
     description: Which ABI to build a toolchain for
     required: false
     default: arm64-v8a
+  platform:
+    description: The AOSP release every source is resolved through
+    required: false
+    default: android-15.0.0_r1
+  api:
+    description: The Android API level the runtimes are built for
+    required: false
+    default: '28'
 
 runs:
   using: composite
   steps:
-    - name: The minimal NDK
+    - name: The tool that makes one
       shell: bash
       run: |
         set -euo pipefail
@@ -28,12 +38,42 @@ runs:
         git checkout 517d2f85f613dc07c71b98bad79e424a46e1a4c3
         cmake -S . -B build -G Ninja \
           -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_C_COMPILER=clang \
-          -DCMAKE_CXX_COMPILER=clang++ \
-          -DCMAKE_INSTALL_PREFIX="$HOME/.cache/pchat-android-$ABI"
-        cmake --build build --parallel 2
-        cmake --install build
+          -DCMAKE_CXX_COMPILER=clang++-23 \
+          -DCMAKE_CXX_FLAGS='-stdlib=libc++'
+        cmake --build build --parallel 4
+
+    - name: Every source at its commit
+      shell: bash
+      run: |
+        set -euo pipefail
+        "$HOME/pchat-tools/ndk-tool/build/minimal-android-ndk" \
+          --root "$HOME/.cache/pchat-android-${{ inputs.abi }}" \
+          --build-root "$HOME/pchat-tools/ndk-${{ inputs.abi }}" \
+          pin --platform "${{ inputs.platform }}"
+
+    - name: Headers, stubs, builtins and the C++ standard library
+      shell: bash
+      run: |
+        set -euo pipefail
+        "$HOME/pchat-tools/ndk-tool/build/minimal-android-ndk" \
+          --root "$HOME/.cache/pchat-android-${{ inputs.abi }}" \
+          --build-root "$HOME/pchat-tools/ndk-${{ inputs.abi }}" \
+          --clang /usr/lib/llvm-23/bin/clang \
+          --llvm-bin /usr/lib/llvm-23/bin \
+          --api ${{ inputs.api }} \
+          --jobs 4 \
+          build runtimes toolchain-file
+
+    - name: A whole sysroot, or nothing cached
+      shell: bash
+      run: |
+        set -euo pipefail
+        root="$HOME/.cache/pchat-android-${{ inputs.abi }}"
+        test -f "$root/cmake/target.cmake"
+        test -f "$root/sysroot/usr/lib/libc++.modules.json"
+        find "$root" -exec touch -h -d "@1000000000" {} +
+
     - name: Say the toolchain
       shell: bash
       run: |
-        ls "$HOME/.cache/pchat-android-${{ inputs.abi }}/cmake" || true
+        ls "$HOME/.cache/pchat-android-${{ inputs.abi }}/cmake"

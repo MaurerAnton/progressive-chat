@@ -2,30 +2,36 @@
 name: Setup — Emscripten
 
 description: >-
-  The Emscripten SDK, at one pinned revision. The program is compiled by the
-  same clang the desktop build uses; the SDK supplies the sysroot, the
-  loader and the bindings a browser gives it.
+  The Emscripten SDK, at one pinned revision. Its own clang is what compiles
+  the program: it is the only one whose `import std` is read against the
+  sysroot a browser is given, and whose `libc++.modules.json` tells CMake
+  where that standard library's modules are.
 
 runs:
   using: composite
   steps:
-    - name: The SDK
+    - name: The SDK, cached whole
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pchat-emsdk
+        key: pchat-emsdk-6.0.13-${{ runner.os }}-v1
+
+    - name: Install the pinned SDK
       shell: bash
       run: |
         set -euo pipefail
-        git clone --depth 1 --branch 4.0.13 https://github.com/emscripten-core/emsdk.git "$HOME/emsdk" \
-          || git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$HOME/emsdk"
-        cd "$HOME/emsdk"
-        ./emsdk install latest
-        ./emsdk activate latest
-        echo "$HOME/emsdk" >> "$GITHUB_PATH"
-        echo "$HOME/emsdk/upstream/emscripten" >> "$GITHUB_PATH"
-        echo "$HOME/emsdk/node/*/bin" >> "$GITHUB_PATH"
-        echo "EMSDK=$HOME/emsdk" >> "$GITHUB_ENV"
-        echo "EMSDK_NODE=$HOME/emsdk/node/latest/bin/node" >> "$GITHUB_ENV"
+        sdk="$HOME/.cache/pchat-emsdk"
+        if [ ! -x "$sdk/emsdk" ]; then
+          git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$sdk"
+        fi
+        "$sdk/emsdk" install 6.0.13
+        "$sdk/emsdk" activate 6.0.13
+        echo "$sdk/upstream/emscripten" >> "$GITHUB_PATH"
+        echo "$sdk/upstream/bin" >> "$GITHUB_PATH"
+        echo "EM_CONFIG=$sdk/.emscripten" >> "$GITHUB_ENV"
 
     - name: Say the SDK
       shell: bash
       run: |
-        export PATH="$HOME/emsdk:$HOME/emsdk/upstream/emscripten:$PATH"
         emcc --version | head -2
+        ls "$HOME/.cache/pchat-emsdk/upstream/bin/clang-scan-deps"

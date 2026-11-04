@@ -27,6 +27,23 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/desktop-setup
       - uses: ./.github/actions/web-setup
+      # CMake asks the compiler where its standard library's modules are;
+      # em++ is a driver rather than a clang, and answers nothing. So the
+      # file is looked for in the sysroot it will read them from instead.
+      - name: Where the standard library's modules are
+        run: |
+          set -euo pipefail
+          json="$(em++ -print-file-name=libc++.modules.json 2>/dev/null || true)"
+          if [ ! -f "$json" ]; then
+            json="$(find "$HOME/.cache/pchat-emsdk/upstream/emscripten/cache/sysroot" \
+              -name 'libc++.modules.json' -print -quit 2>/dev/null || true)"
+          fi
+          if [ ! -f "$json" ]; then
+            echo "::error::no libc++.modules.json came with this SDK"
+            exit 1
+          fi
+          echo "found $json"
+          echo "PCHAT_MODULES_JSON=$json" >> "$GITHUB_ENV"
       - name: Configure
         run: |
           emcmake cmake -S . -B build-web -G Ninja \
@@ -34,7 +51,8 @@ jobs:
             -DCMAKE_CXX_FLAGS_DEBUG="-Os -g0" \
             -DCMAKE_C_FLAGS_DEBUG="-Os -g0" \
             -DCMAKE_CXX_FLAGS="-stdlib=libc++" \
-            -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS="$(dirname "$(command -v clang-scan-deps || command -v clang)")/clang-scan-deps" \
+            -DCMAKE_CXX_STDLIB_MODULES_JSON="$PCHAT_MODULES_JSON" \
+            -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS="$HOME/.cache/pchat-emsdk/upstream/bin/clang-scan-deps" \
             -DPCHAT_TESTS=OFF
       - name: Build
         run: cmake --build build-web --target progressive-chat -- -k 0

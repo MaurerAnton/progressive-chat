@@ -21,12 +21,17 @@ permissions:
 jobs:
   library:
     runs-on: ubuntu-24.04
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/desktop-setup
       - uses: ./.github/actions/android-setup
         with:
           abi: ${{ inputs.abi || 'arm64-v8a' }}
+      - uses: actions/cache@v4
+        with:
+          path: build-android
+          key: android-${{ inputs.abi || 'arm64-v8a' }}-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake', '.github/workflows/android.yml') }}
       - name: Configure
         run: |
           cmake -S . -B build-android -G Ninja \
