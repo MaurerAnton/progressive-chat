@@ -28,8 +28,14 @@ project(progressive-chat VERSION 0.1 LANGUAGES C CXX)
 # build of 0.1 is a different one. Asked of git here because a build is of a
 # checkout; say it where it is known already, with -DPCHAT_REVISION.
 if(NOT PCHAT_REVISION)
-  find_package(Git QUIET)
-  if(Git_FOUND)
+  # git asked for as a program, and not find_package(Git): cmake-everywhere
+  # answers find_package, and answering one before the ports are declared
+  # loads its own list of them first -- "the first place that names a port
+  # is the place it comes from" -- which made sdl3 come from the registry
+  # instead of from this project, and with it a released SDL 3.4.16 with no
+  # SDL3/SDL_nativeactivity.h in it at all.
+  find_program(GIT_EXECUTABLE NAMES git)
+  if(GIT_EXECUTABLE)
     execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse --short=12 HEAD
       WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
       OUTPUT_VARIABLE pchat_revision OUTPUT_STRIP_TRAILING_WHITESPACE
