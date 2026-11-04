@@ -54,7 +54,11 @@ runs:
         aapt2 version
         java -version
         javac -version
-        command -v aapt2 zipalign java javac keytool
+        # readelf and strip of the very llvm that compiled: what they are
+        # asked for is a whole directory of them, on PATH as a whole.
+        echo /usr/lib/llvm-23/bin >> "$GITHUB_PATH"
+        PATH="/usr/lib/llvm-23/bin:$PATH"
+        command -v aapt2 zipalign java javac keytool llvm-readelf llvm-strip
 
     - name: The activity's classes, written by the fork's own script
       shell: bash
