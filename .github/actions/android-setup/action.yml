@@ -49,6 +49,7 @@ runs:
         "$HOME/pchat-tools/ndk-tool/build/minimal-android-ndk" \
           --root "$HOME/.cache/pchat-android-${{ inputs.abi }}" \
           --build-root "$HOME/pchat-tools/ndk-${{ inputs.abi }}" \
+          --manifest "$HOME/pchat-tools/ndk-tool/manifest/sources.json" \
           pin --platform "${{ inputs.platform }}"
 
     - name: Headers, stubs, builtins and the C++ standard library
@@ -58,6 +59,7 @@ runs:
         "$HOME/pchat-tools/ndk-tool/build/minimal-android-ndk" \
           --root "$HOME/.cache/pchat-android-${{ inputs.abi }}" \
           --build-root "$HOME/pchat-tools/ndk-${{ inputs.abi }}" \
+          --manifest "$HOME/pchat-tools/ndk-tool/manifest/sources.json" \
           --clang /usr/lib/llvm-23/bin/clang \
           --llvm-bin /usr/lib/llvm-23/bin \
           --api ${{ inputs.api }} \
