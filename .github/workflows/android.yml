@@ -12,28 +12,25 @@ permissions:
 
 # The same program, as a library an Android activity loads. It is built with
 # a toolchain of this clang rather than Android's own, because only this clang
-# reads C++26 modules. One ABI, and one line of builds for it.
+# reads C++26 modules; making that toolchain takes long enough that the two
+# ABIs are built beside each other rather than one after the other.
 jobs:
   library:
     runs-on: ubuntu-24.04
     timeout-minutes: 350
-    # No wait of this ABI is cancelled by another run's: one line, kept.
+    # One ABI does not take the other with it: each keeps its own line of
+    # builds, and neither's own wait is cancelled by the other's.
     concurrency:
       group: android-${{ github.ref }}-${{ matrix.abi }}
       cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:
-        # What a phone today is: 64-bit ARM. 32-bit ARM is not here, not
-        # for want of wanting it: bionic's own kernel headers give
-        # asm/sigcontext.h a field of a type clang 23 has no name for on a
-        # 32-bit target, and compiler-rt's builtins -- needed before there
-        # is a libc++ at all -- do not get compiled. The tool that makes
-        # the toolchain does not come to what would have to be patched
-        # around it, and patching a header of the platform's own into every
-        # build is not a thing worth keeping in this repository: one ABI,
-        # built well, rather than two of which one only ever fails.
-        abi: [arm64-v8a]
+        # What a phone today is: 64-bit ARM, and the 32-bit ARM a great
+        # many still are -- one APK for each. What 32-bit ARM needs that
+        # 64-bit ARM does not is said by tools/manifest_abi.py, over the
+        # toolchain's own manifest.
+        abi: [arm64-v8a, armeabi-v7a]
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/desktop-setup
@@ -41,9 +38,12 @@ jobs:
         with:
           abi: ${{ matrix.abi }}
       - uses: actions/cache@v4
+        # The 32-bit line's key is not the one it had: a build of its own
+        # was once kept from a toolchain made of 64-bit ARM's kernel
+        # headers, which is not a build anything should go on from.
         with:
           path: build-android
-          key: android-${{ matrix.abi }}-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake', '.github/workflows/android.yml') }}
+          key: android-${{ matrix.abi }}-${{ runner.os }}-${{ matrix.abi == 'armeabi-v7a' && 'asm-arm-' || '' }}${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake', '.github/workflows/android.yml') }}
       - name: Configure
         run: |
           cmake -S . -B build-android -G Ninja \

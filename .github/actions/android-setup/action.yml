@@ -71,6 +71,21 @@ runs:
         git checkout FETCH_HEAD
         test -f build-scripts/native-activity/dex/CMakeLists.txt
 
+    # This tool's own manifest names one architecture, and says which:
+    # 64-bit ARM, and the kernel headers of 64-bit ARM. A 32-bit ARM
+    # toolchain is the same sources said the way that architecture spells
+    # them, and tools/manifest_abi.py says them so over the tool's copy --
+    # the target, and asm-arm for asm-arm64, without which the compiler's
+    # own builtins do not compile and there is no toolchain at all.
+    - name: The manifest, said for this ABI
+      shell: bash
+      run: |
+        set -euo pipefail
+        python3 "${{ github.workspace }}/tools/manifest_abi.py" \
+          --manifest "$HOME/pchat-tools/ndk-tool/manifest/sources.json" \
+          --abi "${{ inputs.abi }}" \
+          --out "$HOME/pchat-tools/manifest-${{ inputs.abi }}.json"
+
     - name: Every source at its commit
       shell: bash
       run: |
@@ -78,7 +93,7 @@ runs:
         "$HOME/pchat-tools/ndk-tool/build/minimal-android-ndk" \
           --root "$HOME/.cache/pchat-android-${{ inputs.abi }}" \
           --build-root "$HOME/pchat-tools/ndk-${{ inputs.abi }}" \
-          --manifest "$HOME/pchat-tools/ndk-tool/manifest/sources.json" \
+          --manifest "$HOME/pchat-tools/manifest-${{ inputs.abi }}.json" \
           pin --platform "${{ inputs.platform }}"
 
     - name: Headers, stubs, builtins and the C++ standard library
@@ -88,7 +103,7 @@ runs:
         "$HOME/pchat-tools/ndk-tool/build/minimal-android-ndk" \
           --root "$HOME/.cache/pchat-android-${{ inputs.abi }}" \
           --build-root "$HOME/pchat-tools/ndk-${{ inputs.abi }}" \
-          --manifest "$HOME/pchat-tools/ndk-tool/manifest/sources.json" \
+          --manifest "$HOME/pchat-tools/manifest-${{ inputs.abi }}.json" \
           --clang /usr/lib/llvm-23/bin/clang \
           --llvm-bin /usr/lib/llvm-23/bin \
           --api ${{ inputs.api }} \
