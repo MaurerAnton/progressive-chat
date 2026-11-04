@@ -34,11 +34,15 @@ function(pchat_add_android_apk target)
     endif()
   endforeach()
   # These run on the machine that builds, not on the one the APK runs on.
+  # readelf and strip are of the same llvm as the compiler, which is not on
+  # PATH as a whole -- only what this build asks of clang is.
+  get_filename_component(llvm_bin "${CMAKE_CXX_COMPILER}" DIRECTORY)
   foreach(program IN ITEMS "PCHAT_AAPT2;aapt2" "PCHAT_ZIPALIGN;zipalign" "PCHAT_JAVA;java"
                            "PCHAT_KEYTOOL;keytool" "PCHAT_READELF;llvm-readelf;readelf"
                            "PCHAT_STRIP;llvm-strip;strip")
     list(POP_FRONT program variable names)
-    find_program(${variable} NAMES ${names} REQUIRED NO_CMAKE_FIND_ROOT_PATH)
+    find_program(${variable} NAMES ${names} HINTS "${llvm_bin}" REQUIRED
+      NO_CMAKE_FIND_ROOT_PATH)
   endforeach()
   find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
