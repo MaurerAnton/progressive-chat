@@ -117,7 +117,11 @@ function(pchat_add_android_apk target)
       --version-code "${PCHAT_ANDROID_VERSION_CODE}" --version-name "${PROJECT_VERSION}"
     DEPENDS "${manifest}" "${PCHAT_ANDROID_FRAMEWORK_RES_APK}" VERBATIM)
   # The archive, of those two and every library they load with.
+  # Two archives come of one command: the packager writes the unaligned one,
+  # and zipalign writes the aligned one out of it -- named here as well, or
+  # ninja is asked for a file no rule says it can make.
   add_custom_command(OUTPUT "${out}/progressive-chat-unaligned.apk"
+    "${out}/progressive-chat-aligned.apk"
     COMMAND "${Python3_EXECUTABLE}" "${packager}"
       --resources "${out}/progressive-chat-resources.apk" --dex "${out}/classes.dex"
       --library "$<TARGET_FILE:${target}>" --strip-tool "${PCHAT_STRIP}"
