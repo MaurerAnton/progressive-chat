@@ -17,7 +17,7 @@ inputs:
   platform:
     description: The AOSP release every source is resolved through
     required: false
-    default: android-15.0.0_r1
+    default: android-14.0.0_r75
   api:
     description: The Android API level the runtimes are built for
     required: false
