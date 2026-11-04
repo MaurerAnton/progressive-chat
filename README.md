@@ -33,6 +33,17 @@ So what this repository is, now, is that client in its beginning: the look of
 [Agora](https://github.com/MaurerAnton/agora) drawn again on it, and no back
 end yet. It is **not** designed for people to talk to each other in.
 
+## Where it stands
+
+Said again every day this has been a program, newest first: what it was on
+that day, not what it is meant to be one day.
+
+### 2026-11-04
+
+Thousands of lines of code were written in 24 hours. The build is almost
+fully debugged across desktop, web, and Android. We are near a runnable
+app.
+
 ## What it is made of
 
 ```
@@ -94,17 +105,6 @@ are not a page's to have without them, which a host that only serves files
 cannot say. `tools/package_web.py` puts the four and the client together into
 one directory, named by what the client is made of so that a page left open
 does not keep one that has been replaced.
-
-## Where it stands
-
-Said again every day this has been a program, newest first: what it was on
-that day, not what it is meant to be one day.
-
-### 2026-11-04
-
-Thousands of lines of code were written in 24 hours. The build is almost
-fully debugged across desktop, web, and Android. We are near a runnable
-app.
 
 ## License
 
