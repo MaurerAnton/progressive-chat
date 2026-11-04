@@ -15,14 +15,13 @@ inputs:
     required: false
     default: arm64-v8a
   platform:
-    # 16, and not an older release: 14's own headers spell one of
-    # AHardwareBuffer's usages "1UL << 32", which is not a constant where
-    # long is 32 bits wide -- so Skia's hardware buffers, SDL's activity
-    # and this program's own entry do not compile for 32-bit ARM. Android
-    # wrote "1ULL" in a later release, which is what 16 resolves to.
+    # Not a later release, though a later release would have given the one
+    # line below without this asking for it: 16's framework resources do not
+    # compile with the aapt2 here (no "de-feminine" and the like it knows),
+    # and 15 still writes the shift the step after this one rewrites.
     description: The AOSP release every source is resolved through
     required: false
-    default: android-16.0.0_r4
+    default: android-14.0.0_r75
   api:
     description: The Android API level the runtimes are built for
     required: false
@@ -114,6 +113,25 @@ runs:
           --api ${{ inputs.api }} \
           --jobs 4 \
           build runtimes toolchain-file framework-res apksigner
+
+    # One shift, in Android's own headers, said as Android's own later
+    # release says it. This release writes AHardwareBuffer's front-buffer
+    # usage as 1UL << 32, which is not a constant expression at all where
+    # long is 32 bits wide -- so for 32-bit ARM nothing that includes the
+    # header compiles: Skia's hardware buffers, SDL's activity, this
+    # program's own entry. Taking the whole later release instead brings
+    # its framework resources, which this aapt2 cannot read (it knows no
+    # "de-feminine" and the like), so what is taken is this one line, and
+    # it is taken for both ABIs: a toolchain is one set of headers.
+    - name: One shift, as a later release of Android writes it
+      shell: bash
+      run: |
+        set -euo pipefail
+        header="$HOME/.cache/pchat-android-${{ inputs.abi }}/sysroot/usr/include/android/hardware_buffer.h"
+        test -f "$header"
+        sed -i 's/1UL << 32/1ULL << 32/g' "$header"
+        # Nothing of 32-bit ARM compiles with the old spelling still in it.
+        ! grep -q '1UL << 32' "$header"
 
     - name: A whole sysroot, and what packages an APK, or nothing cached
       shell: bash
