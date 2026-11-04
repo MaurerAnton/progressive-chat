@@ -26,6 +26,17 @@ jobs:
       # them without it does not even get as far as its first test program.
       - name: The sanitizers' runtime
         run: sudo apt-get install -y --no-install-recommends libclang-rt-23-dev
+      # A window was asked for before this was, and there was no GL behind
+      # it: SDL's dummy driver has none, and neither has an X server that
+      # was never started. Skia asks GL what it has, gets a pointer that is
+      # nothing, and it is inside Skia's own answer that the program went --
+      # said of a machine rather than of this program. Mesa in software, and
+      # an X server in front of it, so that what is asked of GL is asked of
+      # something that answers.
+      - name: A GL that answers
+        run: |
+          sudo apt-get install -y --no-install-recommends \
+            xvfb libgl1-mesa-dri libglx-mesa0 libegl-mesa0
       # Kept between runs too: nothing here is a check of the build, only of
       # what the built program does.
       - uses: actions/cache@v4
@@ -51,18 +62,13 @@ jobs:
       - name: Run it, and say where it went
         env:
           SDL_AUDIODRIVER: dummy
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_DRIVER: llvmpipe
           ASAN_OPTIONS: detect_leaks=0:abort_on_error=0
           UBSAN_OPTIONS: print_stacktrace=1
         run: |
-          # A window of its own, rather than none: SDL_VIDEODRIVER=dummy is
-          # a video driver no GL ever comes out of, and what is asked here
-          # is what happens in a window that is really there.
-          runner=()
-          if command -v xvfb-run >/dev/null; then
-            runner=(xvfb-run -a)
-          else
-            export SDL_VIDEODRIVER=dummy
-          fi
+          runner=(xvfb-run -a)
+          command -v xvfb-run >/dev/null || runner=()
           if ! timeout 90 "${runner[@]}" ./build-crash/progressive-chat; then
             echo "progressive-chat went: $?"
           fi
