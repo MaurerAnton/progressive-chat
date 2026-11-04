@@ -9,6 +9,8 @@ import skiff.nodes.icon;
 
 export namespace pchat::ui {
 
+namespace nodes = skiff::nodes;
+
 using nodes::IconShape;
 using nodes::Mark;
 namespace marks = nodes::mark;

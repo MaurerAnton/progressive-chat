@@ -20,12 +20,14 @@ import pchat.app.sample;
 import pchat.logic.composer;
 import pchat.logic.lists;
 
+namespace scene = skiff::scene;
+
 export namespace pchat::app {
 
 // Everything shown, and what is done with what was asked for.
 class screens {
  public:
-  screens() : root_(sample::sample_chats()), shown_(default_looks), look_(ui::paints_of(colors_of(shown_, true), true)) {}
+  screens() : root_(sample_chats()), shown_(default_looks), look_(ui::paints_of(colors_of(shown_, true), true)) {}
 
   [[nodiscard]] scene::Scene<ui::window_type> &window() noexcept { return scene_; }
 
@@ -36,7 +38,7 @@ class screens {
                    [&](const send_message &asking) {
                      const logic::sent_message said =
                          logic::send(logic::sending_request{asking.chat, asking.text, {}, std::nullopt},
-                                     "Reader", static_cast<core::moment>(said_count_++));
+                                     "Reader", static_cast<moment>(said_count_++));
                      root_.messages.push_back(said.said);
                    },
                    [&](const edit_draft &) {},
@@ -69,15 +71,15 @@ class screens {
     scene_.root().refresh(look_, root_, shown_, dark_, settings_, drawer_, width_, height_, &asked_);
   }
 
-  [[nodiscard]] core::chats_root &root() noexcept { return root_; }
-  [[nodiscard]] const core::chats_root &root() const noexcept { return root_; }
+  [[nodiscard]] chats_root &root() noexcept { return root_; }
+  [[nodiscard]] const chats_root &root() const noexcept { return root_; }
   [[nodiscard]] bool dark() const noexcept { return dark_; }
 
  private:
   void recolour() { look_ = ui::paints_of(colors_of(shown_, true), dark_); }
 
   scene::Scene<ui::window_type> scene_{std::in_place};
-  core::chats_root root_;
+  chats_root root_;
   looks shown_;
   ui::paints look_;
   requests asked_;
@@ -85,7 +87,7 @@ class screens {
   bool dark_ = true;
   bool settings_ = false;
   bool drawer_ = true;
-  core::moment said_count_ = 1;
+  moment said_count_ = 1;
   float width_ = 1100.0f;
   float height_ = 720.0f;
 };

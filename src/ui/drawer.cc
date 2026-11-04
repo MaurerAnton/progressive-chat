@@ -75,7 +75,7 @@ struct conversation_row : scene::Node {
     fBadge.setVisible(false);
   }
 
-  void refresh(const paints &look, const core::conversation &chat, std::string_view said, std::string_view when,
+  void refresh(const paints &look, const conversation &chat, std::string_view said, std::string_view when,
                bool chosen) {
     this->setVisible(true);
     fPlate.setColour(chosen ? look.raised : 0u);
@@ -127,7 +127,7 @@ struct drawer_screen : scene::Node {
 
   // The colours, then what each row says: called by the program whenever the
   // model moved.
-  void refresh(const paints &look, const core::chats_root &root, const std::string &opened, app::requests *asked) {
+  void refresh(const paints &look, const chats_root &root, const std::string &opened, app::requests *asked) {
     fPaper.setColour(look.drawer);
     fHeading.setColour(look.text);
     fSearch.onSubmit().asked = asked;
@@ -137,11 +137,11 @@ struct drawer_screen : scene::Node {
         fRows[at].blank();
         continue;
       }
-      const core::conversation &chat = *rows[at];
+      const conversation &chat = *rows[at];
       // What the row says under the name: the last message in it, if there is
       // one, else what the conversation is.
-      std::string said = chat.kind == core::conversation_kind::direct ? "Say something" : "No messages yet";
-      for (const core::message &one : root.messages)
+      std::string said = chat.kind == conversation_kind::direct ? "Say something" : "No messages yet";
+      for (const message &one : root.messages)
         if (one.chat.value == chat.id.value)
           said = one.text;
       fRows[at].refresh(look, chat, said, "12:40", chat.id.value == opened);

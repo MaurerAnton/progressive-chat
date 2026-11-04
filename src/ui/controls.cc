@@ -16,6 +16,7 @@ import :base;
 
 export namespace pchat::ui {
 
+namespace scene = skiff::scene;
 namespace compose = skiff::compose;
 namespace widgets = skiff::widgets;
 using compose::column;

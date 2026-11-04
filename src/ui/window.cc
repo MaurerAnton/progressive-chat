@@ -47,15 +47,15 @@ struct app_window : scene::Node {
   }
 
   // What the messages are called, from the model: the title the bar shows.
-  [[nodiscard]] static std::string title_of(const core::chats_root &root, const std::string &opened) {
-    for (const core::conversation &chat : root.conversations)
+  [[nodiscard]] static std::string title_of(const chats_root &root, const std::string &opened) {
+    for (const conversation &chat : root.conversations)
       if (chat.id.value == opened)
         return chat.title;
     return std::string{};
   }
 
   // Everything drawn again from the model, for this size of window.
-  void refresh(const paints &look, const core::chats_root &root, const config::looks &shown, bool dark,
+  void refresh(const paints &look, const chats_root &root, const looks &shown, bool dark,
                bool settings_open, bool drawer_open, float width, float height, app::requests *asked) {
     const bool wide = width >= side_by_side_from;
     const float breadth = std::min(drawer_width, std::max(width * 0.32f, 280.0f));
@@ -91,7 +91,7 @@ struct app_window : scene::Node {
     // The card at the foot.
     fComposer.apply({.anchor = scene::anchor::kBottomLeft, .origin = scene::anchor::kBottomLeft, .x = left,
                      .y = 0.0f, .width = column, .height = 56.0f + 2.0f * edge, .visible = in_chat});
-    for (const core::conversation &chat : root.conversations)
+    for (const conversation &chat : root.conversations)
       if (chat.id.value == root.opened.value)
         fComposer.refresh(look, chat.id, asked);
     // The settings page, over everything, when it is opened.

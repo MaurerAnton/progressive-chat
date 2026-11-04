@@ -99,7 +99,7 @@ struct settings_screen : scene::Node {
 
   void hide() { this->setVisible(false); }
 
-  void refresh(const paints &look, const config::looks &shown, bool dark, float breadth) {
+  void refresh(const paints &look, const looks &shown, bool dark, float breadth) {
     this->setVisible(true);
     fPaper.setColour(look.paper);
     fCard.setColour(look.drawer);
@@ -127,7 +127,7 @@ struct settings_screen : scene::Node {
                    look, "Larger type", shown.font_scale > 1.0f);
     fSystemFont.refresh({.anchor = row.anchor, .x = row.x, .y = top + 104.0f, .width = row.width,
                          .height = row.height, .cornerRadius = row.cornerRadius},
-                        look, "System font", shown.font == config::font_choice::system);
+                        look, "System font", shown.font == font_choice::system);
   }
 
   void forEachChild(auto &&f) {

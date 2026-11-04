@@ -59,7 +59,7 @@ struct message_row : scene::Node {
     return 2.0f * bubble_pad_y + static_cast<float>(lines) * bubble_line;
   }
 
-  void refresh(const paints &look, const core::message &said, bool outgoing, bool head, float top, float breadth,
+  void refresh(const paints &look, const message &said, bool outgoing, bool head, float top, float breadth,
                float scale) {
     // How many lines it takes: the same width the bubble has.
     const float wide = (bubble_max - 2.0f * bubble_pad_x) * scale;
@@ -74,7 +74,7 @@ struct message_row : scene::Node {
                   .y = head ? 16.0f : 0.0f});
     fPlate.setColour(outgoing ? look.sent : look.bubble);
     fName.setVisible(head && !outgoing);
-    fName.setText(said.author.value);
+    fName.setText(said.author);
     fName.setColour(look.primary);
     fName.apply({.anchor = scene::anchor::kTopLeft, .x = left + bubble_pad_x, .y = 0.0f,
                  .autoSize = scene::axes::kBoth});
@@ -110,9 +110,9 @@ struct message_screen : scene::Node {
   }
 
   // Called by the program whenever what is shown moved.
-  void refresh(const paints &look, const core::chats_root &root, const std::string &opened, float breadth, float scale) {
-    std::vector<const core::message *> said;
-    for (const core::message &one : root.messages)
+  void refresh(const paints &look, const chats_root &root, const std::string &opened, float breadth, float scale) {
+    std::vector<const message *> said;
+    for (const message &one : root.messages)
       if (one.chat.value == opened)
         said.push_back(&one);
     float top = edge;
@@ -123,14 +123,14 @@ struct message_screen : scene::Node {
         fRows[at].blank();
         continue;
       }
-      const core::message &one = *said[at];
-      const bool head = one.author.value != last_author || one.outgoing != last_outgoing;
+      const message &one = *said[at];
+      const bool head = one.author != last_author || one.outgoing != last_outgoing;
       fRows[at].refresh(look, one, one.outgoing, head, top, breadth, scale);
       const float lines = static_cast<float>(
           std::max<std::size_t>(1, (one.text.size() * 8) /
                                        static_cast<std::size_t>((bubble_max - 2.0f * bubble_pad_x) * scale) + 1));
       top += message_row::height_of(static_cast<std::size_t>(lines)) + bubble_gap + (head ? 16.0f : 0.0f);
-      last_author = one.author.value;
+      last_author = one.author;
       last_outgoing = one.outgoing;
     }
     this->apply({.fillX = true, .height = top + edge});

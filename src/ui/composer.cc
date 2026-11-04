@@ -56,7 +56,7 @@ struct composer : scene::Node {
                      .origin = scene::anchor::kCentre, .x = -(edge + send_size / 2.0f), .y = edge + send_size / 2.0f});
   }
 
-  void refresh(const paints &look, const core::conversation_id &chat, app::requests *asked) {
+  void refresh(const paints &look, const conversation_id &chat, app::requests *asked) {
     (void)chat;
     fGiven = message_given{asked, chat};
     fField.onSubmit() = fGiven;
