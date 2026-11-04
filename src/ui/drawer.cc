@@ -93,8 +93,10 @@ struct conversation_row : scene::Node {
     fBadge.setVisible(false);
   }
 
-  void again(const paints &look, const conversation &chat, std::string_view said, std::string_view when,
-               bool chosen) {
+  void again(app::requests *sink, const paints &look, const conversation &chat, std::string_view said,
+               std::string_view when, bool chosen) {
+    asked = sink;
+    said_of = chat.id;
     this->setVisible(true);
     fPlate.setColour(chosen ? look.raised : 0u);
     fAvatar.setColour(look.avatar);
