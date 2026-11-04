@@ -14,7 +14,7 @@ function(pchat_add_android_apk target)
       "AOSP framework resource APK")
   set(PCHAT_ANDROID_APKSIGNER_JAR "${MANDK_ROOT}/tools/apksigner.jar" CACHE FILEPATH
       "Source-built apksigner JAR")
-  set(PCHAT_ANDROID_TARGET_API 35 CACHE STRING "APK target API")
+  set(PCHAT_ANDROID_TARGET_API 34 CACHE STRING "APK target API")
   set(PCHAT_ANDROID_MIN_API 28 CACHE STRING "APK minimum API")
   set(PCHAT_ANDROID_VERSION_CODE 1 CACHE STRING "Monotonic APK version code")
   set(PCHAT_ANDROID_SDL_DEX_DIR "" CACHE PATH
