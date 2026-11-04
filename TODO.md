@@ -16,9 +16,16 @@ build and the next.
 
 - [ ] **The program goes as soon as it starts**, on an android and in a
       browser both, since the design was drawn (9e989cb) -- every build
-      since it. Not for want of a cause guessed at: `.github/workflows/
-      crash.yml` builds it with the address and undefined sanitizers and
-      runs it with no window at all, which is asked to say where it goes.
+      since it. Where it goes on a desktop is known now
+      (`.github/workflows/crash.yml`, address and undefined sanitizers):
+      inside Skia, asking GL what it knows -- `GrGLExtensions::init`, given
+      a pointer that is nothing because the window behind it had no GL at
+      all. Whether an android's going is the same going has not been said
+      anywhere yet: what it wants is `adb logcat -b crash` off the phone.
+      Two things are guessed at meanwhile, neither shown true: the window's
+      tree of nodes being too tall for a thread given a megabyte (rows are
+      on the heap now, and the APK asks for sixteen megabytes), and what is
+      behind the window being no GL rather than GL.
 
 - [ ] The back end: `src/app/sample.cc` answers for now, so nothing that
       is counted -- tokens, tool calls, how long an answer took -- is
