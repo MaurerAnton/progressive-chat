@@ -5,9 +5,21 @@ import { chromium } from 'playwright';
 
 const url = process.env.PCHAT_PAGE ?? 'https://progressive-chat.github.io/progressive-chat/';
 
-const shoot = async (browser, name, viewport, wants_touch) => {
-  const context = await browser.newContext({ viewport, deviceScaleFactor: 1, isMobile: wants_touch, hasTouch: wants_touch });
+// Two kinds of page: one the worker isolates and so draws on more than one
+// thread, and one that blocks it and so is drawn on one -- which is how the
+// client answers a host that says no to isolation. Both are asked, because
+// which of them a tester's browser got is half of what a report leaves out.
+const shoot = async (browser, name, viewport, alone) => {
+  const context = await browser.newContext({
+    viewport,
+    deviceScaleFactor: 1,
+    isMobile: alone,
+    hasTouch: alone,
+    ...(alone ? { serviceWorkers: 'block' } : {}),
+  });
   const page = await context.newPage();
+  page.on('crash', () => console.log(`crashed[${name}]: the page's renderer went`));
+  page.on('close', () => console.log(`closed[${name}]`));
   page.on('console', message => console.log(`console[${name}] ${message.type()}: ${String(message.text()).slice(0, 400)}`));
   page.on('pageerror', error => console.log(`pageerror[${name}]: ${String(error).slice(0, 600)}`));
   await page.goto(url, { waitUntil: 'load' });
@@ -52,4 +64,5 @@ const browser = await chromium.launch({
 });
 await shoot(browser, 'painted-wide', { width: 1280, height: 900 }, false);
 await shoot(browser, 'painted-narrow', { width: 390, height: 844 }, true);
+await shoot(browser, 'painted-one-thread', { width: 1280, height: 900 }, false);
 await browser.close();
