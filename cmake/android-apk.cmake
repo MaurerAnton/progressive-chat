@@ -15,19 +15,23 @@ function(pchat_add_android_apk target)
   set(PCHAT_ANDROID_APKSIGNER_JAR "${MANDK_ROOT}/tools/apksigner.jar" CACHE FILEPATH
       "Source-built apksigner JAR")
   set(PCHAT_ANDROID_TARGET_API 34 CACHE STRING "APK target API")
-  set(PCHAT_ANDROID_MIN_API 28 CACHE STRING "APK minimum API")
+  set(PCHAT_ANDROID_MIN_API 5 CACHE STRING "APK minimum API")
   set(PCHAT_ANDROID_VERSION_CODE 1 CACHE STRING "Monotonic APK version code")
   set(PCHAT_ANDROID_SDL_DEX_DIR "" CACHE PATH
       "Directory of the SDL fork's native-activity/dex script")
   option(PCHAT_ANDROID_TEST_KEY "Sign the APK with a generated test key" ON)
   set(PCHAT_ANDROID_LIBRARY_DIRS "" CACHE STRING "Additional Android runtime library search directories")
-  if(PCHAT_ANDROID_MIN_API LESS 28 OR PCHAT_ANDROID_TARGET_API LESS PCHAT_ANDROID_MIN_API)
-    message(FATAL_ERROR "Android packaging requires 28 <= PCHAT_ANDROID_MIN_API <= PCHAT_ANDROID_TARGET_API")
+  if(PCHAT_ANDROID_MIN_API LESS 5 OR PCHAT_ANDROID_TARGET_API LESS PCHAT_ANDROID_MIN_API)
+    message(FATAL_ERROR "Android packaging requires 5 <= PCHAT_ANDROID_MIN_API <= PCHAT_ANDROID_TARGET_API")
   endif()
-  # Android keeps the signature outside the archive from 7.0 (API 24): an
-  # APK signed in that scheme alone installs on everything this one runs on,
-  # so the older signature inside the archive is not made.
-  set(v1_signing false)
+  # Android keeps the signature outside the archive from 7.0 (API 24): only
+  # below that is the signature inside the archive the one that is read, and
+  # so only there is it made.
+  if(PCHAT_ANDROID_MIN_API LESS 24)
+    set(v1_signing true)
+  else()
+    set(v1_signing false)
+  endif()
   foreach(input PCHAT_ANDROID_FRAMEWORK_RES_APK PCHAT_ANDROID_APKSIGNER_JAR)
     if(NOT EXISTS "${${input}}")
       message(FATAL_ERROR "Set ${input} to an existing file (currently '${${input}}')")
