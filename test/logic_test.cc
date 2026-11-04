@@ -1,6 +1,6 @@
 module;
 #include "tests.h"
-module pchat.test.logic;
+export module pchat.test.logic;
 // SPDX-License-Identifier: AGPL-3.0-only
 // What the screens read out of the model: the drawer's order, the search over
 // it, the badge, the field, and the marks in a line.

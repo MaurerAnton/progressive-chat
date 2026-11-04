@@ -1,6 +1,6 @@
 module;
 #include "tests.h"
-module pchat.test.core;
+export module pchat.test.core;
 // SPDX-License-Identifier: AGPL-3.0-only
 // What the model itself says: ids are comparable, and what the screens read is
 // what was put in.

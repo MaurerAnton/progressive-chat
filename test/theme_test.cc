@@ -1,6 +1,6 @@
 module;
 #include "tests.h"
-module pchat.test.theme;
+export module pchat.test.theme;
 // SPDX-License-Identifier: AGPL-3.0-only
 // The colours: every preset gives a scheme whose roles are kept, and AMOLED's
 // black is blacker than the dark scheme's own.
