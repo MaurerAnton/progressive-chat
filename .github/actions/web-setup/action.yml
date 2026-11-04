@@ -36,9 +36,11 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        python3 "${{ github.workspace }}/tools/prepare_emscripten.py" \
-          --emscripten "$HOME/.cache/pchat-emsdk/upstream/emscripten" \
-          --libcxx /usr/lib/llvm-23/include/c++/v1
+        sdk="$HOME/.cache/pchat-emsdk/upstream/emscripten"
+        python3 "${{ github.workspace }}/tools/prepare_libcxx.py" \
+          --libcxx /usr/lib/llvm-23/include/c++/v1 \
+          --tree "$sdk/system/lib/libcxx/include" \
+          --tree "$sdk/cache/sysroot/include/c++/v1"
 
     - name: Say the SDK
       shell: bash

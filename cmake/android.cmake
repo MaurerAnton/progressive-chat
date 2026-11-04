@@ -11,6 +11,10 @@ set_property(SOURCE src/main.cc APPEND PROPERTY COMPILE_OPTIONS
 # The linker options the platform needs: no undefined symbol may stay
 # unresolved in a library loaded by ART, and every part of the C++ runtime
 # the NDK's build does not add by itself is named here.
-set(PCHAT_ANDROID_LINK_OPTIONS
+# Nothing here opens a camera, and the NDK made from Android's own sources
+# carries no headers for one: SDL3's Android camera driver is not built.
+set(SDL_CAMERA OFF CACHE BOOL "" FORCE)
+
+# The linker options the platform needs:
   -Wl,--no-undefined
   -Wl,-z,max-page-size=16384)

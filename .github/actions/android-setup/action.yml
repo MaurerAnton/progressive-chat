@@ -75,6 +75,16 @@ runs:
         test -f "$root/sysroot/usr/lib/libc++.modules.json"
         find "$root" -exec touch -h -d "@1000000000" {} +
 
+    # This tree is read by clang 23 against a libc++ of AOSP's, which is one
+    # release behind: given what that clang already gives the host's own.
+    - name: The sysroot's libc++, given what libc++ 23 added
+      shell: bash
+      run: |
+        set -euo pipefail
+        python3 "${{ github.workspace }}/tools/prepare_libcxx.py" \
+          --libcxx /usr/lib/llvm-23/include/c++/v1 \
+          --tree "$HOME/.cache/pchat-android-${{ inputs.abi }}/sysroot/usr/include/c++/v1"
+
     - name: Say the toolchain
       shell: bash
       run: |
