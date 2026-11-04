@@ -147,10 +147,12 @@ function(pchat_add_android_apk target)
       endif()
     endif()
   endif()
+  # Named for what it is before it is named for where it runs: the program's
+  # version, then its commit, then the machine it was made for.
   if(PCHAT_ANDROID_REVISION)
-    set(name "progressive-chat-${abi}-${PCHAT_ANDROID_REVISION}")
+    set(name "progressive-chat-${PROJECT_VERSION}-${PCHAT_ANDROID_REVISION}-${abi}")
   else()
-    set(name "progressive-chat-${abi}")
+    set(name "progressive-chat-${PROJECT_VERSION}-${abi}")
   endif()
 
   # The classes: NativeActivity itself, taken for what its callbacks are.

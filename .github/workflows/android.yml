@@ -57,29 +57,39 @@ jobs:
         run: cmake --build build-android --target progressive-chat -- -k 0
       # The same library, packaged: resources against the platform's own, the
       # activity's classes, the archive lined up and signed. Both APKs are
-      # named with the commit they are of, so that one taken out of here and
-      # of the archive around it still says which build it came from.
+      # named with the version and commit they are of, so that one taken out
+      # of here and of the archive around it still says which build it came
+      # from.
       - name: Package
         run: cmake --build build-android --target progressive-chat-apk-out
       # What installs goes up alone: three files in one artifact -- the
       # signed APK, the unsigned one beside it, the symbols -- is three to
       # choose between, and the wrong one of them is what an Android means
       # by "there was a problem while parsing the package".
+      # What the APK made here is called -- its version, its commit and the
+      # machine it runs on -- said once, so that what goes up is named as
+      # what it holds.
+      - name: Say what it is called
+        id: called
+        run: |
+          version="$(sed -n 's/^CMAKE_PROJECT_VERSION:STATIC=//p' build-android/CMakeCache.txt)"
+          commit="$(git rev-parse --short=12 HEAD)"
+          echo "name=progressive-chat-${version}-${commit}-${{ matrix.abi }}" >> "$GITHUB_OUTPUT"
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: progressive-chat-android-${{ matrix.abi }}-${{ github.sha }}
+          name: ${{ steps.called.outputs.name }}
           path: |
-            build-android/progressive-chat-${{ matrix.abi }}-*.apk
-            !build-android/progressive-chat-${{ matrix.abi }}-*-unsigned.apk
+            build-android/progressive-chat-*-${{ matrix.abi }}.apk
+            !build-android/progressive-chat-*-${{ matrix.abi }}-unsigned.apk
           if-no-files-found: error
       # The rest of what came out, under its own name: what no Android
       # installs, and what a symbolizer reads.
       - name: Upload the rest
         uses: actions/upload-artifact@v4
         with:
-          name: progressive-chat-android-${{ matrix.abi }}-unsigned-and-symbols-${{ github.sha }}
+          name: ${{ steps.called.outputs.name }}-unsigned-and-symbols
           path: |
-            build-android/progressive-chat-${{ matrix.abi }}-*-unsigned.apk
+            build-android/progressive-chat-*-${{ matrix.abi }}-unsigned.apk
             build-android/libprogressive-chat.so
           if-no-files-found: error
