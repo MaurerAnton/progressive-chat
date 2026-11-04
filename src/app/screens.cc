@@ -38,7 +38,13 @@ class screens {
   // Answered between frames: what the controls asked for, oldest first.
   void take(const request &one) {
     std::visit(overloaded{
-                   [&](const open_conversation &asking) { root_.opened = asking.chat; },
+                   [&](const open_conversation &asking) {
+                      root_.opened = asking.chat;
+                      // A drawer that came over the messages has been used:
+                      // put away, leaving the conversation it opened.
+                      if (width_ < ui::side_by_side_from)
+                        drawer_ = false;
+                    },
                    [&](const send_message &asking) {
                      const logic::sent_message said =
                          logic::send(logic::sending_request{asking.chat, asking.text, {}, std::nullopt},
