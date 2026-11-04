@@ -58,18 +58,17 @@
         dispatchEvent(new Event('pchat-started'));
       }
     };
-    const script = document.createElement('script');
-    script.src = asset(build.program + '.js');
-    script.onerror = () => say('Could not load progressive-chat. Please reload.');
-    // Linked modularized (-sMODULARIZE), the client is a factory that is
-    // handed its options and starts when it is called; linked the older way
-    // it starts itself, from the global Module above, and there is no
-    // factory to call.
-    script.onload = () => {
-      if (typeof createProgressiveChat !== 'function') return;
-      Promise.resolve(createProgressiveChat(window.Module)).catch(error => say(String(error)));
-    };
-    document.body.append(script);
+    // The client is linked `-sEXPORT_ES6`: it is a module, its factory is
+    // the module's default export, and what it spawns its threads from is
+    // that same module again -- a `new Worker` of `type: 'module'`. Named in
+    // a script tag it is parsed as an old script instead: no import.meta to
+    // read, no export to give, and so no factory to find -- which is a page
+    // still saying that it is starting, with nothing else ever having run.
+    const made = await import(asset(build.program + '.js'));
+    const start = made.default ?? made.createProgressiveChat;
+    if (typeof start !== 'function')
+      throw new Error('progressive-chat is not the client it should be. Please reload.');
+    await start(window.Module);
   } catch (error) {
     say(error.message || String(error));
   }
