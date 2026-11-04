@@ -1,16 +1,36 @@
 # progressive-chat
 
-A chat client: the conversations of one account, the messages in one of them,
-and the appearance of both. It is a **new front end for the Agora look**,
-written from nothing on the stack [mux](https://github.com/j4niwzis/mux) uses
--- C++26 modules, clang, CMake, Ninja, SDL3 and Skia through skiff -- so that
-it builds for the desktop, for the web and for Android from one set of files.
+A client for talking to a model: the conversations of one account, the
+messages in one of them, and the appearance of both. It is a **new front end
+for the Agora look**, written from nothing on the stack
+[mux](https://github.com/j4niwzis/mux) uses -- C++26 modules, clang, CMake,
+Ninja, SDL3 and Skia through skiff -- so that it builds for the desktop, for
+the web and for Android from one set of files.
 
 Started **3 November 2026, 21:07 UTC** -- the repository's first commit.
 
 The back end is not here yet. What the screens show today is a sample, kept in
 `src/app/sample.cc`, and every change the screens ask for is answered in
 memory until a client answers them instead.
+
+## Why this project exists
+
+It did not begin as this. What was wanted first was a modern client for
+talking to **people**, written in C++ and built for every platform from one
+set of files. That was begun, and then it was left alone: what was needed, it
+turned out, was not another place to talk to people, but a client to talk to
+a **model** -- an agentic one, meant to be used on a phone, so small and
+friendly enough to be opened there. Work on the chat client stopped.
+
+Months later, looking for what may have been written since, there was mux:
+found in a conversation with a model that had the web to search, and kept for
+what it is made of rather than for what it is -- C++26 modules, clang, Skia
+through skiff, one program built for a window, for a page and for a phone.
+Its stack is the stack here; it is what made starting again worth it.
+
+So what this repository is, now, is that client in its beginning: the look of
+[Agora](https://github.com/MaurerAnton/agora) drawn again on it, and no back
+end yet. It is **not** designed for people to talk to each other in.
 
 ## What it is made of
 
