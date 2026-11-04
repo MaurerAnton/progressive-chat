@@ -62,7 +62,7 @@ struct composer : scene::Node {
                      .origin = scene::anchor::kCentre, .x = -(edge + send_size / 2.0f), .y = edge + send_size / 2.0f});
   }
 
-  void refresh(const paints &look, const conversation_id &chat, app::requests *asked) {
+  void again(const paints &look, const conversation_id &chat, app::requests *asked) {
     fSink->asked = asked;
     fSink->chat = chat;
     fCard.setColour(look.card);

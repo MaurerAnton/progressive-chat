@@ -53,7 +53,7 @@ struct switch_row : scene::Node {
                  .origin = scene::anchor::kCentreRight, .x = -16.0f - 21.0f});
   }
 
-  void refresh(const scene::Spec &spec, const paints &look, std::string_view name, bool on) {
+  void again(const scene::Spec &spec, const paints &look, std::string_view name, bool on) {
     this->apply(spec);
     fName.setText(std::string(name));
     fName.setColour(look.text);
@@ -99,7 +99,7 @@ struct settings_screen : scene::Node {
 
   void hide() { this->setVisible(false); }
 
-  void refresh(const paints &look, const looks &shown, bool dark, float breadth) {
+  void again(const paints &look, const looks &shown, bool dark, float breadth) {
     this->setVisible(true);
     fPaper.setColour(look.paper);
     fCard.setColour(look.drawer);
@@ -114,18 +114,18 @@ struct settings_screen : scene::Node {
       const scene::Spec spec{.anchor = scene::anchor::kTopLeft, .x = 16.0f,
                              .y = 108.0f + static_cast<float>(at) * 52.0f, .width = breadth - 32.0f,
                              .height = 48.0f, .cornerRadius = 14.0f};
-      fSeeds[at].refresh(spec, look, scheme.primary, seeds_offered[at].name, chosen);
+      fSeeds[at].again(spec, look, scheme.primary, seeds_offered[at].name, chosen);
     }
     const float top = 108.0f + 52.0f * static_cast<float>(max_seeds) + 16.0f;
     const scene::Spec row{.anchor = scene::anchor::kTopLeft, .x = 16.0f, .width = breadth - 32.0f, .height = 48.0f,
                           .cornerRadius = 14.0f};
-    fBlack.refresh({.anchor = row.anchor, .x = row.x, .y = top, .width = row.width, .height = row.height,
+    fBlack.again({.anchor = row.anchor, .x = row.x, .y = top, .width = row.width, .height = row.height,
                     .cornerRadius = row.cornerRadius},
                    look, "Pure black", shown.amoled);
-    fLarge.refresh({.anchor = row.anchor, .x = row.x, .y = top + 52.0f, .width = row.width, .height = row.height,
+    fLarge.again({.anchor = row.anchor, .x = row.x, .y = top + 52.0f, .width = row.width, .height = row.height,
                     .cornerRadius = row.cornerRadius},
                    look, "Larger type", shown.font_scale > 1.0f);
-    fSystemFont.refresh({.anchor = row.anchor, .x = row.x, .y = top + 104.0f, .width = row.width,
+    fSystemFont.again({.anchor = row.anchor, .x = row.x, .y = top + 104.0f, .width = row.width,
                          .height = row.height, .cornerRadius = row.cornerRadius},
                         look, "System font", shown.font == font_choice::system);
   }

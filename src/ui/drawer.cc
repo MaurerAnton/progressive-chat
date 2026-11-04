@@ -80,7 +80,7 @@ struct conversation_row : scene::Node {
     fBadge.setVisible(false);
   }
 
-  void refresh(const paints &look, const conversation &chat, std::string_view said, std::string_view when,
+  void again(const paints &look, const conversation &chat, std::string_view said, std::string_view when,
                bool chosen) {
     this->setVisible(true);
     fPlate.setColour(chosen ? look.raised : 0u);
@@ -133,7 +133,7 @@ struct drawer_screen : scene::Node {
 
   // The colours, then what each row says: called by the program whenever the
   // model moved.
-  void refresh(const paints &look, const chats_root &root, const std::string &opened, app::requests *asked) {
+  void again(const paints &look, const chats_root &root, const std::string &opened, app::requests *asked) {
     fPaper.setColour(look.drawer);
     fHeading.setColour(look.text);
     fSink->asked = asked;
@@ -150,7 +150,7 @@ struct drawer_screen : scene::Node {
       for (const message &one : root.messages)
         if (one.chat.value == chat.id.value)
           said = one.text;
-      fRows[at].refresh(look, chat, said, "12:40", chat.id.value == opened);
+      fRows[at].again(look, chat, said, "12:40", chat.id.value == opened);
     }
   }
 

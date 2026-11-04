@@ -33,7 +33,7 @@ struct bar_pill : scene::Node {
                   .autoSize = scene::axes::kBoth});
   }
 
-  void refresh(const paints &look, scene::Colour plate, std::string_view label) {
+  void again(const paints &look, scene::Colour plate, std::string_view label) {
     (void)look;
     fPlate.setColour(plate);
     fMark.setColour(look.text);
@@ -74,7 +74,7 @@ struct top_bar : scene::Node {
                        .origin = scene::anchor::kCentre, .x = -(edge + 18.0f), .y = top_bar_height / 2.0f});
   }
 
-  void refresh(const paints &look, std::string_view title) {
+  void again(const paints &look, std::string_view title) {
     fScrim.setColour(look.paper);
     fScrim.apply({.fill = true, .gradient = scene::Gradient{look.paper, look.scrim_top}});
     fMenuPlate.setColour(look.search_bar);

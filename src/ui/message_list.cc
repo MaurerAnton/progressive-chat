@@ -59,7 +59,7 @@ struct message_row : scene::Node {
     return 2.0f * bubble_pad_y + static_cast<float>(lines) * bubble_line;
   }
 
-  void refresh(const paints &look, const message &said, bool outgoing, bool head, float top, float breadth,
+  void again(const paints &look, const message &said, bool outgoing, bool head, float top, float breadth,
                float scale) {
     // How many lines it takes: the same width the bubble has.
     const float wide = (bubble_max - 2.0f * bubble_pad_x) * scale;
@@ -110,7 +110,7 @@ struct message_screen : scene::Node {
   }
 
   // Called by the program whenever what is shown moved.
-  void refresh(const paints &look, const chats_root &root, const std::string &opened, float breadth, float scale) {
+  void again(const paints &look, const chats_root &root, const std::string &opened, float breadth, float scale) {
     std::vector<const message *> said;
     for (const message &one : root.messages)
       if (one.chat.value == opened)
@@ -125,7 +125,7 @@ struct message_screen : scene::Node {
       }
       const message &one = *said[at];
       const bool head = one.author != last_author || one.outgoing != last_outgoing;
-      fRows[at].refresh(look, one, one.outgoing, head, top, breadth, scale);
+      fRows[at].again(look, one, one.outgoing, head, top, breadth, scale);
       const float lines = static_cast<float>(
           std::max<std::size_t>(1, (one.text.size() * 8) /
                                        static_cast<std::size_t>((bubble_max - 2.0f * bubble_pad_x) * scale) + 1));

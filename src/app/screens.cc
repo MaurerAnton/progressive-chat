@@ -68,7 +68,7 @@ class screens {
   void before_frame(double) {
     for (const request &one : asked_.drain())
       take(one);
-    scene_.root().refresh(look_, root_, shown_, dark_, settings_, drawer_, width_, height_, &asked_);
+    scene_.root().again(look_, root_, shown_, dark_, settings_, drawer_, width_, height_, &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }

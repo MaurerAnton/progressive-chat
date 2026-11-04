@@ -40,7 +40,7 @@ struct seed_row : scene::Node {
 
   void blank() { this->setVisible(false); }
 
-  void refresh(const scene::Spec &spec, const paints &look, scene::Colour seed, std::string_view name, bool chosen) {
+  void again(const scene::Spec &spec, const paints &look, scene::Colour seed, std::string_view name, bool chosen) {
     this->setVisible(true);
     this->apply(spec);
     fPlate.setColour(chosen ? look.raised : 0u);
