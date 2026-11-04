@@ -6,17 +6,19 @@ build and the next.
 
 ## Wrong today
 
-- [ ] **The icon is wrong.** What the launcher, the app list and the task
-      switcher show for progressive-chat is not the one the sources say:
-      `android/res/mipmap-*/ic_launcher.png` is what every Android before
-      26 shows, and the vector in `android/res/drawable/ic_launcher_*`
-      is what 26 and later show. Say which of them you see, and what it
-      looks like -- a plain green plate, an SDL or template icon -- before
-      it is redrawn: the two are drawn by different hands.
-      The same for what the browser shows on a tab (`web/icon.svg`) and
-      what a desktop window shows, which have not been looked at either.
+- [x] **The icon is wrong** -- done 2026-11-04: what every density and both
+      shapes of it are made of now is progressive-android's own 512x512
+      picture (`android/res/icon-source.png`), cut by `tools/make_icons.py`.
+      The same picture has still not been given to the browser's tab
+      (`web/icon.svg`) or to a desktop window, which nobody has looked at.
 
 ## Known not to be done
+
+- [ ] **The program goes as soon as it starts**, on an android and in a
+      browser both, since the design was drawn (9e989cb) -- every build
+      since it. Not for want of a cause guessed at: `.github/workflows/
+      crash.yml` builds it with the address and undefined sanitizers and
+      runs it with no window at all, which is asked to say where it goes.
 
 - [ ] The back end: `src/app/sample.cc` answers for now, so nothing that
       is counted -- tokens, tool calls, how long an answer took -- is

@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+name: crash
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# The program run here rather than only built, because what it does in the
+# first second of running it is what every check misses: the checks compile
+# it, and an android cannot be asked why it went.
+#
+# Built with address and undefined sanitizers, and run in front of no window
+# at all (SDL_VIDEODRIVER=dummy), so that going is said with the place it
+# went and the words under it -- an abort says what it aborted on, and what
+# the machine is left holding is written out before the run ends.
+jobs:
+  crash:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/desktop-setup
+      # Kept between runs too: nothing here is a check of the build, only of
+      # what the built program does.
+      - uses: actions/cache@v4
+        with:
+          path: build-crash
+          key: crash-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake', '.github/workflows/crash.yml', '.github/actions/desktop-setup/action.yml') }}
+      - name: Configure
+        run: |
+          cmake -S . -B build-crash -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_CXX_FLAGS_DEBUG='-O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined' \
+            -DCMAKE_C_FLAGS_DEBUG='-O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined' \
+            -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address,undefined' \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++"
+      - name: Build the program
+        run: cmake --build build-crash --target progressive-chat --parallel 4
+      # Ninety seconds, and then it is taken down: a program that starts and
+      # stays started has nothing more to say, and this is asked when it does
+      # not stay started. Everything it printed, and the way it ended, is
+      # printed whether it ended well or badly.
+      - name: Run it, and say where it went
+        env:
+          SDL_VIDEODRIVER: dummy
+          SDL_AUDIODRIVER: dummy
+          ASAN_OPTIONS: detect_leaks=0:abort_on_error=0:log_path=stderr
+          UBSAN_OPTIONS: print_stacktrace=1:log_path=stderr
+        run: |
+          if ! timeout 90 ./build-crash/progressive-chat; then
+            echo "progressive-chat went: $?"
+          fi
