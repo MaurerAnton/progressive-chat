@@ -45,15 +45,26 @@ struct switch_row : scene::Node {
   switch_row() {
     this->apply({.fillX = true, .height = 48.0f, .cornerRadius = 14.0f});
     fPlate.apply({.fill = true});
-    fName.apply({.anchor = scene::anchor::kCentreLeft, .origin = scene::anchor::kCentreLeft, .x = 16.0f,
+    fName.apply({.anchor = scene::anchor::kCentreLeft,
+                 .origin = scene::anchor::kCentreLeft,
+                 .x = 16.0f,
                  .autoSize = scene::axes::kBoth});
-    fTrack.apply({.width = 42.0f, .height = 24.0f, .cornerRadius = 12.0f, .anchor = scene::anchor::kCentreRight,
-                  .origin = scene::anchor::kCentreRight, .x = -16.0f});
-    fKnob.apply({.width = 18.0f, .height = 18.0f, .cornerRadius = 9.0f, .anchor = scene::anchor::kCentreLeft,
-                 .origin = scene::anchor::kCentreRight, .x = -16.0f - 21.0f});
+    fTrack.apply({.width = 42.0f,
+                  .height = 24.0f,
+                  .cornerRadius = 12.0f,
+                  .anchor = scene::anchor::kCentreRight,
+                  .origin = scene::anchor::kCentreRight,
+                  .x = -16.0f});
+    fKnob.apply({.width = 18.0f,
+                 .height = 18.0f,
+                 .cornerRadius = 9.0f,
+                 .anchor = scene::anchor::kCentreLeft,
+                 .origin = scene::anchor::kCentreRight,
+                 .x = -16.0f - 21.0f});
   }
 
-  void again(const scene::Spec &spec, const paints &look, std::string_view name, bool on) {
+  void again(const scene::Spec &spec, const paints &look, std::string_view name,
+             bool on) {
     this->apply(spec);
     fName.setText(std::string(name));
     fName.setColour(look.text);
@@ -81,19 +92,36 @@ struct settings_screen : scene::Node {
   switch_row fBlack;
   switch_row fLarge;
   switch_row fSystemFont;
+  // What this build is: not a number that a hundred other builds share, but
+  // the number and the commit they were made of.
+  nodes::Text fVersion{"", 12.0f, 0u};
 
   settings_screen() {
     this->apply({.fill = true});
     fPaper.apply({.fill = true});
-    fCard.apply({.anchor = scene::anchor::kTopCentre, .origin = scene::anchor::kTopLeft, .y = 12.0f, .fillX = true,
-                 .fillY = true, .cornerRadius = 24.0f});
-    fHeading.apply({.anchor = scene::anchor::kTopLeft, .x = 20.0f, .y = 24.0f, .autoSize = scene::axes::kBoth});
-    fLooks.apply({.anchor = scene::anchor::kTopLeft, .x = 20.0f, .y = 76.0f, .autoSize = scene::axes::kBoth});
+    fCard.apply({.anchor = scene::anchor::kTopCentre,
+                 .origin = scene::anchor::kTopLeft,
+                 .y = 12.0f,
+                 .fillX = true,
+                 .fillY = true,
+                 .cornerRadius = 24.0f});
+    fHeading.apply({.anchor = scene::anchor::kTopLeft,
+                    .x = 20.0f,
+                    .y = 24.0f,
+                    .autoSize = scene::axes::kBoth});
+    fLooks.apply({.anchor = scene::anchor::kTopLeft,
+                  .x = 20.0f,
+                  .y = 76.0f,
+                  .autoSize = scene::axes::kBoth});
     for (std::size_t at = 0; at < max_seeds; ++at)
       fSeeds[at].blank();
     fBlack.fName.setText("Pure black");
     fLarge.fName.setText("Larger type");
     fSystemFont.fName.setText("System font");
+    fVersion.setText(std::string("progressive-chat ") + PCHAT_VERSION_SAID);
+    fVersion.apply({.anchor = scene::anchor::kTopLeft,
+                    .x = 20.0f,
+                    .autoSize = scene::axes::kBoth});
     this->setVisible(false);
   }
 
@@ -109,28 +137,62 @@ struct settings_screen : scene::Node {
     // Sizes in pixels: a row made to take the whole of its column when the
     // page was built is told again here how wide it is to be, not how much
     // of its parent it fills.
-    fDivider.apply({.anchor = scene::anchor::kTopLeft, .x = 20.0f, .y = 76.0f + 48.0f * static_cast<float>(max_seeds),
-                    .relativeSize = scene::axes::kNone, .width = breadth - 40.0f, .height = 1.0f});
+    fDivider.apply({.anchor = scene::anchor::kTopLeft,
+                    .x = 20.0f,
+                    .y = 76.0f + 48.0f * static_cast<float>(max_seeds),
+                    .relativeSize = scene::axes::kNone,
+                    .width = breadth - 40.0f,
+                    .height = 1.0f});
     for (std::size_t at = 0; at < max_seeds; ++at) {
       const bool chosen = seeds_offered[at].preset == shown.preset;
-      const color_scheme scheme = scheme_for(seeds_offered[at].preset, shown.style, dark);
-      const scene::Spec spec{.anchor = scene::anchor::kTopLeft, .x = 16.0f, .relativeSize = scene::axes::kNone,
-                             .y = 108.0f + static_cast<float>(at) * 52.0f, .width = breadth - 32.0f,
-                             .height = 48.0f, .cornerRadius = 14.0f};
-      fSeeds[at].again(spec, look, scheme.primary, seeds_offered[at].name, chosen);
+      const color_scheme scheme =
+          scheme_for(seeds_offered[at].preset, shown.style, dark);
+      const scene::Spec spec{.anchor = scene::anchor::kTopLeft,
+                             .x = 16.0f,
+                             .relativeSize = scene::axes::kNone,
+                             .y = 108.0f + static_cast<float>(at) * 52.0f,
+                             .width = breadth - 32.0f,
+                             .height = 48.0f,
+                             .cornerRadius = 14.0f};
+      fSeeds[at].again(spec, look, scheme.primary, seeds_offered[at].name,
+                       chosen);
     }
     const float top = 108.0f + 52.0f * static_cast<float>(max_seeds) + 16.0f;
-    const scene::Spec row{.anchor = scene::anchor::kTopLeft, .x = 16.0f, .relativeSize = scene::axes::kNone,
-                          .width = breadth - 32.0f, .height = 48.0f, .cornerRadius = 14.0f};
-    fBlack.again({.anchor = row.anchor, .x = row.x, .y = top, .relativeSize = scene::axes::kNone, .width = row.width,
-                    .height = row.height, .cornerRadius = row.cornerRadius},
-                   look, "Pure black", shown.amoled);
-    fLarge.again({.anchor = row.anchor, .x = row.x, .y = top + 52.0f, .relativeSize = scene::axes::kNone,
-                    .width = row.width, .height = row.height, .cornerRadius = row.cornerRadius},
-                   look, "Larger type", shown.font_scale > 1.0f);
-    fSystemFont.again({.anchor = row.anchor, .x = row.x, .y = top + 104.0f, .relativeSize = scene::axes::kNone,
-                         .width = row.width, .height = row.height, .cornerRadius = row.cornerRadius},
-                        look, "System font", shown.font == font_choice::system);
+    const scene::Spec row{.anchor = scene::anchor::kTopLeft,
+                          .x = 16.0f,
+                          .relativeSize = scene::axes::kNone,
+                          .width = breadth - 32.0f,
+                          .height = 48.0f,
+                          .cornerRadius = 14.0f};
+    fBlack.again({.anchor = row.anchor,
+                  .x = row.x,
+                  .y = top,
+                  .relativeSize = scene::axes::kNone,
+                  .width = row.width,
+                  .height = row.height,
+                  .cornerRadius = row.cornerRadius},
+                 look, "Pure black", shown.amoled);
+    fLarge.again({.anchor = row.anchor,
+                  .x = row.x,
+                  .y = top + 52.0f,
+                  .relativeSize = scene::axes::kNone,
+                  .width = row.width,
+                  .height = row.height,
+                  .cornerRadius = row.cornerRadius},
+                 look, "Larger type", shown.font_scale > 1.0f);
+    fVersion.apply({.anchor = scene::anchor::kTopLeft,
+                    .x = 20.0f,
+                    .y = top + 156.0f,
+                    .autoSize = scene::axes::kBoth});
+    fVersion.setColour(look.dim);
+    fSystemFont.again({.anchor = row.anchor,
+                       .x = row.x,
+                       .y = top + 104.0f,
+                       .relativeSize = scene::axes::kNone,
+                       .width = row.width,
+                       .height = row.height,
+                       .cornerRadius = row.cornerRadius},
+                      look, "System font", shown.font == font_choice::system);
   }
 
   void forEachChild(auto &&f) {
@@ -144,7 +206,8 @@ struct settings_screen : scene::Node {
     f(fBlack);
     f(fLarge);
     f(fSystemFont);
+    f(fVersion);
   }
 };
 
-}  // namespace pchat::ui
+} // namespace pchat::ui

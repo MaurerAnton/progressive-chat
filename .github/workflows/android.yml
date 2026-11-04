@@ -15,10 +15,10 @@ permissions:
 # reads C++26 modules; making that toolchain takes long enough that the two
 # ABIs are built beside each other rather than one after the other.
 #
-# Built as a release: this library is loaded by an activity that is given no
-# time to load it in, and everything it does before its first frame -- Skia
-# and HarfBuzz both, which a debug build leaves unoptimized and full of
-# checking -- is done while the screen is still black.
+# Built as mux builds it: Debug asked for -- and kept, for what a debug
+# build keeps and a release one does not -- but with its own flags over it,
+# because a debug build unoptimized asks everything the first frame needs
+# of Skia and HarfBuzz to be done while the screen is still black.
 jobs:
   library:
     runs-on: ubuntu-24.04
@@ -52,9 +52,9 @@ jobs:
       - name: Configure
         run: |
           cmake -S . -B build-android -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CXX_FLAGS_RELEASE="-O2 -g0" \
-            -DCMAKE_C_FLAGS_RELEASE="-O2 -g0" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_CXX_FLAGS_DEBUG='-O3 -g0' \
+            -DCMAKE_C_FLAGS_DEBUG='-O3 -g0' \
             -DCMAKE_TOOLCHAIN_FILE="$HOME/.cache/pchat-android-${{ matrix.abi }}/cmake/target.cmake" \
             -DANDROID_ABI=${{ matrix.abi }} \
             -DANDROID_PLATFORM=android-28 \

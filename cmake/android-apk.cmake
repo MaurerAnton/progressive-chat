@@ -150,9 +150,9 @@ function(pchat_add_android_apk target)
   # Named for what it is before it is named for where it runs: the program's
   # version, then its commit, then the machine it was made for.
   if(PCHAT_ANDROID_REVISION)
-    set(name "progressive-chat-${PROJECT_VERSION}-${PCHAT_ANDROID_REVISION}-${abi}")
+    set(name "progressive-chat-${PCHAT_VERSION_SAID}-${abi}")
   else()
-    set(name "progressive-chat-${PROJECT_VERSION}-${abi}")
+    set(name "progressive-chat-${PCHAT_VERSION_SAID}-${abi}")
   endif()
 
   # The classes: NativeActivity itself, taken for what its callbacks are.
@@ -195,7 +195,7 @@ function(pchat_add_android_apk target)
       --manifest "${manifest}" -I "${PCHAT_ANDROID_FRAMEWORK_RES_APK}"
       ${res_flat_args} --auto-add-overlay
       --min-sdk-version "${PCHAT_ANDROID_MIN_API}" --target-sdk-version "${PCHAT_ANDROID_TARGET_API}"
-      --version-code "${PCHAT_ANDROID_VERSION_CODE}" --version-name "${PROJECT_VERSION}"
+      --version-code "${PCHAT_ANDROID_VERSION_CODE}" --version-name "${PCHAT_VERSION_SAID}"
     DEPENDS "${manifest}" "${PCHAT_ANDROID_FRAMEWORK_RES_APK}" ${res_outs} VERBATIM)
   # The archive, of those two and every library they load with.
   # Two archives come of one command: the packager writes the unaligned one,

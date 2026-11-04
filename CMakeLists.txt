@@ -23,6 +23,28 @@ endif()
 
 project(progressive-chat VERSION 0.1 LANGUAGES C CXX)
 
+# What version this is, said as its number and the commit it was made of:
+# one number alone says nothing about which build a tester has, and every
+# build of 0.1 is a different one. Asked of git here because a build is of a
+# checkout; say it where it is known already, with -DPCHAT_REVISION.
+if(NOT PCHAT_REVISION)
+  find_package(Git QUIET)
+  if(Git_FOUND)
+    execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse --short=12 HEAD
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+      OUTPUT_VARIABLE pchat_revision OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET)
+    set(PCHAT_REVISION "${pchat_revision}" CACHE STRING
+      "What version this is said to be of, after its number: the commit it was built from" FORCE)
+  endif()
+endif()
+if(PCHAT_REVISION)
+  set(PCHAT_VERSION_SAID "${PROJECT_VERSION}-${PCHAT_REVISION}")
+else()
+  set(PCHAT_VERSION_SAID "${PROJECT_VERSION}")
+endif()
+add_compile_definitions(PCHAT_VERSION_SAID="${PCHAT_VERSION_SAID}")
+
 # With libstdc++, clang 23.1.4 at least: before it, clang with libstdc++'s
 # std module found no operator| for a range adaptor closure another imported
 # module had made first, and every pipe had to be written in the call form
