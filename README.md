@@ -27,6 +27,9 @@ Three targets, one program:
 | ------- | ------------------------------------------- | ------------------------------ |
 | desktop | `cmake` + Ninja, clang 23, SDL3             | a window of its own            |
 | web     | the same cmake through Emscripten           | a page served by GitHub Pages  |
+
+The page is built and published by `web.yml`, and is served at
+<https://progressive-chat.github.io/progressive-chat/>.
 | android | the same cmake through a self-built NDK     | an APK                         |
 
 ## To build it
@@ -45,10 +48,18 @@ cmake --build build --target progressive-chat
 ```
 
 The web and the APK cross-compile from the same cmake: `-DCMAKE_TOOLCHAIN_FILE`
-of Emscripten's own for the page (which `.github/workflows/web.yml` does, and
-serves from `web/index.html`), and of a clang-23 NDK made from
+of Emscripten's own for the page, and of a clang-23 NDK made from
 `minimal-android-ndk.cpp` for Android (which `.github/workflows/android.yml`
 does).
+
+The page is four files of its own beside the linked client: `web/index.html`,
+the element skiff writes the window into, `web/bootstrap.js`, which isolates
+the page and loads the client, and `web/worker.js`, the service worker that
+answers the isolation headers -- the client is linked with threads, and threads
+are not a page's to have without them, which a host that only serves files
+cannot say. `tools/package_web.py` puts the four and the client together into
+one directory, named by what the client is made of so that a page left open
+does not keep one that has been replaced.
 
 ## License
 
