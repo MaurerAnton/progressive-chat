@@ -50,9 +50,9 @@ jobs:
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_CXX_FLAGS_DEBUG="-Os -g0" \
             -DCMAKE_C_FLAGS_DEBUG="-Os -g0" \
-            -DCMAKE_CXX_FLAGS="-stdlib=libc++ -fexceptions" \
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++ -fexceptions -pthread -msimd128" \
             -DCMAKE_CXX_STDLIB_MODULES_JSON="$PCHAT_MODULES_JSON" \
-            -DSKIFF_EMSCRIPTEN_THREADS=OFF \
+            -DCMAKE_EXE_LINKER_FLAGS="-pthread -msimd128" \
             -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS="$HOME/.cache/pchat-emsdk/upstream/bin/clang-scan-deps" \
             -DPCHAT_TESTS=OFF
       - name: Build
