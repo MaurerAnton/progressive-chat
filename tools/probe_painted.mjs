@@ -58,8 +58,8 @@ const browser = await chromium.launch({
     '--no-sandbox',
     '--disable-dev-shm-usage',
     '--disable-gpu',
-    '--use-gl=swiftshader',
-    '--enable-features=SharedArrayBuffer',
+    '--single-process',
+    '--js-flags=--max-old-space-size=3072',
   ],
 });
 await shoot(browser, 'painted-wide', { width: 1280, height: 900 }, false);
