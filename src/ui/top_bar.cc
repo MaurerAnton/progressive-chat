@@ -9,6 +9,7 @@ import std;
 import skiff.scene;
 import skiff.nodes;
 import pchat.core;
+import pchat.app.requests;
 import :theme;
 import :base;
 import :icons;
@@ -50,10 +51,12 @@ struct bar_pill : scene::Node {
 };
 
 // The bar itself: its fading band behind the pills, the name in the middle,
-// and one pill at each side.
+// the pill that opens the drawer at one side -- where there is a drawer to
+// open, which a window wide enough to keep it open says there is not -- and
+// the search at the other.
 struct top_bar : scene::Node {
   nodes::Box<> fScrim{0u};
-  nodes::Box<> fMenuPlate{0u};
+  ask_box fMenuPlate{};
   nodes::Icon fMenuMark{shape::menu(), 0u};
   nodes::Box<> fSearchPlate{0u};
   nodes::Icon fSearchMark{shape::search(), 0u};
@@ -74,10 +77,14 @@ struct top_bar : scene::Node {
                        .origin = scene::anchor::kCentre, .x = -(edge + 18.0f), .y = top_bar_height / 2.0f});
   }
 
-  void again(const paints &look, std::string_view title) {
+  void again(app::requests *sink, const paints &look, bool menu, std::string_view title) {
     fScrim.setColour(look.paper);
     fScrim.apply({.fill = true, .gradient = scene::Gradient{look.paper, look.scrim_top}});
-    fMenuPlate.setColour(look.search_bar);
+    fMenuPlate.apply({.width = 36.0f, .height = 36.0f, .cornerRadius = 18.0f,
+                      .anchor = scene::anchor::kTopLeft, .x = edge,
+                      .y = (top_bar_height - 36.0f) / 2.0f, .visible = menu});
+    fMenuPlate.again(sink, app::toggle_drawer{}, look.search_bar);
+    fMenuMark.setVisible(menu);
     fSearchPlate.setColour(look.search_bar);
     fMenuMark.setColour(look.text);
     fSearchMark.setColour(look.text);

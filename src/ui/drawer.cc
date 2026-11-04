@@ -43,8 +43,11 @@ struct search_given {
 };
 
 // One conversation, as a row: the name's circle, the name, the time, what was
-// said last, and the badge. Filled in again whenever what it says changes.
+// said last, and the badge. Pressed, it opens what it names. Filled in again
+// whenever what it says changes.
 struct conversation_row : scene::Node {
+  app::requests *asked = nullptr;
+  conversation_id said_of;
   nodes::Box<> fPlate{0u};
   nodes::Box<> fAvatar{0u};
   nodes::Text fTitle{"", 15.0f, 0u, true};
@@ -68,6 +71,16 @@ struct conversation_row : scene::Node {
                   .origin = scene::anchor::kTopRight, .x = -edge, .y = 38.0f});
     fCount.apply({.anchor = scene::anchor::kTopRight, .origin = scene::anchor::kCentre, .x = -edge - 10.0f,
                   .y = 48.0f, .autoSize = scene::axes::kBoth});
+  }
+
+  // A row is pressed to open what it names: said as a request, and answered
+  // between frames, like everything else a control asks for.
+  [[nodiscard]] bool acceptsInput() const { return true; }
+  [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+  [[nodiscard]] bool onClick(float, float) {
+    if (asked)
+      asked->ask(app::open_conversation{said_of});
+    return true;
   }
 
   // Nothing of a conversation: the row is put away until one needs it.
@@ -150,7 +163,7 @@ struct drawer_screen : scene::Node {
       for (const message &one : root.messages)
         if (one.chat.value == chat.id.value)
           said = one.text;
-      fRows[at].again(look, chat, said, "12:40", chat.id.value == opened);
+      fRows[at].again(asked, look, chat, said, "12:40", chat.id.value == opened);
     }
   }
 

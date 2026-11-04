@@ -34,6 +34,7 @@ namespace nodes = skiff::nodes;
 struct app_window : scene::Node {
   nodes::Box<> fPaper{0u};
   nodes::Box<> fMessages{0u};
+  ask_box fShade{};
   drawer_screen fDrawer{360.0f};
   top_bar fTop{};
   nodes::ScrollContainer<message_screen> fList{message_screen{}};
@@ -83,7 +84,14 @@ struct app_window : scene::Node {
     // The bar, over the top of the messages.
     fTop.apply({.anchor = scene::anchor::kTopLeft, .x = left, .y = 0.0f, .width = column, .height = top_scrim,
                 .visible = in_chat});
-    fTop.again(look, title_of(root, opened));
+    // The pill that opens the drawer is there where a drawer can be opened:
+    // a window wide enough to keep it beside the messages has none to open.
+    fTop.again(asked, look, !wide, title_of(root, opened));
+    // Over what the messages were, where the drawer has come over them:
+    // pressed, it puts the drawer away again.
+    fShade.apply({.anchor = scene::anchor::kTopLeft, .x = 0.0f, .y = 0.0f, .width = width, .height = height,
+                  .visible = !wide && drawer_open});
+    fShade.again(asked, app::toggle_drawer{}, look.scrim);
     // The messages, in what scrolls, between the bar and the card.
     auto &messages = std::get<0>(fList.fChildren);
     messages.again(look, root, opened, column, shown.font_scale);
@@ -107,6 +115,7 @@ struct app_window : scene::Node {
   void forEachChild(auto &&f) {
     f(fPaper);
     f(fMessages);
+    f(fShade);
     f(fDrawer);
     f(fList);
     f(fTop);

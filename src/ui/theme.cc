@@ -37,6 +37,7 @@ struct paints {
   Colour scrim_top = 0x000c160cu;   // see-through, the top of the messages
   Colour scrim_bottom = 0xff0c160cu;
   Colour search_bar = 0xd9162616u;  // the pills over the list
+  Colour scrim = 0x99000000u;       // over the messages, while the drawer is over them
   Colour online = 0xff6ede8au;
   float size = 15.0f;  // the body's type size
   bool dark = true;
@@ -69,6 +70,7 @@ struct paints {
   out.scrim_top = scheme.background & 0x00ffffffu;
   out.scrim_bottom = out.paper;
   out.search_bar = (out.card & 0x00ffffffu) | (0xd9u << 24);
+  out.scrim = 0x99000000u;
   out.dark = dark;
   return out;
 }

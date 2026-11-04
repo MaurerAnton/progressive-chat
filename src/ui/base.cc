@@ -9,6 +9,7 @@ import skia;
 import skiff.scene;
 import skiff.nodes;
 import pchat.config;
+import pchat.app.requests;
 import :theme;
 
 export namespace pchat::ui {
@@ -33,6 +34,34 @@ inline constexpr float card_radius = 20.0f;
 inline constexpr float send_size = 46.0f;
 inline constexpr float gap = 12.0f;
 inline constexpr float edge = 12.0f;
+
+// One thing the program is asked for by a press: the request is kept here,
+// whole, and pushed into what the program drains when this is pressed. A
+// plate that only asks -- a pill, the shade over the messages a drawer is
+// open over -- has nothing else in it.
+struct ask_box : scene::Node {
+  nodes::Box<> fPlate{0u};
+  app::requests *asked = nullptr;
+  app::request one{app::toggle_drawer{}};
+
+  ask_box() { fPlate.apply({.fill = true}); }
+
+  [[nodiscard]] bool acceptsInput() const { return true; }
+  [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+  [[nodiscard]] bool onClick(float, float) {
+    if (asked)
+      asked->ask(one);
+    return true;
+  }
+
+  void again(app::requests *sink, app::request asking, scene::Colour colour) {
+    asked = sink;
+    one = std::move(asking);
+    fPlate.setColour(colour);
+  }
+
+  void forEachChild(auto &&f) { f(fPlate); }
+};
 
 // What the window gives the screens: its size, and what that size asks for.
 struct metrics {
