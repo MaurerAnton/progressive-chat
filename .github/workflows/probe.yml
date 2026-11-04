@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+name: probe
+
+# Only ever asked for by hand: what the deployed page paints is not what a
+# push changes, and a browser takes its minutes here for nothing if every
+# push pays them.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  painted:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: A browser that can be driven
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Shoot the page
+        run: node tools/probe_painted.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: painted
+          path: |
+            painted-wide.png
+            painted-narrow.png
+          if-no-files-found: error
