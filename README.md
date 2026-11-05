@@ -157,13 +157,24 @@ same three frames to and reads back.
 * it takes **about twenty seconds** before anything is drawn. Nothing in the
   tree explains that yet: the shared object is 13 MB, the fonts are baked
   into the binary, and there is no network to wait for;
-* it **answers no press**, and Android says it is not responding. It was run
-  on a thread of its own (so that it would have room to grow in, Android
-  giving a thread asked for no stack about a megabyte), and everything a
-  machine says to a program is said to the thread SDL was given, which that
-  thread was not. It runs on SDL's own thread since `8f179164e5ca`, with the
-  tree in static storage and nothing deep on the stack at all; whether that
-  was the whole of it is what the next run of the APK says.
+* it **answers no press**, and Android says it is not responding.
+
+Two answers have been ruled out since, by reading mux rather than by
+guessing -- mux draws on the same phone without either of them:
+
+* what the GPU compiled is **kept between runs** since `a0f90c8ddf0d`. Skia
+  was compiling every program it needed at every start, because nothing told
+  the window where to keep them; mux tells it, and now so does the window
+  (`src/platform/kept.cc`). A phone is slow at compiling them, and until that
+  is read off the machine it is the best candidate there is;
+* what the window itself says is **heard** since `a0f90c8ddf0d`. Both SDL and
+  skiff print to stderr -- among the rest the one line saying whether it is
+  drawn through OpenGL or in software -- and Android throws stderr away; mux
+  pipes it into logcat, and so does this now. Every question above could have
+  been answered from that line, and none of them could be before it.
+
+So: `adb logcat -d -s progressive-chat`, started twice -- the first run fills
+what is kept, and the second is the one that says anything.
 
 Where to look, when something else is wrong: everything above the transport
 is covered by tests (`test/provider_run_test.cc`, the tools and the loop), so
