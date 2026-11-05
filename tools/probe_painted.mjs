@@ -123,7 +123,13 @@ const shoot_answering = async (browser, name) => {
   page.on('pageerror', error => console.log(`pageerror[${name}]: ${String(error).slice(0, 600)}`));
   let asked_url = 'nothing was asked';
   let asked_body = 'nothing was asked';
-  await page.route('**/chat/completions', async route => {
+  // Everything is asked about, and what a model is asked for is answered
+  // here: a pattern written against the url was never asked, because what the
+  // client asks leaves through a worker, and only a request held up on its
+  // way anywhere at all is one that can be said yes to.
+  await context.route(() => true, async route => {
+    if (!route.request().url().includes('chat/completions'))
+      return route.continue();
     asked_url = route.request().url();
     asked_body = route.request().postData() ?? 'nothing in the body';
     await route.fulfill({
@@ -172,7 +178,9 @@ const shoot_with_tools = async (browser, name) => {
   page.on('pageerror', error => console.log(`pageerror[${name}]: ${String(error).slice(0, 600)}`));
   let round = 0;
   const bodies = [];
-  await page.route('**/chat/completions', route => {
+  await context.route(() => true, route => {
+    if (!route.request().url().includes('chat/completions'))
+      return route.continue();
     round += 1;
     bodies.push(route.request().postData() ?? 'nothing in the body');
     console.log(`asked[${name}]: round ${round}`);

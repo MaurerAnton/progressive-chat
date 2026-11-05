@@ -55,6 +55,14 @@ times at most. Nothing here runs anything: a call is read out as data and
 answered as data, so a two-round loop is said by tests with no tools and no
 wire anywhere in it.
 
+And the page was seen asking. Not guessed at: the deployed one, driven in a
+browser, wrote to `https://progressive-chat.github.io/v1/chat/completions`
+the whole conversation as turns -- system, ours, its own -- and was answered
+405 by a host that has no server in it yet, which is the right answer for a
+page that asks a wire nobody is holding the other end of. A tester that can
+catch that asking catches it at the context, because what the client asks
+leaves through a worker and not through the page.
+
 The client spoke to a wire. What one conversation asks of a model is written
 out (`pchat.provider`), carried by whatever carries bytes here
 (`pchat.platform.carry` -- the browser's fetch on a page, and nothing
