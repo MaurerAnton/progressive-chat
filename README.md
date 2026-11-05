@@ -45,6 +45,16 @@ that day, not what it is meant to be one day.
 
 ### 2026-11-05
 
+A question is asked again. A model does not answer in one go: it stops, asks
+for a tool, and goes on once somebody has answered it -- so what it asked for
+comes out of the answer whole, is answered here by the program itself
+(`pchat.tools`: read this conversation back, say how much has been said in
+it, say what time it is -- none of which leaves this machine), and the
+question goes out again with what they said (`pchat.provider.loop`), four
+times at most. Nothing here runs anything: a call is read out as data and
+answered as data, so a two-round loop is said by tests with no tools and no
+wire anywhere in it.
+
 The client spoke to a wire. What one conversation asks of a model is written
 out (`pchat.provider`), carried by whatever carries bytes here
 (`pchat.platform.carry` -- the browser's fetch on a page, and nothing
@@ -73,6 +83,8 @@ src/app/*.cc             the program, the screens, and today's sample
 src/provider.cc          what one conversation asks of a model, and the body
 src/provider/stream.cc   one answer arriving a frame at a time
 src/provider/run.cc      one answer whole: why it is over, the message it leaves
+src/provider/loop.cc     one question asked again with what its tools answered
+src/tools.cc             what this program answers itself, and nothing else
 src/platform/carry.cc    what hands a body over, per platform: a page's fetch
 src/ui.cc, src/ui/*.cc   the window: every screen, drawn with skiff
 ```

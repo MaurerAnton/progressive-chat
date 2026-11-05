@@ -224,7 +224,7 @@ private:
                          .said = message_id{chat.value + "-" +
                                             std::to_string(root_.messages.size())},
                          .going = provider::loop{at,
-                                                 provider::turns_of(turns),
+                                                 turns,
                                                  4,
                                                  provider::wanted{
                                                      .tools = mine.offered()}},
