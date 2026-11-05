@@ -16,6 +16,9 @@ import pchat.core;
 import pchat.config;
 import pchat.theme;
 import pchat.ui;
+import pchat.provider;
+import pchat.provider.run;
+import pchat.platform.carry;
 import pchat.app.requests;
 import pchat.app.sample;
 import pchat.logic.composer;
@@ -55,6 +58,7 @@ public:
                       asking.chat, asking.text, {}, std::nullopt},
                   "Reader", static_cast<moment>(said_count_++));
               root_.messages.push_back(said.said);
+              ask_a_model(asking.chat);
             },
 
             [&](const new_chat &) {
@@ -148,6 +152,7 @@ public:
   void before_frame(double) {
     for (const request &one : asked_.drain())
       take(one);
+    read_what_arrived();
     scene_.root().again(look_, root_, shown_, query_, dark_, settings_, drawer_,
                         width_, height_, &asked_);
   }
@@ -157,6 +162,105 @@ public:
   [[nodiscard]] bool dark() const noexcept { return dark_; }
 
 private:
+  // What asked it is the model asked: which is to say nothing of what any of
+  // this is, only the wire it is spoken through.
+  [[nodiscard]] static moment now_ms() {
+    return static_cast<moment>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch())
+            .count());
+  }
+
+  // One answer asked of a model, and the message it is being written into:
+  // what asked it, what carries the bytes, and when it began, which is how
+  // long an answer is said to have taken.
+  //
+  // Nothing outside this class knows of any of it. The window is drawn again
+  // every frame from `root()`, so an answer arriving is only ever a message
+  // whose text is longer than it was.
+  struct answer_coming {
+    conversation_id chat;
+    message_id said;
+    provider::run asked;
+    platform::carrying carried;
+    moment began;
+  };
+  std::optional<answer_coming> answering_;
+
+  // Asked of a model, where anything here can carry the asking. Today nothing
+  // can anywhere but a page -- that is what `carrying::any` says -- and where
+  // nothing can, nothing is asked and no answer comes, as it was before.
+  void ask_a_model(const conversation_id &chat) {
+    if (answering_)
+      return;
+    platform::carrying carried;
+    if (!carried.any())
+      return;
+    const provider::endpoint at{.base = opened_.base,
+                                .model = ending_of(chat),
+                                .told = opened_.told};
+    const auto turns = root_.messages |
+                       std::views::filter([&chat](const message &one) {
+                         return one.chat == chat;
+                       });
+    answer_coming coming{.chat = chat,
+                         .said = message_id{chat.value + "-" +
+                                            std::to_string(root_.messages.size())},
+                         .asked = provider::run{at, turns},
+                         .carried = std::move(carried),
+                         .began = now_ms()};
+    coming.carried.begin(coming.asked.wants().url,
+                         coming.asked.wants().headers,
+                         coming.asked.wants().body);
+    // The answer as a message before anything of it has come: written into as
+    // it arrives, and kept whole when nothing more is.
+    root_.messages.push_back(message{.id = coming.said,
+                                     .chat = chat,
+                                     .author = ending_of(chat),
+                                     .outgoing = false,
+                                     .sent = coming.began,
+                                     .state = delivery::writing});
+    answering_ = std::move(coming);
+  }
+
+  // What has arrived since the last frame, handed to the answer; the message
+  // written again as it reads; and when nothing more is coming, the answer
+  // said whole -- thought, calls, tokens and all -- in the message's place.
+  void read_what_arrived() {
+    if (!answering_)
+      return;
+    answer_coming &one = *answering_;
+    const std::string arrived = one.carried.take();
+    if (!arrived.empty())
+      one.asked.arrive(arrived);
+    if (message *there = found(one.said))
+      there->text = std::string(one.asked.said());
+    if (!one.carried.over())
+      return;
+    one.asked.carried_over(one.carried.trouble());
+    const moment ended = now_ms();
+    if (message *there = found(one.said))
+      *there = one.asked.answer_of(provider::put_in{.id = one.said,
+                                                    .chat = one.chat,
+                                                    .author = ending_of(one.chat),
+                                                    .sent = ended,
+                                                    .took_ms = ended - one.began});
+    answering_.reset();
+  }
+
+  // One of the messages, by its answer's name: nothing where it is not one.
+  [[nodiscard]] message *found(const message_id &said) {
+    for (message &one : root_.messages)
+      if (one.id == said)
+        return &one;
+    return nullptr;
+  }
+  // Which model answers in a chat, named as the messages name it.
+  [[nodiscard]] std::string ending_of(const conversation_id &chat) const {
+    const std::string model = model_of(chat);
+    return model.empty() ? std::string("Model") : model;
+  }
+
   void recolour() {
     dark_ = dark_of(shown_.mode, true);
     look_ = ui::paints_of(colors_of(shown_, true), dark_);
@@ -215,6 +319,13 @@ private:
     root_.messages = std::move(kept);
   }
 
+  // The door a model is spoken through, while this is only a client: the
+  // server that served the page is the one expected to answer it, which is
+  // why the way in is written relative and why there is no key in it -- whose
+  // a key is, is that server's own to know.
+  const provider::endpoint opened_{
+      .base = "/v1",
+      .told = "You are answering in Progressive Chat, briefly and plainly."};
   window_scene scene_{std::in_place};
   chats_root root_;
   looks shown_;

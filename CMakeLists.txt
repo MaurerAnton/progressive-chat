@@ -217,6 +217,15 @@ target_compile_features(pchat_requests PUBLIC cxx_std_26)
 target_compile_options(pchat_requests PUBLIC ${pchat_std_flags})
 target_link_libraries(pchat_requests PUBLIC pchat_core splice)
 
+# What hands a body over on the platform this is running on, and what takes
+# the bytes it answers with back out of it: a browser's own fetch today, and
+# nothing anywhere else yet, which it says.
+add_library(pchat_platform)
+target_sources(pchat_platform PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
+  FILES src/platform/carry.cc)
+target_compile_features(pchat_platform PUBLIC cxx_std_26)
+target_compile_options(pchat_platform PUBLIC ${pchat_std_flags})
+
 if(PCHAT_UI)
   pchat_find_package(skiff 0.1.0 COMPONENTS ${pchat_skiff_components} REQUIRED)
   pchat_find_package(SDL3 REQUIRED)
@@ -299,7 +308,8 @@ if(PCHAT_UI)
     FILES src/app/screens.cc src/app/sample.cc src/app/faces.cc)
   target_compile_features(pchat_app PUBLIC cxx_std_26)
   target_compile_options(pchat_app PUBLIC ${pchat_std_flags})
-  target_link_libraries(pchat_app PUBLIC pchat_ui pchat_requests)
+  target_link_libraries(pchat_app PUBLIC pchat_ui pchat_requests
+    pchat_provider pchat_platform)
 
   # The program itself.
   if(PCHAT_BROWSER)
