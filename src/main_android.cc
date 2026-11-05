@@ -9,6 +9,7 @@
 #include <csignal>
 #include <cstddef>
 #include <cstdint>
+#include <atomic>
 #include <initializer_list>
 #include <pthread.h>
 
@@ -51,13 +52,45 @@ struct it_asks_to_be_told {
 // and there was nothing to say it had gone.
 constexpr std::size_t stack_wanted = 16u * 1024u * 1024u;
 
+// Everything the machine says to it, said in the log as well: whether a
+// press ever arrives at all is not something a program that draws nothing
+// back can answer about itself, and a window that takes twenty seconds and
+// then takes no press is either one that was never pressed or one that was
+// pressed and said nothing. Which of the two it is decides everything.
+// Only the first hundred are said whole, because the rest is what a finger
+// says about moving and is nothing anybody reads.
+std::atomic<unsigned> how_many_said{0};
+
+bool said_what_arrived(void *, SDL_Event *one) {
+  const bool pressed = one->type == SDL_EVENT_MOUSE_BUTTON_DOWN ||
+                       one->type == SDL_EVENT_MOUSE_BUTTON_UP ||
+                       one->type == SDL_EVENT_FINGER_DOWN ||
+                       one->type == SDL_EVENT_FINGER_UP ||
+                       one->type == SDL_EVENT_KEY_DOWN ||
+                       one->type == SDL_EVENT_WINDOW_SHOWN ||
+                       one->type == SDL_EVENT_WINDOW_RESIZED;
+  const bool first = how_many_said.load() < 100;
+  if (!pressed || !first)
+    return false;
+  __android_log_print(ANDROID_LOG_INFO, what_it_is_called,
+                      "told of it: type %u", static_cast<unsigned>(one->type));
+  how_many_said.fetch_add(1);
+  return false;
+}
+
 void *entry(void *) {
   // Said before it starts, so that it can be told from a program that went
   // before this ever was: nothing at all in the log is as much of an answer
   // as a line saying it began.
   __android_log_print(ANDROID_LOG_INFO, what_it_is_called,
                       "starting on a thread of %zu bytes", stack_wanted);
-  return reinterpret_cast<void *>(static_cast<std::uintptr_t>(pchat_main()));
+  // Watched before the window is asked for, so that nothing said to it is
+  // said before it is heard.
+  SDL_AddEventWatch(&said_what_arrived, nullptr);
+  const int said = pchat_main();
+  __android_log_print(ANDROID_LOG_INFO, what_it_is_called,
+                      "the window answered %d", said);
+  return reinterpret_cast<void *>(static_cast<std::uintptr_t>(said));
 }
 
 int run(int, char **) {
