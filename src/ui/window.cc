@@ -145,9 +145,17 @@ struct app_window : scene::Node {
     // What answered in this chat, said where About asks about it: the room
     // itself never names it, so the rows are told it only to keep it for
     // that one line.
+    // Every model that answers here, said as one -- the About row names them
+    // all together, where the bubbles name each one apart.
+    std::string answerers;
+    if (open_chat)
+      for (const std::string &one : open_chat->models) {
+        if (!answerers.empty())
+          answerers += ", ";
+        answerers += one;
+      }
     messages.again(asked, look, root, opened, column,
-                   open_chat ? std::string_view(open_chat->model)
-                             : std::string_view());
+                   std::string_view(answerers));
     fList.apply(
         {.anchor = scene::anchor::kTopLeft,
          .x = left,
