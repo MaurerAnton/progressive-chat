@@ -6,6 +6,7 @@
 #   pchat-core-test    the model: ids, conversations, messages
 #   pchat-theme-test   the palette and what the looks give
 #   pchat-logic-test   what the screens read out of the model
+#   pchat-json-test    what comes in off the wire, read and written back
 
 function(pchat_test name libraries)
   add_executable(pchat-${name}-test)

@@ -162,6 +162,15 @@ endif()
 cme_options(skiff ${pchat_skiff_options})
 cme_options(skiff-framework "SKIFF_FRAMEWORK_APP OFF" "SKIFF_FRAMEWORK_SITE OFF" "SKIFF_FRAMEWORK_WINDOW ON" "SKIFF_FRAMEWORK_PAGE OFF")
 
+# What is written on the wire and what is kept on the disk: read into values
+# of its own once, where it comes in, and written out of them again -- nothing
+# past it looks at a brace.
+add_library(pchat_json)
+target_sources(pchat_json PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
+  FILES src/json.cc)
+target_compile_features(pchat_json PUBLIC cxx_std_26)
+target_compile_options(pchat_json PUBLIC ${pchat_std_flags})
+
 # The model, the settings and the palette: modules of their own, so that they
 # build -- and are tested -- without a window.
 add_library(pchat_core)
