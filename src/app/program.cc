@@ -1,3 +1,7 @@
+module;
+#if defined(__EMSCRIPTEN__)
+#include <emscripten/console.h>
+#endif
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.app.program -- The program: one window's worth of screens, the paint
 // they are drawn with, and what is done between one frame and the next --
@@ -18,6 +22,7 @@ export namespace pchat::app {
 
 struct program {
   screens view;
+  unsigned frames_ = 0u;
   skiff::scene::detail::PlainPaint paint;
   // The faces every piece of text in the window is drawn with: Open Sans,
   // shipped in this binary, because a browser has no system to ask.
@@ -30,6 +35,10 @@ struct program {
   // again from the model. The size it lays itself out by is the one the last
   // frame left it.
   void before_frame() {
+#if defined(__EMSCRIPTEN__)
+    if (frames_++ % 60u == 0u)
+      emscripten_console_log("before a frame");
+#endif
     const auto &bounds = view.window().root().fState.fBounds;
     if (bounds.width() > 1.0f && bounds.height() > 1.0f)
       view.sized(bounds.width(), bounds.height());

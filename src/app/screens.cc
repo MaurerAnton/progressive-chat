@@ -1,3 +1,11 @@
+module;
+// What it says about itself while it is being found: the page answers no
+// questions of its own, so what is said here is said in the console a tester
+// reads, and nowhere else -- and nowhere at all off the page.
+#if defined(__EMSCRIPTEN__)
+#include <emscripten/console.h>
+#endif
+#include <cstdio>
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.app.screens -- What the window shows, and what a control's asking is
 // answered with: one model, one set of looks, one scene. Every request a
@@ -27,6 +35,18 @@ import pchat.logic.composer;
 import pchat.logic.lists;
 
 namespace scene = skiff::scene;
+
+namespace {
+// What it says while it is being found: nothing off the page, and on the page
+// only in the console a tester reads.
+void told(const char *said) {
+#if defined(__EMSCRIPTEN__)
+  emscripten_console_log(said);
+#else
+  (void)said;
+#endif
+}
+} // namespace
 
 export namespace pchat::app {
 
@@ -260,12 +280,34 @@ private:
   // Where it stopped because it asked for something this program owns, those
   // calls are answered here and the question is asked again with them.
   void read_what_arrived() {
+#if defined(__EMSCRIPTEN__)
+    told("read: asked of it");
+#endif
     if (!answering_ || !answering_->asked)
       return;
     answer_coming &one = *answering_;
     const std::string arrived = one.carried.take();
+#if defined(__EMSCRIPTEN__)
+    {
+      char said[96];
+      std::snprintf(said, sizeof said, "read: %zu bytes came, over is %d",
+                    arrived.size(), one.carried.over() ? 1 : 0);
+      told(said);
+    }
+#endif
     if (!arrived.empty())
       one.asked->arrive(arrived);
+    if (message *there = found(one.said))
+      there->text = std::string(one.going.said()) +
+                    std::string(one.asked->said());
+#if defined(__EMSCRIPTEN__)
+    {
+      char said[96];
+      std::snprintf(said, sizeof said, "read: the message says %zu",
+                    found(one.said) ? found(one.said)->text.size() : 0u);
+      told(said);
+    }
+#endif
     if (message *there = found(one.said))
       there->text = std::string(one.going.said()) +
                     std::string(one.asked->said());
