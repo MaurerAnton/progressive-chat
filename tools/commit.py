@@ -64,6 +64,41 @@ for line in git('status', '--porcelain', '-uall').splitlines():
 if not changed:
     raise SystemExit('nothing here is different from what is up')
 
+# How a name is written, which CODE_STYLE.md says at length: it finishes the
+# sentence "After this commit, ...". What cannot finish that sentence is said
+# here and the tree is left as it is -- a name is read far more often than it
+# is written, and it is put into the names of builds besides.
+said = args.message.splitlines()[0]
+wrong = []
+if said[:1].isupper():
+    wrong.append('it begins with a capital letter, and it is not a sentence '
+                 'of its own')
+if said.endswith('.'):
+    wrong.append('it ends with a full stop, and it does not end the sentence '
+                 'it finishes')
+for prefix in ('feat', 'fix', 'chore', 'docs', 'refactor', 'test'):
+    if said.lower().startswith(prefix + ':') or said.lower().startswith(prefix + '('):
+        wrong.append(f'it begins with "{prefix}:", and nothing comes in front '
+                     'of a name')
+# What was done, said as an instruction: an imperative answers what someone
+# was told to do, and reads in a log as a thing still to be done.
+for imperative in ('add', 'fix', 'update', 'remove', 'improve', 'implement',
+                   'bump', 'revert', 'change', 'make', 'let', 'try'):
+    if said.lower().startswith(imperative + ' '):
+        wrong.append(f'it begins with "{imperative}", which is an '
+                     'instruction and not what is true afterwards')
+if len(said) > 96:
+    wrong.append(f'it is {len(said)} characters, and these names are read in '
+                 'the names of builds')
+if wrong:
+    raise SystemExit('this name finishes no sentence:\n  ' +
+                     '\n  '.join(wrong) +
+                     '\nA name finishes "After this commit, ..." '
+                     '(CODE_STYLE.md).')
+if len(said) > 72:
+    print(f'{len(said)} characters: short names are asked for, and 72 is '
+          'asked for rather than 96')
+
 if args.dry_run:
     for path, what in changed:
         print(f'{"gone" if what is None else "sent"}  {path}')

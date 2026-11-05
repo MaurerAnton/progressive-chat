@@ -101,4 +101,46 @@ skiff over Skia — and this document says how that stack is used here.
   it.
 - English everywhere: code, comments, commits, documents.
 - A commit message says what changed and why: a short first line, then the
-  reason.
+  reason. The first line is read most -- in `git log`, beside a build, in a
+  file's own name -- so there is a rule for how it is written.
+
+### How a commit is named
+
+A name finishes one sentence, always the same one:
+
+    After this commit, <the name>.
+
+Everything wanted of a name comes of asking that, and nothing else has to be
+remembered:
+
+- **It begins lower case.** It is not a sentence of its own, but the tail of
+  another. "After this commit, where there is no GL it draws in software
+  instead." A name that starts with a capital begins a sentence it never
+  finishes.
+- **It says what is true afterwards, not what was done.** Not "add arm64 to
+  the desktop build" but "the desktop is built for arm64 as well": no
+  imperative -- no `add`, `fix`, `update`, `remove` -- because the imperative
+  answers a different question, and reads in a log as a thing still to be
+  done.
+- **It is about the program, not about the files.** "what the first frame
+  began after is said apart", not "program.cc: log first frame". The body
+  names the files freely, and usually should.
+- **Nothing comes in front of it.** No `feat:`, no `fix:`, no number. What
+  sort of change it is, it says by what it says is true.
+- **No full stop.** The sentence it is the tail of ends where the name does,
+  and it is not the name that ends it.
+- **One thing.** A name that needs "and" twice is two commits. Nor is it said
+  in the name what went wrong on the way there: the name is what came of it,
+  and what was tried is what the body is for.
+- **Short.** No more than 72 characters, and fewer wherever they can be
+  spared. A name that will not fit is two things said as one, or one thing
+  said at too much length; and these names are put into the names of builds.
+
+Two that came out of it:
+
+    where there is no GL it draws in software instead
+    why it is called Progressive Chat, said
+
+`tools/commit.py` refuses the beginning of the rule -- a capital letter, a
+full stop, a prefix, an imperative, or more than 96 characters -- and says
+which of them it was. The rest is read by whoever writes it.
