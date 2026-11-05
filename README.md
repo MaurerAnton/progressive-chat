@@ -134,6 +134,13 @@ Three targets, one program:
 The page is built and published by `web.yml`, and is served at
 <https://progressive-chat.github.io/progressive-chat/>.
 
+A desktop build is carried home with what only its own machine had: clang
+23's own C++ library, `libc++.so.1` and `libc++abi.so.1`, put beside the
+program and found there by its `$ORIGIN`, because no distribution keeps them
+but the one it was built on and a machine without them says
+`libc++.so.1: cannot open shared object file` before the program says a
+word. Run it from the directory it came in.
+
 ## What is known broken, and where to look first
 
 Short: nothing is known broken on the page any more, and the phone is where

@@ -86,6 +86,20 @@ jobs:
           install -m 755 build-desktop/progressive-chat "$staging/progressive-chat"
           echo "what it needs:"
           ldd build-desktop/progressive-chat || true
+          # The C++ it is written in is clang 23's own, and a desktop is not
+          # asked to have it: no distribution keeps it but the one it was
+          # built on, and a machine with no libc++ at all answers with
+          # `libc++.so.1: cannot open shared object file` before the program
+          # says a word. So it goes beside it, and the RPATH above ($ORIGIN)
+          # is what finds it there -- named as the program asks for it, which
+          # is not always the name the file keeps on the shelf.
+          ldd build-desktop/progressive-chat \
+            | awk '$1 ~ /^(libc\+\+|libunwind)/ && $2 == "=>" && $3 ~ /^\// {
+                     print $1 "\t" $3 }' \
+            | while IFS=$'\t' read -r asked found; do
+                cp -L "$found" "$staging/$asked"
+                echo "  carried beside it: $asked ($found)"
+              done
           # Only what was built here and nowhere else: what every machine of
           # this kind already has, it has.
           for built in $(find build-desktop -maxdepth 6 -name '*.so*' -type f); do
