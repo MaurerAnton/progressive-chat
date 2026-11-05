@@ -65,7 +65,7 @@ struct app_window : scene::Node {
   // Everything drawn again from the model, for this size of window.
   void again(const paints &look, const chats_root &root, const looks &shown,
              const std::string &query, bool dark, bool settings_open,
-             bool drawer_open, float width, float height,
+             bool design_open, bool drawer_open, float width, float height,
              app::requests *asked) {
     // The conversation the window has open, as it is named: none of them,
     // where none is open.
