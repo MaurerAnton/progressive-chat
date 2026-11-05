@@ -136,30 +136,39 @@ The page is built and published by `web.yml`, and is served at
 
 ## What is known broken, and where to look first
 
-The page asks and does not hear. All of this has been seen on the deployed
-build, driven by hand in a browser, and none of it is guessed at:
+Short: nothing is known broken on the page any more, and the phone is where
+every question is. All of this has been seen, either on the deployed build
+driven by hand in a browser, or in `adb logcat` from the APK -- none of it is
+guessed at.
 
-* what is typed in the card is said as a message and stands in the room;
-* asking leaves as one `POST` to `/v1/chat/completions` with the conversation
-  as turns and the three tools this program offers in the body;
-* nothing above it changes when that asking is answered 200 with a stream --
-  no text, no "said nothing", and no second asking for a tool that was asked
-  for. So the stream is either never handed over or never handed back.
+**The page asks, is answered, and says it.** Seen whole, end to end: one
+`POST` to `/v1/chat/completions`, a stream answered back, the answer written
+into the room as it arrives, and what it thought and what it cost written
+under it (`Thought for 51 ms · 0 tool calls`, `haiku-4 31% of its window`).
+Two things were wrong until today, and neither was the transport: an asking
+was never told it was being carried, so every byte that arrived was dropped
+by the one line that decides whether a byte is taken; and the asking itself
+is a `provider::run`, which is what `test/provider_run_test.cc` feeds the
+same three frames to and reads back.
 
-Everything above the transport is covered by tests (`test/ask.cc`, the tools
-and the loop), so the two things left are in `src/platform/carry.cc`:
+**The phone starts slowly and answers nothing.** An APK is built by
+`android.yml` for `arm64-v8a` and `armeabi-v7a`. It draws, then:
 
-1. Whether the callbacks are called at all. Put `emscripten_console_log` at
-   the top of `went_along`, `went_well` and `went_on`, build the page, and
-   answer the asking in a probe: whatever the browser's console says is which
-   of the two it is. (Nothing else in this file is suspected.)
-2. Whether what is counted as read is right in `went_along`. The arithmetic
-   there assumes `dataOffset` moves with each piece; where a browser hands
-   the whole body over once, the same bytes can be skipped as already read.
+* it takes **about twenty seconds** before anything is drawn. Nothing in the
+  tree explains that yet: the shared object is 13 MB, the fonts are baked
+  into the binary, and there is no network to wait for;
+* it **answers no press**, and Android says it is not responding. It was run
+  on a thread of its own (so that it would have room to grow in, Android
+  giving a thread asked for no stack about a megabyte), and everything a
+  machine says to a program is said to the thread SDL was given, which that
+  thread was not. It runs on SDL's own thread since `8f179164e5ca`, with the
+  tree in static storage and nothing deep on the stack at all; whether that
+  was the whole of it is what the next run of the APK says.
 
-What a probe cannot ask about is a request that leaves through a worker, and
-that is why it is routed at the context (`tools/probe_painted.mjs`) and not
-at the page: routed at the page, the asking was never seen at all.
+Where to look, when something else is wrong: everything above the transport
+is covered by tests (`test/provider_run_test.cc`, the tools and the loop), so
+the remaining questions are either in `src/platform/carry.cc`, which is what
+hands a body over per platform, or in what a host does with a frame.
 
 ## To build it
 
