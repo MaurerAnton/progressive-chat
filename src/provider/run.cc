@@ -82,10 +82,10 @@ public:
   // and never again.
   template <std::ranges::forward_range Turns>
     requires std::same_as<std::ranges::range_value_t<Turns>, turn>
-  run(endpoint at, Turns &&turns)
+  run(endpoint at, Turns &&turns, const wanted &wants = {})
       : asking_{.url = std::string(url_of(at)),
                 .headers = headers_of(at),
-                .body = body_of(at, turns)} {}
+                .body = body_of(at, turns, wants)} {}
 
   // ---- what a transport reads and is given back --------------------------
 

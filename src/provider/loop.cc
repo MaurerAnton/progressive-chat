@@ -35,12 +35,13 @@ public:
   // this lifetime.
   template <std::ranges::forward_range Said>
     requires std::same_as<std::ranges::range_value_t<Said>, message>
-  loop(endpoint at, Said &&said, std::size_t rounds_at_most = 4)
+  loop(endpoint at, Said &&said, std::size_t rounds_at_most = 4,
+       const wanted &wants = {})
       : at_(std::move(at)), turns_(turns_of(said)),
-        rounds_at_most_(rounds_at_most) {}
+        rounds_at_most_(rounds_at_most), wants_(wants) {}
 
   // What is to be carried now: the question asked whole, or asked again.
-  [[nodiscard]] run answering() const { return run{at_, turns_}; }
+  [[nodiscard]] run answering() const { return run{at_, turns_, wants_}; }
 
   // One carried answer, over: what it said kept, what it thought too, what it
   // cost added to what the rounds before it cost, and the tools it stopped to
@@ -126,6 +127,7 @@ private:
 
   endpoint at_;
   std::vector<turn> turns_;
+  wanted wants_;
   std::size_t rounds_at_most_;
   std::size_t rounds_ = 0;
   std::string said_;

@@ -19,6 +19,8 @@ import pchat.ui;
 import pchat.provider;
 import pchat.provider.run;
 import pchat.platform.carry;
+import pchat.provider.loop;
+import pchat.tools;
 import pchat.app.requests;
 import pchat.app.sample;
 import pchat.logic.composer;
@@ -178,11 +180,19 @@ private:
   // Nothing outside this class knows of any of it. The window is drawn again
   // every frame from `root()`, so an answer arriving is only ever a message
   // whose text is longer than it was.
+  //
+  // What asked it, what carries the bytes, what of it is ours to answer, and
+  // when it began, which is how long an answer is said to have taken. An
+  // answer may take more than one asking: a model may stop to ask for
+  // something this program owns, be answered, and go on -- so the question is
+  // a loop and what is being carried now is one round of it.
   struct answer_coming {
     conversation_id chat;
     message_id said;
-    provider::run asked;
+    provider::loop going;
+    std::optional<provider::run> asked;
     platform::carrying carried;
+    tools::owned mine;
     moment began;
   };
   std::optional<answer_coming> answering_;
@@ -203,17 +213,24 @@ private:
                        std::views::filter([&chat](const message &one) {
                          return one.chat == chat;
                        });
+    // What is ours to answer goes in the asking, so a model knows it may stop
+    // and ask; and it is kept here, because answering those calls later is
+    // this program's and nobody else's.
+    const tools::owned mine{turns, now_ms()};
     answer_coming coming{.chat = chat,
                          .said = message_id{chat.value + "-" +
                                             std::to_string(root_.messages.size())},
-                         .asked = provider::run{at, provider::turns_of(turns)},
+                         .going = provider::loop{at,
+                                                 provider::turns_of(turns),
+                                                 4,
+                                                 provider::wanted{
+                                                     .tools = mine.offered()}},
                          .carried = std::move(carried),
+                         .mine = std::move(mine),
                          .began = now_ms()};
-    coming.carried.begin(coming.asked.wants().url,
-                         coming.asked.wants().headers,
-                         coming.asked.wants().body);
     // The answer as a message before anything of it has come: written into as
     // it arrives, and kept whole when nothing more is.
+    carry(coming);
     root_.messages.push_back(message{.id = coming.said,
                                      .chat = chat,
                                      .author = ending_of(chat),
@@ -223,29 +240,61 @@ private:
     answering_ = std::move(coming);
   }
 
+  // One round of the asking given to whatever carries it here.
+  void carry(answer_coming &one) {
+    one.asked = one.going.answering();
+    one.carried.begin(one.asked->wants().url, one.asked->wants().headers,
+                      one.asked->wants().body);
+  }
+
   // What has arrived since the last frame, handed to the answer; the message
   // written again as it reads; and when nothing more is coming, the answer
   // said whole -- thought, calls, tokens and all -- in the message's place.
+  // Where it stopped because it asked for something this program owns, those
+  // calls are answered here and the question is asked again with them.
   void read_what_arrived() {
-    if (!answering_)
+    if (!answering_ || !answering_->asked)
       return;
     answer_coming &one = *answering_;
     const std::string arrived = one.carried.take();
     if (!arrived.empty())
-      one.asked.arrive(arrived);
+      one.asked->arrive(arrived);
     if (message *there = found(one.said))
-      there->text = std::string(one.asked.said());
+      there->text = std::string(one.going.said()) +
+                    std::string(one.asked->said());
     if (!one.carried.over())
       return;
-    one.asked.carried_over(one.carried.trouble());
+    one.asked->carried_over(one.carried.trouble());
+    one.going.came_back(*one.asked);
+    one.asked.reset();
+    if (!one.going.asked_for().empty() && asked_again(one)) {
+      carry(one);
+      if (message *there = found(one.said))
+        there->text = std::string(one.going.said());
+      return;   // and it is not over yet
+    }
     const moment ended = now_ms();
     if (message *there = found(one.said))
-      *there = one.asked.answer_of(provider::put_in{.id = one.said,
+      *there = one.going.answer_of(provider::put_in{.id = one.said,
                                                     .chat = one.chat,
                                                     .author = ending_of(one.chat),
                                                     .sent = ended,
                                                     .took_ms = ended - one.began});
     answering_.reset();
+  }
+
+  // Every call it stopped to ask for, answered by whoever owns it -- here,
+  // now, by this program -- and the question asked again with what they said.
+  // False where there is nothing left to ask, which is when the answer is put
+  // where it belongs.
+  [[nodiscard]] bool asked_again(answer_coming &one) {
+    std::vector<provider::call_answered> answered;
+    for (const provider::tool_call &call : one.going.asked_for())
+      answered.push_back(
+          provider::call_answered{.own = call.id,
+                                  .said = one.mine.answered(call.name, call.arguments)
+                                              .value_or("nothing here answers that call")});
+    return one.going.again(std::move(answered));
   }
 
   // One of the messages, by its answer's name: nothing where it is not one.

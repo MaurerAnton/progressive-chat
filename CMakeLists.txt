@@ -202,8 +202,8 @@ target_compile_options(pchat_core PUBLIC ${pchat_std_flags})
 # the body written for a wire, and its stream read again. No socket in it --
 # what carries the bytes is a platform's to do, later.
 add_library(pchat_tools)
-  FILES src/tools.cc
-
+target_sources(pchat_tools PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
+  FILES src/tools.cc)
 target_link_libraries(pchat_tools PUBLIC pchat_core pchat_json pchat_provider)
 
 add_library(pchat_provider)
@@ -315,7 +315,7 @@ if(PCHAT_UI)
   target_compile_features(pchat_app PUBLIC cxx_std_26)
   target_compile_options(pchat_app PUBLIC ${pchat_std_flags})
   target_link_libraries(pchat_app PUBLIC pchat_ui pchat_requests
-    pchat_provider pchat_platform)
+    pchat_provider pchat_platform pchat_tools)
 
   # The program itself.
   if(PCHAT_BROWSER)
