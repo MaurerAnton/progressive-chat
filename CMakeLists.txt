@@ -181,6 +181,16 @@ target_sources(pchat_core PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
 target_compile_features(pchat_core PUBLIC cxx_std_26)
 target_compile_options(pchat_core PUBLIC ${pchat_std_flags})
 
+# What one conversation asks of a model, and what one answer coming back says:
+# the body written for a wire, and its stream read again. No socket in it --
+# what carries the bytes is a platform's to do, later.
+add_library(pchat_provider)
+target_sources(pchat_provider PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
+  FILES src/provider.cc src/provider/stream.cc)
+target_compile_features(pchat_provider PUBLIC cxx_std_26)
+target_compile_options(pchat_provider PUBLIC ${pchat_std_flags})
+target_link_libraries(pchat_provider PUBLIC pchat_core pchat_json)
+
 # What a control asks the program for: said before the screens are, as they
 # are built out of what asks it.
 add_library(pchat_requests)

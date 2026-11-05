@@ -6,6 +6,8 @@
 #   pchat-core-test    the model: ids, conversations, messages
 #   pchat-theme-test   the palette and what the looks give
 #   pchat-logic-test   what the screens read out of the model
+#   pchat-json-test    what comes off the wire, read into values and written back
+#   pchat-provider-test    a body written for a model, and its stream read back
 #   pchat-json-test    what comes in off the wire, read and written back
 
 function(pchat_test name libraries)
@@ -21,3 +23,5 @@ endfunction()
 pchat_test(core pchat_core)
 pchat_test(theme pchat_core)
 pchat_test(logic pchat_core)
+pchat_test(json pchat_json)
+pchat_test(provider pchat_provider)

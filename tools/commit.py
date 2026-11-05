@@ -54,7 +54,9 @@ branch = git('rev-parse', '--abbrev-ref', 'HEAD').strip()
 # taken from what git staged: staged or not, what is in the files is what
 # goes up.
 changed = []
-for line in git('status', '--porcelain').splitlines():
+# -uall: a new directory is said as the files in it and not as itself, so that
+# nothing here has to know how to walk one.
+for line in git('status', '--porcelain', '-uall').splitlines():
     state, path = line[:2], line[3:]
     if '->' in line:
         raise SystemExit(f'{path} was renamed: say it as two changes')
