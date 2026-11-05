@@ -1,0 +1,93 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+name: desktop
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+# The third machine: what a desktop draws with its own window. Nothing of the
+# page's isolation and nothing of a phone's APK is needed here -- the same
+# tree, drawn through SDL3 into an X11 or a Wayland window, which is what a
+# build of the program is before it is either of those.
+#
+# Linux x86_64 today. The other two desktops are the same build with another
+# toolchain in front of it, and are added when that toolchain says `import std`
+# too: this one is the only one the program is known to be drawn on.
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/desktop-setup
+      # Built once and kept between runs: everything the build is made of --
+      # SDL3, Skia -- is what takes the time, and it does not change when the
+      # program's own sources do.
+      - uses: actions/cache@v4
+        with:
+          path: build-desktop
+          key: desktop-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake', '.github/workflows/desktop.yml', '.github/actions/desktop-setup/action.yml') }}
+      # Nothing packaged before this commit: what the cache keeps may hold a
+      # bundle of another commit's sources, and two bundles of two commits
+      # under one name is a download that says it is of one and is of the
+      # other. What was packaged before is put away first.
+      - name: Nothing packaged before
+        run: rm -f build-desktop/progressive-chat-*-linux-x86_64.tar.gz
+      - name: Configure
+        run: |
+          cmake -S . -B build-desktop -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++" \
+            -DCMAKE_BUILD_RPATH='$ORIGIN'
+      - name: Build
+        run: cmake --build build-desktop --target progressive-chat --parallel 4
+      # What it is called: the version CMake says, the commit it is of, and
+      # the machine it runs on -- as the APK is named, so that a name says
+      # everything a name can say.
+      - name: Say what it is called
+        id: called
+        run: |
+          version="$(sed -n 's/^CMAKE_PROJECT_VERSION:STATIC=//p' build-desktop/CMakeCache.txt)"
+          commit="$(git rev-parse --short=12 HEAD)"
+          echo "name=progressive-chat-${version}-${commit}-linux-x86_64" >> "$GITHUB_OUTPUT"
+      # Packaged as what is carried home: the program itself, the libraries
+      # that were built beside it and that no distribution keeps, the license
+      # it is under, and the license of the faces it ships -- all in one
+      # directory, so that what the program looks for beside itself it finds
+      # beside itself.
+      - name: Package
+        run: |
+          set -euo pipefail
+          staging="build-desktop/${{ steps.called.outputs.name }}"
+          rm -rf "$staging"
+          mkdir -p "$staging"
+          install -m 755 build-desktop/progressive-chat "$staging/progressive-chat"
+          echo "what it needs:"
+          ldd build-desktop/progressive-chat || true
+          # Only what was built here and nowhere else: what every machine of
+          # this kind already has, it has.
+          for built in $(find build-desktop -maxdepth 6 -name '*.so*' -type f); do
+            name="$(basename "$built")"
+            if ldd build-desktop/progressive-chat | grep -q "$name"; then
+              cp -n "$built" "$staging/" || true
+            fi
+          done
+          cp LICENSE "$staging/LICENSE"
+          cp fonts/OFL "$staging/OFL.OpenSans" 2>/dev/null || true
+          tar -czf "${staging}.tar.gz" -C build-desktop "$(basename "$staging")"
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.called.outputs.name }}
+          path: build-desktop/progressive-chat-*-linux-x86_64.tar.gz
+          if-no-files-found: error
