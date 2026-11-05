@@ -20,5 +20,11 @@ const mirror = () => page.evaluate(() => document.getElementById('skiff').innerT
 console.log(`chat: ${JSON.stringify((await mirror()).slice(0, 200))}`);
 await page.mouse.click(330, 30);
 await page.waitForTimeout(1000);
-console.log(`settings: ${JSON.stringify((await mirror()).slice(0, 900))}`);
+const said = await mirror();
+console.log(`said: ${said.length}`);
+console.log(`Services: ${said.includes('Services')}`);
+console.log(`Appearance and Language: ${said.includes('Appearance & Language')}`);
+console.log(`Read the design: ${said.includes('Read the design')}`);
+console.log(`build: ${JSON.stringify((said.match(/progressive-chat 0\.1[^\n]*/g) || []).join(' | '))}`);
+console.log(`tail: ${JSON.stringify(said.slice(-700))}`);
 await browser.close();
