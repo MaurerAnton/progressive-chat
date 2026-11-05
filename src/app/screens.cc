@@ -270,6 +270,11 @@ private:
   // One round of the asking given to whatever carries it here.
   void carry(answer_coming &one) {
     one.asked = one.going.answering();
+    // Told that it is being carried before it is carried: nothing of an
+    // answer is taken by an asking that has not been told it is going, and
+    // everything that came was being dropped because nobody had said it was
+    // being carried at all.
+    one.asked->carried();
     one.carried.begin(one.asked->wants().url, one.asked->wants().headers,
                       one.asked->wants().body);
   }
