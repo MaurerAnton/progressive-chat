@@ -69,4 +69,14 @@ inline constexpr std::array<answerer_choice, 6> answerers_offered{{
     {"local-70b", 128'000},
 }};
 
+// How much room an answerer's window has, said by its name: what is offered
+// keeps its own, and one that is not offered yet says the room every answer
+// has been given so far.
+[[nodiscard]] constexpr std::uint32_t window_of(std::string_view name) {
+  for (const answerer_choice &one : answerers_offered)
+    if (one.name == name)
+      return one.window;
+  return 1'000'000;
+}
+
 }  // namespace pchat

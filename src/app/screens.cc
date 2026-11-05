@@ -73,6 +73,9 @@ public:
                   "New chat", conversation_kind::direct, ++said_count_};
               if (root_.opened)
                 fresh.models.push_back(model_of(*root_.opened));
+              // The room every answerer in it has, said by the first of them:
+              // a chat made new has all of its window to talk into.
+              fresh.window = window_of(fresh.leading_model());
               root_.conversations.insert(root_.conversations.begin(),
                                          std::move(fresh));
               root_.opened = made;

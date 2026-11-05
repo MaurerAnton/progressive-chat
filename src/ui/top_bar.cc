@@ -130,6 +130,10 @@ struct bar_press : scene::Node {
   nodes::Icon fMark{shape::close(), 0u};
 
   bar_press() {
+    // As wide and as tall as what holds it, and so what everything in it is
+    // said against: a node of no size of its own is a place its own children
+    // are put from the corner of, wherever they are told to stand.
+    this->apply({.fill = true});
     fMark.apply({.width = 18.0f,
                  .height = 18.0f,
                  .anchor = scene::anchor::kTopRight,
