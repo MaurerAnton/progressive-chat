@@ -111,12 +111,26 @@ public:
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
             [&](const open_settings &) { settings_ = true; },
             [&](const close_settings &) { settings_ = false; },
-            [&](const set_looks &asking) {
-              shown_ = asking.shown;
+            // What the seed is: every colour grown again out of it, and the
+            // page staying open to be looked at.
+            [&](const pick_seed &asking) {
+              shown_.preset = asking.preset;
               recolour();
             },
             [&](const set_amoled &asking) {
               shown_.amoled = asking.enabled;
+              recolour();
+            },
+            // Larger type: every size drawn in the body of a message is asked
+            // for again with this multiply in it, so what is set larger is
+            // what the answers are written in.
+            [&](const set_font_scale &asking) {
+              shown_.font_scale = asking.scale;
+              recolour();
+            },
+            [&](const pick_theme &asking) {
+              shown_.mode = asking.mode;
+              dark_ = dark_of(shown_.mode, true);
               recolour();
             }},
         one);
@@ -133,8 +147,8 @@ public:
   void before_frame(double) {
     for (const request &one : asked_.drain())
       take(one);
-    scene_.root().again(look_, root_, shown_, dark_, settings_, drawer_, width_,
-                        height_, &asked_);
+    scene_.root().again(look_, root_, shown_, query_, dark_, settings_, drawer_,
+                        width_, height_, &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -142,7 +156,11 @@ public:
   [[nodiscard]] bool dark() const noexcept { return dark_; }
 
 private:
-  void recolour() { look_ = ui::paints_of(colors_of(shown_, true), dark_); }
+  void recolour() {
+    dark_ = dark_of(shown_.mode, true);
+    look_ = ui::paints_of(colors_of(shown_, true), dark_);
+    look_.size = ui::body_size * static_cast<float>(shown_.font_scale);
+  }
 
   // Where in the messages one said is -- one past its own place, so that a
   // fork copies everything said before it.

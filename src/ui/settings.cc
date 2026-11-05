@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // pchat.ui:settings -- The page the drawer's foot opens: a card, a heading
 // collapsing as it is scrolled away, the seeds to choose between, and the
-// switches -- pure black for an AMOLED screen, the type size, the font.
+// switches -- pure black for an AMOLED screen, the type larger, the colours
+// light.
 export module pchat.ui:settings;
 
 import std;
@@ -9,14 +10,20 @@ import skiff.scene;
 import skiff.nodes;
 import pchat.config;
 import pchat.theme;
+import pchat.app.requests;
 import :theme;
 import :base;
 import :appearance;
+import :icons;
 
 export namespace pchat::ui {
 
 namespace scene = skiff::scene;
 namespace nodes = skiff::nodes;
+
+// How much larger "larger type" is: what the body's size is multiplied by
+// when that switch is put on, and one again when it is put off.
+inline constexpr double large_type = 1.25;
 
 // The seeds offered, and the name each is known by.
 struct seed_choice {
@@ -41,6 +48,8 @@ struct switch_row : scene::Node {
   nodes::Text fName{"", 15.0f, 0u};
   nodes::Box<> fTrack{0u};
   nodes::Box<> fKnob{0u};
+  app::requests *asked = nullptr;
+  app::request one{app::set_amoled{true}};
 
   switch_row() {
     this->apply({.fillX = true, .height = 48.0f, .cornerRadius = 14.0f});
@@ -63,8 +72,20 @@ struct switch_row : scene::Node {
                  .x = -16.0f - 21.0f});
   }
 
-  void again(const scene::Spec &spec, const paints &look, std::string_view name,
-             bool on) {
+  [[nodiscard]] bool acceptsInput() const { return true; }
+  [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+  // Pressed: what it asks for is the way it is not put now, whichever way
+  // that is -- a switch does not know itself what it would be turning on.
+  [[nodiscard]] bool onClick(float, float) {
+    if (asked)
+      asked->ask(one);
+    return true;
+  }
+
+  void again(app::requests *sink, const scene::Spec &spec, const paints &look,
+             std::string_view name, bool on, app::request asking) {
+    asked = sink;
+    one = std::move(asking);
     this->apply(spec);
     fName.setText(std::string(name));
     fName.setColour(look.text);
@@ -86,12 +107,17 @@ struct settings_screen : scene::Node {
   nodes::Box<> fPaper{0u};
   nodes::Box<> fCard{0u};
   nodes::Text fHeading{"Settings", 26.0f, 0u, true};
+  // Put away again: the one control the page has that is not a row of its
+  // own kind -- pressed anywhere, the page closes and the room is where it
+  // was left.
+  ask_box fClosePlate{};
+  nodes::Icon fCloseMark{shape::close(), 0u};
   nodes::Text fLooks{"Appearance", 16.0f, 0u, true};
   std::array<seed_row, max_seeds> fSeeds;
   nodes::Box<> fDivider{0u};
   switch_row fBlack;
   switch_row fLarge;
-  switch_row fSystemFont;
+  switch_row fLight;
   // What this build is: not a number that a hundred other builds share, but
   // the number and the commit they were made of.
   nodes::Text fVersion{"", 12.0f, 0u};
@@ -113,11 +139,24 @@ struct settings_screen : scene::Node {
                   .x = 20.0f,
                   .y = 76.0f,
                   .autoSize = scene::axes::kBoth});
+    fClosePlate.apply({.width = 36.0f,
+                       .height = 36.0f,
+                       .cornerRadius = 18.0f,
+                       .anchor = scene::anchor::kTopRight,
+                       .origin = scene::anchor::kTopRight,
+                       .x = -20.0f,
+                       .y = 20.0f});
+    fCloseMark.apply({.width = 18.0f,
+                      .height = 18.0f,
+                      .anchor = scene::anchor::kTopRight,
+                      .origin = scene::anchor::kCentre,
+                      .x = -(20.0f + 18.0f),
+                      .y = 38.0f});
     for (std::size_t at = 0; at < max_seeds; ++at)
       fSeeds[at].blank();
     fBlack.fName.setText("Pure black");
     fLarge.fName.setText("Larger type");
-    fSystemFont.fName.setText("System font");
+    fLight.fName.setText("Light colours");
     fVersion.setText(std::string("progressive-chat ") + PCHAT_VERSION_SAID);
     fVersion.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
@@ -127,8 +166,11 @@ struct settings_screen : scene::Node {
 
   void hide() { this->setVisible(false); }
 
-  void again(const paints &look, const looks &shown, bool dark, float breadth) {
+  void again(app::requests *asked, const paints &look, const looks &shown,
+             bool dark, float breadth) {
     this->setVisible(true);
+    fClosePlate.again(asked, app::close_settings{}, look.raised);
+    fCloseMark.setColour(look.text);
     fPaper.setColour(look.paper);
     fCard.setColour(look.drawer);
     fHeading.setColour(look.text);
@@ -154,8 +196,9 @@ struct settings_screen : scene::Node {
                              .width = breadth - 32.0f,
                              .height = 48.0f,
                              .cornerRadius = 14.0f};
-      fSeeds[at].again(spec, look, scheme.primary, seeds_offered[at].name,
-                       chosen);
+      fSeeds[at].again(asked, spec, look, scheme.primary,
+                       seeds_offered[at].name, chosen,
+                       app::pick_seed{.preset = seeds_offered[at].preset});
     }
     const float top = 108.0f + 52.0f * static_cast<float>(max_seeds) + 16.0f;
     const scene::Spec row{.anchor = scene::anchor::kTopLeft,
@@ -164,48 +207,59 @@ struct settings_screen : scene::Node {
                           .width = breadth - 32.0f,
                           .height = 48.0f,
                           .cornerRadius = 14.0f};
-    fBlack.again({.anchor = row.anchor,
+    fBlack.again(asked,
+                 {.anchor = row.anchor,
                   .x = row.x,
                   .y = top,
                   .relativeSize = scene::axes::kNone,
                   .width = row.width,
                   .height = row.height,
                   .cornerRadius = row.cornerRadius},
-                 look, "Pure black", shown.amoled);
-    fLarge.again({.anchor = row.anchor,
+                 look, "Pure black", shown.amoled,
+                 app::set_amoled{.enabled = !shown.amoled});
+    fLarge.again(asked,
+                 {.anchor = row.anchor,
                   .x = row.x,
                   .y = top + 52.0f,
                   .relativeSize = scene::axes::kNone,
                   .width = row.width,
                   .height = row.height,
                   .cornerRadius = row.cornerRadius},
-                 look, "Larger type", shown.font_scale > 1.0f);
+                 look, "Larger type", shown.font_scale > 1.0f,
+                 app::set_font_scale{
+                     .scale = shown.font_scale > 1.0f ? 1.0 : large_type});
     fVersion.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
                     .y = top + 156.0f,
                     .autoSize = scene::axes::kBoth});
     fVersion.setColour(look.dim);
-    fSystemFont.again({.anchor = row.anchor,
-                       .x = row.x,
-                       .y = top + 104.0f,
-                       .relativeSize = scene::axes::kNone,
-                       .width = row.width,
-                       .height = row.height,
-                       .cornerRadius = row.cornerRadius},
-                      look, "System font", shown.font == font_choice::system);
+    fLight.again(asked,
+                 {.anchor = row.anchor,
+                  .x = row.x,
+                  .y = top + 104.0f,
+                  .relativeSize = scene::axes::kNone,
+                  .width = row.width,
+                  .height = row.height,
+                  .cornerRadius = row.cornerRadius},
+                 look, "Light colours", shown.mode == theme_mode::light,
+                 app::pick_theme{.mode = shown.mode == theme_mode::light
+                                             ? theme_mode::dark
+                                             : theme_mode::light});
   }
 
   void forEachChild(auto &&f) {
     f(fPaper);
     f(fCard);
     f(fHeading);
+    f(fClosePlate);
+    f(fCloseMark);
     f(fLooks);
     for (auto &seed : fSeeds)
       f(seed);
     f(fDivider);
     f(fBlack);
     f(fLarge);
-    f(fSystemFont);
+    f(fLight);
     f(fVersion);
   }
 };

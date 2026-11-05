@@ -5,6 +5,10 @@
 //
 // A row is a node of its own, made with the drawer and filled in again
 // whenever the model moves: the tree's shape is fixed, what it says is not.
+//
+// The field above the rows searches: what it is given is asked for as a
+// request, the program keeps it, and the rows shown here are the ones that
+// ask kept -- the search itself is pchat.logic.lists' to answer.
 export module pchat.ui:drawer;
 
 import std;
@@ -16,6 +20,7 @@ import pchat.logic.lists;
 import pchat.app.requests;
 import :theme;
 import :base;
+import :icons;
 
 export namespace pchat::ui {
 
@@ -59,18 +64,39 @@ struct conversation_row : scene::Node {
   conversation_row() {
     this->apply({.fillX = true, .height = row_height, .cornerRadius = 16.0f});
     fPlate.apply({.fill = true});
-    fAvatar.apply({.width = avatar, .height = avatar, .cornerRadius = avatar / 2.0f,
-                   .anchor = scene::anchor::kTopLeft, .x = edge, .y = (row_height - avatar) / 2.0f});
-    fTitle.apply({.anchor = scene::anchor::kTopLeft, .x = edge + avatar + gap, .y = 14.0f,
-                  .autoSize = scene::axes::kBoth, .maxWidth = 160.0f});
-    fWhen.apply({.anchor = scene::anchor::kTopRight, .origin = scene::anchor::kTopRight, .x = -edge, .y = 16.0f,
+    fAvatar.apply({.width = avatar,
+                   .height = avatar,
+                   .cornerRadius = avatar / 2.0f,
+                   .anchor = scene::anchor::kTopLeft,
+                   .x = edge,
+                   .y = (row_height - avatar) / 2.0f});
+    fTitle.apply({.anchor = scene::anchor::kTopLeft,
+                  .x = edge + avatar + gap,
+                  .y = 14.0f,
+                  .autoSize = scene::axes::kBoth,
+                  .maxWidth = 160.0f});
+    fWhen.apply({.anchor = scene::anchor::kTopRight,
+                 .origin = scene::anchor::kTopRight,
+                 .x = -edge,
+                 .y = 16.0f,
                  .autoSize = scene::axes::kBoth});
-    fSaid.apply({.anchor = scene::anchor::kTopLeft, .x = edge + avatar + gap, .y = 38.0f,
-                 .autoSize = scene::axes::kBoth, .maxWidth = 190.0f});
-    fBadge.apply({.width = 20.0f, .height = 20.0f, .cornerRadius = 10.0f, .anchor = scene::anchor::kTopRight,
-                  .origin = scene::anchor::kTopRight, .x = -edge, .y = 38.0f});
-    fCount.apply({.anchor = scene::anchor::kTopRight, .origin = scene::anchor::kCentre, .x = -edge - 10.0f,
-                  .y = 48.0f, .autoSize = scene::axes::kBoth});
+    fSaid.apply({.anchor = scene::anchor::kTopLeft,
+                 .x = edge + avatar + gap,
+                 .y = 38.0f,
+                 .autoSize = scene::axes::kBoth,
+                 .maxWidth = 190.0f});
+    fBadge.apply({.width = 20.0f,
+                  .height = 20.0f,
+                  .cornerRadius = 10.0f,
+                  .anchor = scene::anchor::kTopRight,
+                  .origin = scene::anchor::kTopRight,
+                  .x = -edge,
+                  .y = 38.0f});
+    fCount.apply({.anchor = scene::anchor::kTopRight,
+                  .origin = scene::anchor::kCentre,
+                  .x = -edge - 10.0f,
+                  .y = 48.0f,
+                  .autoSize = scene::axes::kBoth});
   }
 
   // A row is pressed to open what it names: said as a request, and answered
@@ -93,8 +119,8 @@ struct conversation_row : scene::Node {
     fBadge.setVisible(false);
   }
 
-  void again(app::requests *sink, const paints &look, const conversation &chat, std::string_view said,
-               std::string_view when, bool chosen) {
+  void again(app::requests *sink, const paints &look, const conversation &chat,
+             std::string_view said, std::string_view when, bool chosen) {
     asked = sink;
     said_of = chat.id;
     this->setVisible(true);
@@ -129,30 +155,63 @@ struct conversation_row : scene::Node {
 struct drawer_screen : scene::Node {
   nodes::Box<> fPaper{0u};
   nodes::Text fHeading{"Chats", 21.0f, 0u, true};
+  // The page over the room, opened from here: the drawer is the only part
+  // with a way in, because nothing else on the screen has room to spare.
+  ask_box fSettingsPlate{};
+  nodes::Icon fSettingsMark{shape::gear(), 0u};
   std::shared_ptr<search_sink> fSink = std::make_shared<search_sink>();
-  widgets::TextArea<search_given> fSearch{widgets::Theme{}, "Search conversations", search_given{fSink}};
+  widgets::TextArea<search_given> fSearch{
+      widgets::Theme{}, "Search conversations", search_given{fSink}};
   std::array<conversation_row, max_rows> fRows;
 
   explicit drawer_screen(float breadth) {
     this->apply({.width = breadth, .fillY = true});
     fPaper.apply({.fill = true});
-    fHeading.apply({.anchor = scene::anchor::kTopLeft, .x = edge, .y = edge, .autoSize = scene::axes::kBoth});
-    fSearch.apply({.anchor = scene::anchor::kTopLeft, .x = edge, .y = edge + 34.0f, .fillX = true,
-                   .height = 40.0f, .cornerRadius = 20.0f, .padding = scene::Margin::horizontal(16.0f)});
+    fHeading.apply({.anchor = scene::anchor::kTopLeft,
+                    .x = edge,
+                    .y = edge,
+                    .autoSize = scene::axes::kBoth});
+    fSearch.apply({.anchor = scene::anchor::kTopLeft,
+                   .x = edge,
+                   .y = edge + 34.0f,
+                   .fillX = true,
+                   .height = 40.0f,
+                   .cornerRadius = 20.0f,
+                   .padding = scene::Margin::horizontal(16.0f)});
+    fSettingsPlate.apply({.width = 36.0f,
+                          .height = 36.0f,
+                          .cornerRadius = 18.0f,
+                          .anchor = scene::anchor::kTopRight,
+                          .origin = scene::anchor::kTopRight,
+                          .x = -edge,
+                          .y = edge});
+    fSettingsMark.apply({.width = 18.0f,
+                         .height = 18.0f,
+                         .anchor = scene::anchor::kTopRight,
+                         .origin = scene::anchor::kCentre,
+                         .x = -(edge + 18.0f),
+                         .y = edge + 18.0f});
     for (std::size_t at = 0; at < max_rows; ++at)
-      fRows[at].apply({.anchor = scene::anchor::kTopLeft, .x = edge,
-                       .y = edge + 86.0f + static_cast<float>(at) * (row_height + 4.0f)});
+      fRows[at].apply(
+          {.anchor = scene::anchor::kTopLeft,
+           .x = edge,
+           .y = edge + 86.0f + static_cast<float>(at) * (row_height + 4.0f)});
     for (auto &row : fRows)
       row.blank();
   }
 
   // The colours, then what each row says: called by the program whenever the
-  // model moved.
-  void again(const paints &look, const chats_root &root, const std::string &opened, app::requests *asked) {
+  // model moved. What the rows are is what the search asked for keeps -- the
+  // search is not this drawer's to do; the drawer only shows what was kept.
+  void again(const paints &look, const chats_root &root,
+             const std::string &opened, const std::string &query,
+             app::requests *asked) {
     fPaper.setColour(look.drawer);
     fHeading.setColour(look.text);
+    fSettingsPlate.again(asked, app::open_settings{}, look.raised);
+    fSettingsMark.setColour(look.text);
     fSink->asked = asked;
-    const auto rows = logic::ordered(root);
+    const auto rows = logic::matching(root, query);
     for (std::size_t at = 0; at < max_rows; ++at) {
       if (at >= rows.size()) {
         fRows[at].blank();
@@ -161,21 +220,28 @@ struct drawer_screen : scene::Node {
       const conversation &chat = *rows[at];
       // What the row says under the name: the last message in it, if there is
       // one, else what the conversation is.
-      std::string said = chat.kind == conversation_kind::direct ? "Say something" : "No messages yet";
+      std::string said = chat.kind == conversation_kind::direct
+                             ? "Say something"
+                             : "No messages yet";
       for (const message &one : root.messages)
         if (one.chat.value == chat.id.value)
           said = one.text;
-      fRows[at].again(asked, look, chat, said, "12:40", chat.id.value == opened);
+      // How long ago, as the clock reads it: the moment the last thing was
+      // said in it, which is what the order of these rows comes from too.
+      fRows[at].again(asked, look, chat, said, clock_of(chat.last_activity),
+                      chat.id.value == opened);
     }
   }
 
   void forEachChild(auto &&f) {
     f(fPaper);
     f(fHeading);
+    f(fSettingsPlate);
+    f(fSettingsMark);
     f(fSearch);
     for (auto &row : fRows)
       f(row);
   }
 };
 
-}  // namespace pchat::ui
+} // namespace pchat::ui

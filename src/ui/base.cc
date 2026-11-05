@@ -39,6 +39,8 @@ inline constexpr float send_size = 46.0f;
 inline constexpr float composer_height = 92.0f;
 inline constexpr float gap = 12.0f;
 inline constexpr float edge = 12.0f;
+// What the body's type is set in, before the reader asks for it larger.
+inline constexpr float body_size = 15.0f;
 
 // One thing the program is asked for by a press: the request is kept here,
 // whole, and pushed into what the program drains when this is pressed. A
@@ -100,6 +102,36 @@ struct metrics {
       out += ",";
     out += digits[at];
   }
+  return out;
+}
+// The same number said short, as the bar over the messages says it: its
+// thousands and one figure after them -- `12.4k` -- because the bar has one
+// word of width to spare for what this chat has been worth.
+[[nodiscard]] inline std::string tokens_short(std::uint32_t tokens) {
+  if (tokens < 1'000)
+    return std::to_string(tokens);
+  if (tokens < 1'000'000) {
+    const std::uint32_t tenths = (tokens / 100) % 10;
+    return std::to_string(tokens / 1'000) +
+           (tenths ? "." + std::to_string(tenths) : "") + "k";
+  }
+  const std::uint32_t tenths = (tokens / 100'000) % 10;
+  return std::to_string(tokens / 1'000'000) +
+         (tenths ? "." + std::to_string(tenths) : "") + "M";
+}
+// The clock as it is read in this window: the hour of the day and the minute
+// in it, out of a moment kept as it is in the model. No zone of its own to
+// ask, because what a chat is written in is whatever its reader's is.
+[[nodiscard]] inline std::string clock_of(moment at) {
+  const std::int64_t minutes = (at / 60'000) % (24 * 60);
+  const std::int64_t hour = minutes / 60;
+  const std::int64_t minute = minutes % 60;
+  std::string out;
+  out += hour < 10 ? "0" : "";
+  out += std::to_string(hour);
+  out += ":";
+  out += minute < 10 ? "0" : "";
+  out += std::to_string(minute);
   return out;
 }
 // A line of text, of a size of its own, bold or not.

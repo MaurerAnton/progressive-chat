@@ -62,8 +62,9 @@ struct app_window : scene::Node {
 
   // Everything drawn again from the model, for this size of window.
   void again(const paints &look, const chats_root &root, const looks &shown,
-             bool dark, bool settings_open, bool drawer_open, float width,
-             float height, app::requests *asked) {
+             const std::string &query, bool dark, bool settings_open,
+             bool drawer_open, float width, float height,
+             app::requests *asked) {
     // The conversation the window has open, as it is named: none of them,
     // where none is open.
     const std::string opened = root.opened ? root.opened->value : std::string{};
@@ -106,7 +107,7 @@ struct app_window : scene::Node {
                      .height = height,
                      .visible = true,
                      .background = look.drawer});
-      fDrawer.again(look, root, opened, asked);
+      fDrawer.again(look, root, opened, query, asked);
     }
     // The bar, over the top of the messages.
     fTop.apply({.anchor = scene::anchor::kTopLeft,
@@ -138,7 +139,12 @@ struct app_window : scene::Node {
     fShade.again(asked, app::toggle_drawer{}, look.scrim);
     // The messages, in what scrolls, between the bar and the card.
     auto &messages = std::get<0>(fList.fChildren);
-    messages.again(asked, look, root, opened, column, shown.font_scale);
+    // What answered in this chat, said where About asks about it: the room
+    // itself never names it, so the rows are told it only to keep it for
+    // that one line.
+    messages.again(asked, look, root, opened, column,
+                   open_chat ? std::string_view(open_chat->model)
+                             : std::string_view());
     fList.apply(
         {.anchor = scene::anchor::kTopLeft,
          .x = left,
@@ -161,7 +167,7 @@ struct app_window : scene::Node {
       fComposer.again(look, *open_chat, asked);
     // The settings page, over everything, when it is opened.
     if (settings_open)
-      fSettings.again(look, shown, dark, std::min(width, 720.0f));
+      fSettings.again(asked, look, shown, dark, std::min(width, 720.0f));
     else
       fSettings.hide();
   }

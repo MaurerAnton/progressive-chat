@@ -48,21 +48,6 @@ inline constexpr std::size_t foot_count = 6;
 
 // ---- what the numbers read as --------------------------------------------
 
-// The clock as it is read in this window: the hour of the day and the minute
-// in it, out of a moment kept as it is in the model. No zone of its own to
-// ask, because what a chat is written in is whatever its reader's is.
-[[nodiscard]] inline std::string clock_of(moment at) {
-  const std::int64_t minutes = (at / 60'000) % (24 * 60);
-  const std::int64_t hour = minutes / 60;
-  const std::int64_t minute = minutes % 60;
-  std::string out;
-  out += hour < 10 ? "0" : "";
-  out += std::to_string(hour);
-  out += ":";
-  out += minute < 10 ? "0" : "";
-  out += std::to_string(minute);
-  return out;
-}
 // How long a thought took, as it is said under it: its seconds where it took
 // more than one, its milliseconds where it did not.
 [[nodiscard]] inline std::string took_of(std::int64_t took_ms) {
@@ -294,7 +279,7 @@ struct history_fold : nodes::Stack {
         {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
     // What it wrote to itself, greentext: shown while it is pressed open.
     fThought.setText(before.said);
-    fThought.setColour(look.primary);
+    fThought.setColour(look.thought);
     fThought.setMonospace(true);
     fThought.setVisible(fOpen && !before.said.empty());
     fThought.apply(
@@ -369,7 +354,7 @@ struct answer_row : nodes::Stack {
   }
 
   void again(app::requests *sink, const paints &look, const message &said,
-             float breadth) {
+             float breadth, std::string_view model) {
     const float widest = std::max(0.0f, breadth);
     this->setVisible(true);
     this->apply({.fillX = true,
@@ -384,12 +369,19 @@ struct answer_row : nodes::Stack {
     fBody.setFontSize(look.size);
     fBody.apply({.autoSize = scene::axes::kY, .fillX = true});
     fFoot.again(sink, look, said);
-    // What About tells: no name and no model, only what this answer came to.
-    fInfo.setText(
+    // What About tells: what answered, and what this answer came to -- the
+    // model that keeps this chat, then how long it thought, how often it
+    // reached for a tool, what it was worth, and when. Nothing else names a
+    // model anywhere on the screen, so this is the place it is said.
+    std::string info;
+    if (!model.empty())
+      info += std::string(model) + " · ";
+    info +=
         std::string(said.before ? took_of(said.before->took_ms) + " · " : "") +
         std::to_string(said.before ? said.before->tool_calls : 0u) +
         " tool calls · " + tokens_said(said.tokens) + " tokens · " +
-        clock_of(said.sent));
+        clock_of(said.sent);
+    fInfo.setText(info);
     fInfo.setColour(look.faint);
     fInfo.setVisible(fFoot.fChips[4].down());
   }
@@ -421,7 +413,7 @@ struct message_row : nodes::Stack {
   }
 
   void again(app::requests *sink, const paints &look, const message &said,
-             bool head, float breadth) {
+             bool head, float breadth, std::string_view model) {
     this->setVisible(true);
     this->apply({.fillX = true, .autoSize = scene::axes::kY});
     if (said.outgoing) {
@@ -429,7 +421,7 @@ struct message_row : nodes::Stack {
       fReader.again(look, said, head, breadth);
     } else {
       fReader.setVisible(false);
-      fAnswer.again(sink, look, said, breadth);
+      fAnswer.again(sink, look, said, breadth, model);
     }
   }
 
@@ -468,7 +460,8 @@ struct message_screen : nodes::Stack {
 
   // Called by the program whenever what is shown moved.
   void again(app::requests *sink, const paints &look, const chats_root &root,
-             const std::string &opened, float breadth, float) {
+             const std::string &opened, float breadth,
+             std::string_view model) {
     std::vector<const message *> said;
     for (const message &one : root.messages)
       if (one.chat.value == opened)
@@ -483,7 +476,7 @@ struct message_screen : nodes::Stack {
       const message &one = *said[at];
       // Left above it: room, where it is an answer, or where it follows one.
       const bool head = !one.outgoing || last_outgoing;
-      (*fRows)[at].again(sink, look, one, head, room);
+      (*fRows)[at].again(sink, look, one, head, room, model);
       last_outgoing = one.outgoing;
     }
   }

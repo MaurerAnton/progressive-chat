@@ -57,18 +57,29 @@ struct set_query {
 struct toggle_drawer {};
 struct open_settings {};
 struct close_settings {};
-struct set_looks {
-  looks shown;
-};
 struct set_amoled {
   bool enabled;
 };
+// What the Appearance page asks for: which seed the colours grow out of,
+// whether the type is set larger, and whose face it is set in. Each row asks
+// for one whole thing, not for the set of looks it would like to see, because
+// what the rest of the looks are is the program's to know and not a row's.
+struct pick_seed {
+  scheme_preset preset = default_preset;
+};
+struct set_font_scale {
+  double scale = 1.0;
+};
+// Which way the colours go: light or dark, whichever the seed is grown in.
+struct pick_theme {
+  theme_mode mode = theme_mode::dark;
+};
 
-using request =
-    std::variant<open_conversation, send_message, new_chat, copy_answer,
-                 regenerate_answer, fork_answer, share_answer, delete_answer,
-                 edit_draft, set_query, toggle_drawer, open_settings,
-                 close_settings, set_looks, set_amoled>;
+using request = std::variant<open_conversation, send_message, new_chat,
+                             copy_answer, regenerate_answer, fork_answer,
+                             share_answer, delete_answer, edit_draft, set_query,
+                             toggle_drawer, open_settings, close_settings,
+                             pick_seed, set_amoled, set_font_scale, pick_theme>;
 
 class requests {
 public:
