@@ -25,6 +25,9 @@ struct program {
   unsigned frames_ = 0u;
   std::chrono::steady_clock::time_point began_ =
       std::chrono::steady_clock::now();
+  // When this was made, which is very nearly when the window was: what the
+  // first frame began after is counted from here.
+  std::chrono::steady_clock::time_point opened_ = began_;
   skiff::scene::detail::PlainPaint paint;
   // The faces every piece of text in the window is drawn with: Open Sans,
   // shipped in this binary, because a browser has no system to ask.
@@ -48,6 +51,16 @@ struct program {
                             begun - began_)
                             .count();
       began_ = begun;
+      // The first one, said apart: how long it takes before anything at all
+      // is drawn is not a frame's length, and would be lost in an average
+      // of thirty.
+      if (frames_ == 0u)
+        __android_log_print(ANDROID_LOG_INFO, "progressive-chat",
+                            "the first frame began %d ms in",
+                            static_cast<int>(std::chrono::duration_cast<
+                                             std::chrono::milliseconds>(
+                                                 begun - opened_)
+                                                 .count()));
       if (frames_++ % 30u == 0u)
         __android_log_print(ANDROID_LOG_INFO, "progressive-chat",
                             "a frame took %d ms", static_cast<int>(took));
