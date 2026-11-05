@@ -21,6 +21,29 @@ const stream_body = [
   '',
 ].join('\n');
 
+// The same, said by a wire that stops on the way: it asks for one tool, and
+// only answers once the program has answered that. Who asked what is read out
+// of every request, so a loop of two askings can be told from one.
+const stream_body_stopped = [
+  'data: {"choices":[{"delta":{"content":"Looking it up."},"index":0}]}',
+  '',
+  'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_probe","function":{"name":"how_much_has_been_said","arguments":"{}"}}]},"index":0}]}',
+  '',
+  'data: {"choices":[{"delta":{},"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":9,"completion_tokens":4}}',
+  '',
+  'data: [DONE]',
+  '',
+].join('\n');
+
+const stream_body_answered = [
+  'data: {"choices":[{"delta":{"content":"asked-twice"},"index":0}]}',
+  '',
+  'data: {"choices":[{"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":30,"completion_tokens":2}}',
+  '',
+  'data: [DONE]',
+  '',
+].join('\n');
+
 let webgl = 'not asked';
 const url = process.env.PCHAT_PAGE ?? 'https://progressive-chat.github.io/progressive-chat/';
 
@@ -139,6 +162,53 @@ const shoot_answering = async (browser, name) => {
   await context.close().catch(() => {});
 };
 
+// One question asked twice: the wire stops to ask for a tool, the program
+// answers it, and the question is asked again. Two bodies are said back in
+// turn, so that the asking that came second can be read -- and the tools it
+// was offered read out of the first one.
+const shoot_with_tools = async (browser, name) => {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });
+  const page = await context.newPage();
+  page.on('pageerror', error => console.log(`pageerror[${name}]: ${String(error).slice(0, 600)}`));
+  let round = 0;
+  const bodies = [];
+  await page.route('**/chat/completions', route => {
+    round += 1;
+    bodies.push(route.request().postData() ?? 'nothing in the body');
+    console.log(`asked[${name}]: round ${round}`);
+    console.log(`body[${name}][${round}]: ${(route.request().postData() ?? '').replace(/\s+/g, ' ').slice(0, 1600)}`);
+    return route.fulfill({
+      status: 200,
+      headers: { 'Content-Type': 'text/event-stream', 'Access-Control-Allow-Origin': '*' },
+      body: round === 1 ? stream_body_stopped : stream_body_answered,
+    });
+  });
+  await page.goto(url, { waitUntil: 'load' });
+  try {
+    await page.waitForFunction(() => window.__pchat_started === true, null, { timeout: 180000 });
+    console.log(`started[${name}]: yes`);
+  } catch {
+    console.log(`started[${name}]: no`);
+  }
+  await page.waitForTimeout(4000);
+  try {
+    await page.mouse.click(640, 830);
+    await page.keyboard.type('Ask me something you have to look up.');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(16000);
+  } catch (error) {
+    console.log(`said[${name}]: could not -- ${String(error).slice(0, 300)}`);
+  }
+  const said = await page.evaluate(() => {
+    const host = document.getElementById('skiff');
+    return (host?.innerText ?? host?.textContent ?? '').replace(/\s+/g, ' ').slice(0, 4000);
+  });
+  console.log(`rounds[${name}]: ${round}`);
+  console.log(`text[${name}]: ${said}`);
+  await page.screenshot({ path: `${name}.png` }).catch(() => {});
+  await context.close().catch(() => {});
+};
+
 const browser = await chromium.launch({
   args: [
     '--no-sandbox',
@@ -153,4 +223,5 @@ await shoot(browser, 'painted-wide', { width: 1280, height: 900 }, false);
 await shoot(browser, 'painted-narrow', { width: 390, height: 844 }, true);
 await shoot(browser, 'painted-one-thread', { width: 1280, height: 900 }, false);
 await shoot_answering(browser, 'painted-answering');
+await shoot_with_tools(browser, 'painted-tools');
 await browser.close();

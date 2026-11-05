@@ -209,14 +209,17 @@ private:
     const provider::endpoint at{.base = opened_.base,
                                 .model = ending_of(chat),
                                 .told = opened_.told};
-    const auto turns = root_.messages |
+    // Not const: a view over messages asked of more than once is read more
+    // than once, and reading it again is not a thing a const view of it says
+    // yes to.
+    auto turns = root_.messages |
                        std::views::filter([&chat](const message &one) {
                          return one.chat == chat;
                        });
     // What is ours to answer goes in the asking, so a model knows it may stop
     // and ask; and it is kept here, because answering those calls later is
     // this program's and nobody else's.
-    const tools::owned mine{turns, now_ms()};
+    tools::owned mine{turns, now_ms()};
     answer_coming coming{.chat = chat,
                          .said = message_id{chat.value + "-" +
                                             std::to_string(root_.messages.size())},

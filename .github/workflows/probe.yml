@@ -33,4 +33,5 @@ jobs:
             painted-wide.png
             painted-narrow.png
             painted-answering.png
+          painted-tools.png
           if-no-files-found: error
