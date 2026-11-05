@@ -63,6 +63,12 @@ page that asks a wire nobody is holding the other end of. A tester that can
 catch that asking catches it at the context, because what the client asks
 leaves through a worker and not through the page.
 
+What is not seen arriving yet is the answer. The message said stands in the
+room at 00:00 with the six under it, the asking leaves with the three tools
+offered in it, and nothing above it changes however long the wire takes to be
+said yes to -- so what is still wrong is the coming back and not the going
+out, and that is where it goes next.
+
 The client spoke to a wire. What one conversation asks of a model is written
 out (`pchat.provider`), carried by whatever carries bytes here
 (`pchat.platform.carry` -- the browser's fetch on a page, and nothing
