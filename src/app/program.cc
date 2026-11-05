@@ -2,6 +2,9 @@ module;
 #if defined(__EMSCRIPTEN__)
 #include <emscripten/console.h>
 #endif
+#if defined(__ANDROID__)
+#include <android/log.h>
+#endif
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.app.program -- The program: one window's worth of screens, the paint
 // they are drawn with, and what is done between one frame and the next --
@@ -23,6 +26,8 @@ export namespace pchat::app {
 struct program {
   screens view;
   unsigned frames_ = 0u;
+  std::chrono::steady_clock::time_point began_ =
+      std::chrono::steady_clock::now();
   skiff::scene::detail::PlainPaint paint;
   // The faces every piece of text in the window is drawn with: Open Sans,
   // shipped in this binary, because a browser has no system to ask.
@@ -35,6 +40,22 @@ struct program {
   // again from the model. The size it lays itself out by is the one the last
   // frame left it.
   void before_frame() {
+#if defined(__ANDROID__)
+    // How long one of them took, said every thirtieth: twenty seconds before
+    // anything is drawn, and nothing answered afterwards, is a phone whose
+    // frames take longer than the machine is willing to wait for one -- and
+    // nothing but this says it.
+    {
+      const auto begun = std::chrono::steady_clock::now();
+      const auto took = std::chrono::duration_cast<std::chrono::milliseconds>(
+                            begun - began_)
+                            .count();
+      began_ = begun;
+      if (frames_++ % 30u == 0u)
+        __android_log_print(ANDROID_LOG_INFO, "progressive-chat",
+                            "a frame took %d ms", static_cast<int>(took));
+    }
+#endif
 #if defined(__EMSCRIPTEN__)
     if (frames_++ % 60u == 0u)
       emscripten_console_log("before a frame");
