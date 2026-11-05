@@ -22,6 +22,7 @@ import :top_bar;
 import :message_list;
 import :composer;
 import :settings;
+import :doc;
 
 export namespace pchat::ui {
 
@@ -40,6 +41,7 @@ struct app_window : scene::Node {
   nodes::ScrollContainer<message_screen> fList{message_screen{}};
   composer fComposer{};
   settings_screen fSettings{};
+  doc_screen fDesign{};
 
   app_window() {
     this->apply({.fill = true});
@@ -170,6 +172,12 @@ struct app_window : scene::Node {
       fSettings.again(asked, look, shown, dark, std::min(width, 720.0f));
     else
       fSettings.hide();
+    // The design said in the room, when it is opened: over everything, as a
+    // page of words it is, and put away again whole.
+    if (design_open)
+      fDesign.again(asked, look, std::min(width, 760.0f), height);
+    else
+      fDesign.hide();
   }
 
   void forEachChild(auto &&f) {
@@ -181,6 +189,7 @@ struct app_window : scene::Node {
     f(fTop);
     f(fComposer);
     f(fSettings);
+    f(fDesign);
   }
 };
 

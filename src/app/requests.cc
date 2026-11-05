@@ -59,6 +59,10 @@ struct set_query {
 struct toggle_drawer {};
 struct open_settings {};
 struct close_settings {};
+// The design said in the room itself: what stands written at the top of the
+// tree is read here too, and put away again.
+struct open_design {};
+struct close_design {};
 struct set_amoled {
   bool enabled;
 };
@@ -83,7 +87,8 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              copy_answer, regenerate_answer, fork_answer,
                              share_answer, delete_answer, edit_draft, set_query,
                              toggle_drawer, open_settings, close_settings,
-                             pick_seed, set_amoled, set_font_scale, pick_theme>;
+                             open_design, close_design, pick_seed, set_amoled,
+                             set_font_scale, pick_theme>;
 
 class requests {
 public:

@@ -10,6 +10,7 @@ import pchat.logic.lists;
 import pchat.logic.search;
 import pchat.logic.composer;
 import pchat.logic.formatting;
+import pchat.logic.doc;
 
 
 
@@ -69,3 +70,64 @@ SAID(logic, marks_make_runs_of_style) {
 }
 
 int main() { return pchat::tests::run(); }
+
+
+SAID(doc, a document is read one line at a time and each knows what it is) {
+  const std::vector<logic::doc_line> read = logic::read_doc(
+      "# The design of a chat\n"
+      "\n"
+      "How the screen looks.\n"
+      "## The room\n"
+      "One conversation fills it.\n"
+      "### What is not drawn yet\n"
+      "* a pill\n"
+      "- another\n"
+      "#### As small as three\n");
+  EXPECT_EQ(read.size(), 10u);
+  EXPECT_TRUE(read[0].kind == logic::doc_kind::title);
+  EXPECT_EQ(read[0].said, std::string("The design of a chat"));
+  EXPECT_TRUE(read[1].kind == logic::doc_kind::gap);
+  EXPECT_TRUE(read[2].kind == logic::doc_kind::words);
+  EXPECT_EQ(read[2].said, std::string("How the screen looks."));
+  EXPECT_TRUE(read[3].kind == logic::doc_kind::heading);
+  EXPECT_EQ(read[3].said, std::string("The room"));
+  EXPECT_TRUE(read[5].kind == logic::doc_kind::subheading);
+  EXPECT_EQ(read[5].said, std::string("What is not drawn yet"));
+  EXPECT_TRUE(read[6].kind == logic::doc_kind::bullet);
+  EXPECT_EQ(read[6].said, std::string("a pill"));
+  EXPECT_TRUE(read[7].kind == logic::doc_kind::bullet);
+  EXPECT_EQ(read[7].said, std::string("another"));
+  // More hashes than three are said as small as three was.
+  EXPECT_TRUE(read[9].kind == logic::doc_kind::subheading);
+}
+
+SAID(doc, a last line with no break after it is read as one too) {
+  const std::vector<logic::doc_line> read = logic::read_doc("one\ntwo");
+  EXPECT_EQ(read.size(), 2u);
+  EXPECT_EQ(read[1].said, std::string("two"));
+  EXPECT_TRUE(read[1].kind == logic::doc_kind::words);
+}
+
+SAID(doc, a mark alone in front is words and not a list of one) {
+  const std::vector<logic::doc_line> read = logic::read_doc("*\n-# not a heading");
+  EXPECT_TRUE(read[0].kind == logic::doc_kind::words);
+  EXPECT_EQ(read[0].said, std::string("*"));
+  EXPECT_TRUE(read[1].kind == logic::doc_kind::words);
+  EXPECT_EQ(read[1].said, std::string("-# not a heading"));
+}
+
+SAID(doc, the design this build was made with is read whole) {
+  const std::string_view design = logic::the_design();
+  EXPECT_LT(1000u, design.size());
+  EXPECT_TRUE(design.find("The design of a chat") != std::string_view::npos);
+  const std::vector<logic::doc_line> read = logic::read_doc(design);
+  EXPECT_LT(100u, read.size());
+  bool titled = false;
+  bool listed = false;
+  for (const logic::doc_line &one : read) {
+    titled = titled || one.kind == logic::doc_kind::title;
+    listed = listed || one.kind == logic::doc_kind::bullet;
+  }
+  EXPECT_TRUE(titled);
+  EXPECT_TRUE(listed);
+}

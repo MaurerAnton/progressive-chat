@@ -51,6 +51,35 @@ else()
 endif()
 add_compile_definitions(PCHAT_VERSION_SAID="${PCHAT_VERSION_SAID}")
 
+# The design, said once at the top of the tree in design-doc.md and read
+# inside the program as well as out of it: written out here as one string a
+# module can hold, because neither a page nor a phone has a file to read --
+# and even a desktop has nothing to say where to look for one. In a raw
+# string, so that not one backslash, brace or quote in it is read as anything
+# but what was written; and the build says out loud if the marks that close
+# that string ever turn up in the design itself.
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/design-doc.md" pchat_design_text)
+if(pchat_design_text MATCHES "\\)pchat_design")
+  message(FATAL_ERROR
+    "design-doc.md holds the marks that close the string this build writes "
+    "it in, ')pchat_design', so it cannot be written as one string: say it "
+    "another way there, or choose other marks here.")
+endif()
+set(pchat_design_header "${CMAKE_CURRENT_BINARY_DIR}/generated/pchat/design.h")
+file(WRITE "${pchat_design_header}"
+[==[
+// Written by the build out of design-doc.md; not to be edited here.
+#pragma once
+#include <string_view>
+namespace pchat {
+inline constexpr std::string_view design_doc =
+R"pchat_design(]==]
+"${pchat_design_text}"
+[==[
+)pchat_design";
+}
+]==])
+
 # With libstdc++, clang 23.1.4 at least: before it, clang with libstdc++'s
 # std module found no operator| for a range adaptor closure another imported
 # module had made first, and every pipe had to be written in the call form
@@ -194,9 +223,12 @@ add_library(pchat_core)
 target_sources(pchat_core PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
   FILES src/core.cc src/config.cc src/theme.cc src/theme_palette.cc
         src/logic/lists.cc src/logic/search.cc src/logic/drafts.cc
-        src/logic/composer.cc src/logic/formatting.cc)
+        src/logic/composer.cc src/logic/formatting.cc src/logic/doc.cc)
 target_compile_features(pchat_core PUBLIC cxx_std_26)
 target_compile_options(pchat_core PUBLIC ${pchat_std_flags})
+# The design, as a string the build wrote: said to whoever reads this model,
+# which is every screen and every test of one.
+target_include_directories(pchat_core PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/generated")
 
 # What one conversation asks of a model, and what one answer coming back says:
 # the body written for a wire, and its stream read again. No socket in it --
@@ -301,7 +333,7 @@ if(PCHAT_UI)
     FILES ${pchat_platform_sources} src/ui.cc
           src/ui/base.cc src/ui/theme.cc src/ui/icons.cc src/ui/controls.cc
           src/ui/drawer.cc src/ui/top_bar.cc src/ui/message_list.cc
-          src/ui/composer.cc src/ui/settings.cc src/ui/appearance.cc
+          src/ui/composer.cc src/ui/settings.cc src/ui/doc.cc src/ui/appearance.cc
           src/ui/window.cc)
   target_compile_features(pchat_ui PUBLIC cxx_std_26)
   target_compile_options(pchat_ui PUBLIC ${pchat_std_flags})

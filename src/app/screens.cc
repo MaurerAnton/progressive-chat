@@ -118,6 +118,15 @@ public:
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
             [&](const open_settings &) { settings_ = true; },
             [&](const close_settings &) { settings_ = false; },
+            // Read where it is asked for, over the room and over nothing
+            // else: the page it was asked from is put away under it, so
+            // that putting the design away leaves the conversation and not
+            // a page the reader had already gone on from.
+            [&](const open_design &) {
+              settings_ = false;
+              design_ = true;
+            },
+            [&](const close_design &) { design_ = false; },
             // What the seed is: every colour grown again out of it, and the
             // page staying open to be looked at.
             [&](const pick_seed &asking) {
@@ -155,8 +164,8 @@ public:
     for (const request &one : asked_.drain())
       take(one);
     read_what_arrived();
-    scene_.root().again(look_, root_, shown_, query_, dark_, settings_, drawer_,
-                        width_, height_, &asked_);
+    scene_.root().again(look_, root_, shown_, query_, dark_, settings_, design_,
+                        drawer_, width_, height_, &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -402,6 +411,8 @@ private:
   // over them and the conversation not at all: nothing was left in the middle
   // of the window but the drawer's own ground.
   bool drawer_ = false;
+  // Whether the design said in the room is being read.
+  bool design_ = false;
   moment said_count_ = 1;
   std::size_t chat_count_ = 0;
   // What copy last took whole: said nowhere yet, because what a host's

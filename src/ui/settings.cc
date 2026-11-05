@@ -118,6 +118,10 @@ struct settings_screen : scene::Node {
   switch_row fBlack;
   switch_row fLarge;
   switch_row fLight;
+  // What the design is called when it is offered: pressed, the whole of it
+  // is said in the room, where it can be read against what is drawn.
+  ask_box fReadPlate{};
+  nodes::Text fRead{"Read the design", 15.0f, 0u};
   // What this build is: not a number that a hundred other builds share, but
   // the number and the commit they were made of.
   nodes::Text fVersion{"", 12.0f, 0u};
@@ -175,6 +179,7 @@ struct settings_screen : scene::Node {
     fCard.setColour(look.drawer);
     fHeading.setColour(look.text);
     fLooks.setColour(look.dim);
+    fRead.setColour(look.text);
     fDivider.setColour(look.outline);
     // Sizes in pixels: a row made to take the whole of its column when the
     // page was built is told again here how wide it is to be, not how much
@@ -228,9 +233,12 @@ struct settings_screen : scene::Node {
                  look, "Larger type", shown.font_scale > 1.0f,
                  app::set_font_scale{
                      .scale = shown.font_scale > 1.0f ? 1.0 : large_type});
+    // What this build is, said under the heading rather than under the last
+    // switch: the rows are all there is room for, and the number wants none
+    // of it.
     fVersion.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
-                    .y = top + 156.0f,
+                    .y = 56.0f,
                     .autoSize = scene::axes::kBoth});
     fVersion.setColour(look.dim);
     fLight.again(asked,
@@ -245,6 +253,21 @@ struct settings_screen : scene::Node {
                  app::pick_theme{.mode = shown.mode == theme_mode::light
                                              ? theme_mode::dark
                                              : theme_mode::light});
+    // The design, offered under the switches: a plate the whole breadth of
+    // the rows, and what it is called written in it.
+    fReadPlate.again(asked, app::open_design{}, look.raised);
+    fReadPlate.apply({.anchor = row.anchor,
+                      .x = row.x,
+                      .y = top + 156.0f,
+                      .relativeSize = scene::axes::kNone,
+                      .width = row.width,
+                      .height = row.height,
+                      .cornerRadius = row.cornerRadius});
+    fRead.apply({.anchor = scene::anchor::kCentreLeft,
+                 .origin = scene::anchor::kCentreLeft,
+                 .x = 32.0f,
+                 .y = top + 156.0f + row.height / 2.0f,
+                 .autoSize = scene::axes::kBoth});
   }
 
   void forEachChild(auto &&f) {
@@ -260,6 +283,8 @@ struct settings_screen : scene::Node {
     f(fBlack);
     f(fLarge);
     f(fLight);
+    f(fReadPlate);
+    f(fRead);
     f(fVersion);
   }
 };

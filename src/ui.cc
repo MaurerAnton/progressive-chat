@@ -15,5 +15,7 @@ export import :top_bar;
 export import :message_list;
 export import :composer;
 export import :settings;
+export import :doc;
+import :doc;
 export import :appearance;
 export import :window;
