@@ -86,11 +86,11 @@ struct prompt_screen : scene::Node {
                  .cornerRadius = 24.0f});
     fHead.apply({.anchor = scene::anchor::kTopCentre,
                  .origin = scene::anchor::kTopCentre,
-                 .y = above + 28.0f,
+                 .y = 28.0f,
                  .autoSize = scene::axes::kBoth});
     fSaid.apply({.anchor = scene::anchor::kTopCentre,
                  .origin = scene::anchor::kTopCentre,
-                 .y = above + 62.0f,
+                 .y = 62.0f,
                  .autoSize = scene::axes::kBoth});
     fField.apply({.anchor = scene::anchor::kTopCentre,
                   .origin = scene::anchor::kTopCentre,
