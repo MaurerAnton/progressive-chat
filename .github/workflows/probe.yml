@@ -32,4 +32,5 @@ jobs:
           path: |
             painted-wide.png
             painted-narrow.png
+            painted-answering.png
           if-no-files-found: error

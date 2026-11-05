@@ -89,12 +89,14 @@ public:
 
   // What has come since the last take, whole, and nothing where nothing has.
   [[nodiscard]] std::string take() {
-    if (over_ && held_) {
 #if defined(__EMSCRIPTEN__)
+    // Nothing carries anything any more: what was asked of the browser is
+    // closed the once it has been answered, and only then.
+    if (over_ && held_) {
       emscripten_fetch_close(held_);
-#endif
       held_ = nullptr;
     }
+#endif
     return std::exchange(arrived_, std::string{});
   }
 
@@ -148,8 +150,8 @@ private:
 #if defined(__EMSCRIPTEN__)
     if (held_)
       emscripten_fetch_close(held_);
-#endif
     held_ = nullptr;
+#endif
   }
 
 #if defined(__EMSCRIPTEN__)

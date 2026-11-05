@@ -9,9 +9,14 @@ the web and for Android from one set of files.
 
 Started **3 November 2026, 21:07 UTC** -- the repository's first commit.
 
-The back end is not here yet. What the screens show today is a sample, kept in
+The back end is not here yet, and it is being written apart from this tree, in
+C++: what the screens show alongside it is a sample, kept in
 `src/app/sample.cc`, and every change the screens ask for is answered in
-memory until a client answers them instead.
+memory. What a **model** is asked, though, is asked for real: on the page it
+is carried by the browser's own fetch to the server that served it, answered
+a piece at a time, and written into the room as it comes
+(`docs/PROTOCOL.md`). A desk and a phone do not carry anything yet, and every
+build says so rather than pretending otherwise.
 
 ## Why this project exists
 
@@ -38,6 +43,19 @@ end yet. It is **not** designed for people to talk to each other in.
 Said again every day this has been a program, newest first: what it was on
 that day, not what it is meant to be one day.
 
+### 2026-11-05
+
+The client spoke to a wire. What one conversation asks of a model is written
+out (`pchat.provider`), carried by whatever carries bytes here
+(`pchat.platform.carry` -- the browser's fetch on a page, and nothing
+anywhere else yet, which every build says), read back a frame at a time
+(`pchat.provider.stream`), and written into the room as it arrives: one
+answer, held and ended and left as a message (`pchat.provider.run`), with
+what it thought before it spoke, how many tools it asked for, and what it
+cost. Every part of it is said by tests with no network under them, and the
+page's own asking can be caught in a browser and read
+(`node tools/probe_painted.mjs`).
+
 ### 2026-11-04
 
 Thousands of lines of code were written in 24 hours. The build is almost
@@ -52,6 +70,10 @@ src/config.cc            what is kept on disk: the looks, the account
 src/theme*.cc            eight preset palettes, in Material's own terms
 src/logic/*.cc           what the screens read out of the model
 src/app/*.cc             the program, the screens, and today's sample
+src/provider.cc          what one conversation asks of a model, and the body
+src/provider/stream.cc   one answer arriving a frame at a time
+src/provider/run.cc      one answer whole: why it is over, the message it leaves
+src/platform/carry.cc    what hands a body over, per platform: a page's fetch
 src/ui.cc, src/ui/*.cc   the window: every screen, drawn with skiff
 ```
 
