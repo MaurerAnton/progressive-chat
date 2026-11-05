@@ -114,6 +114,33 @@ Three targets, one program:
 The page is built and published by `web.yml`, and is served at
 <https://progressive-chat.github.io/progressive-chat/>.
 
+## What is known broken, and where to look first
+
+The page asks and does not hear. All of this has been seen on the deployed
+build, driven by hand in a browser, and none of it is guessed at:
+
+* what is typed in the card is said as a message and stands in the room;
+* asking leaves as one `POST` to `/v1/chat/completions` with the conversation
+  as turns and the three tools this program offers in the body;
+* nothing above it changes when that asking is answered 200 with a stream --
+  no text, no "said nothing", and no second asking for a tool that was asked
+  for. So the stream is either never handed over or never handed back.
+
+Everything above the transport is covered by tests (`test/ask.cc`, the tools
+and the loop), so the two things left are in `src/platform/carry.cc`:
+
+1. Whether the callbacks are called at all. Put `emscripten_console_log` at
+   the top of `went_along`, `went_well` and `went_on`, build the page, and
+   answer the asking in a probe: whatever the browser's console says is which
+   of the two it is. (Nothing else in this file is suspected.)
+2. Whether what is counted as read is right in `went_along`. The arithmetic
+   there assumes `dataOffset` moves with each piece; where a browser hands
+   the whole body over once, the same bytes can be skipped as already read.
+
+What a probe cannot ask about is a request that leaves through a worker, and
+that is why it is routed at the context (`tools/probe_painted.mjs`) and not
+at the page: routed at the page, the asking was never seen at all.
+
 ## To build it
 
 What has to be on the machine is what mux asks for: **clang 23** with its
