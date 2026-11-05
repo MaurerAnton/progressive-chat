@@ -93,6 +93,10 @@ skiff over Skia — and this document says how that stack is used here.
   a top bar over them, a composer under them, and settings in the same shell.
   It is re-drawn here from its idea, in this stack; nothing of Agora's own
   sources is in this tree.
+- How the library actually lays things out — what sizes it reads, what it
+  throws away, what a press reaches — is written down as it is learned in
+  `docs/skiff-notes.md`. Read it before drawing anything new, and add to it
+  when a screen comes out somewhere other than where it was put.
 
 ## Comments, names and commits
 
