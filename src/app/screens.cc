@@ -395,7 +395,13 @@ private:
   std::string query_;
   bool dark_ = true;
   bool settings_ = false;
-  bool drawer_ = true;
+  // The drawer is beside the messages, where the window has room for both,
+  // and it comes over them only where it is asked for with the pill. It was
+  // asked for from the first frame onwards, which a wide window answered by
+  // showing it beside them -- and a narrower one, or a phone, by showing it
+  // over them and the conversation not at all: nothing was left in the middle
+  // of the window but the drawer's own ground.
+  bool drawer_ = false;
   moment said_count_ = 1;
   std::size_t chat_count_ = 0;
   // What copy last took whole: said nowhere yet, because what a host's
