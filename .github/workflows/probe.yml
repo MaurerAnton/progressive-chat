@@ -31,7 +31,11 @@ jobs:
       - name: A browser that can be driven
         run: |
           npm init -y
-          npm install playwright
+          # Said of a version and not "the newest": a playwright is put out
+          # before the core it is said on top of, and a probe that cannot be
+          # installed is no probe at all -- this one is moved on by hand when
+          # the next is settled.
+          npm install playwright@1.64.1
           npx playwright install --with-deps chromium
       - name: What to say to the page, when it is said by hand
         if: ${{ github.event.inputs.script != '' }}
