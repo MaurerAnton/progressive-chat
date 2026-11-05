@@ -1,5 +1,6 @@
 module;
 #if defined(__EMSCRIPTEN__)
+#include <emscripten/console.h>
 #include <emscripten/fetch.h>
 #endif
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -148,11 +149,19 @@ private:
   // through a pointer to a function and not to anything of ours: each one is
   // given this object back in `userData` and says everything to it.
 #if defined(__EMSCRIPTEN__)
+  // What the page told us, said into the browser's own console, where a
+  // tester can read it: whether anything came at all is not something a
+  // program that only ever sees bytes can say to anybody but whoever is
+  // watching the page be driven. Nothing above this file knows of it, and
+  // nothing in it is decided by what it says.
+  static void told(const char *what) { emscripten_console_log(what); }
+
   // A piece arrived, and where the piece says it arrived: take what of it has
   // not been taken yet, and nothing of it twice. A browser that hands the
   // whole body over at once instead says this too, once.
   static void went_along(emscripten_fetch_t *one) {
     auto &self = *static_cast<carrying *>(one->userData);
+    told("carrying: a piece came");
     if (!one->data || one->numBytes == 0)
       return;
     const std::uint64_t said = static_cast<std::uint64_t>(one->numBytes);
@@ -167,12 +176,14 @@ private:
   }
   static void went_wrong(emscripten_fetch_t *one) {
     auto &self = *static_cast<carrying *>(one->userData);
+    told("carrying: it did not ask");
     if (!self.trouble_)
       self.trouble_ = "the page could not ask for it";
     self.over_ = true;
   }
   static void went_well(emscripten_fetch_t *one) {
     auto &self = *static_cast<carrying *>(one->userData);
+    told("carrying: it answered");
     // Everything in one piece, where the browser never handed it over in
     // pieces: taken once, and not again on top of what already came.
     if (self.read_ == 0 && one->data && one->numBytes)
@@ -185,6 +196,7 @@ private:
     auto &self = *static_cast<carrying *>(one->userData);
     if (one->readyState != 4 /* done */)
       return;
+    told("carrying: done");
     // Answered, and answered that it will not: the body it says that in
     // is not the answer asked for, so it is said here and nothing of it
     // is taken.
