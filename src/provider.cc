@@ -41,6 +41,13 @@ struct turn {
   role who = role::user;
   std::string text;
   std::string thought;
+  // The tools it stopped to ask for, where it stopped to ask for any: they
+  // are given back with the asking, because a wire answers an answer of a
+  // call against the call and nothing else.
+  std::vector<tool_call> calls;
+  // Which call this turn answers, where it answers one: named as the wire
+  // named it, which is how what a tool said is read against what asked it.
+  std::string own;
   friend bool operator==(const turn &, const turn &) = default;
 };
 
@@ -140,8 +147,26 @@ template <std::ranges::forward_range Turns>
           .name("role").text(said_by(role::system))
           .name("content").text(one.told)
           .shut();
-    for (const turn &said : turns)
-      out.thing().name("role").text(said_by(said.who)).name("content").text(said.text).shut();
+    for (const turn &said : turns) {
+      out.thing().name("role").text(said_by(said.who));
+      if (said.who == role::tool && !said.own.empty())
+        out.name("tool_call_id").text(said.own);
+      out.name("content").text(said.text);
+      if (!said.calls.empty()) {
+        out.name("tool_calls").list();
+        for (const tool_call &one : said.calls)
+          out.thing()
+              .name("id").text(one.id)
+              .name("type").text("function")
+              .name("function").thing()
+              .name("name").text(one.name)
+              .name("arguments").text(one.arguments)
+              .shut()
+              .shut();
+        out.shut();
+      }
+      out.shut();
+    }
     out.shut();
   }
   // What it cost comes at the end of the stream too: the last frame of one has

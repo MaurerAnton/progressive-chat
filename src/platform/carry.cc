@@ -32,6 +32,34 @@ public:
   carrying(const carrying &) = delete;
   carrying &operator=(const carrying &) = delete;
 
+  // Given away whole and never in two places at once: what the browser was
+  // asked for is one request, and closing it twice is not a thing to want.
+  carrying(carrying &&gone)
+      : place_(std::move(gone.place_)), wrote_(std::move(gone.wrote_)),
+        fields_(std::move(gone.fields_)), flat_(std::move(gone.flat_)),
+        arrived_(std::move(gone.arrived_)), trouble_(std::move(gone.trouble_)),
+        over_(gone.over_) {
+#if defined(__EMSCRIPTEN__)
+    held_ = std::exchange(gone.held_, nullptr);
+#endif
+  }
+  carrying &operator=(carrying &&gone) {
+    if (this != &gone) {
+      shut();
+      place_ = std::move(gone.place_);
+      wrote_ = std::move(gone.wrote_);
+      fields_ = std::move(gone.fields_);
+      flat_ = std::move(gone.flat_);
+      arrived_ = std::move(gone.arrived_);
+      trouble_ = std::move(gone.trouble_);
+      over_ = gone.over_;
+#if defined(__EMSCRIPTEN__)
+      held_ = std::exchange(gone.held_, nullptr);
+#endif
+    }
+    return *this;
+  }
+
   // Whether this platform hands bytes over at all: everything that can be
   // asked of it is nothing where it cannot, so that nothing else here has to
   // be a different program on each platform.

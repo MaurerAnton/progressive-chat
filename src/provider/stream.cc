@@ -64,7 +64,9 @@ public:
   // it has stopped, or failed on the way.
   [[nodiscard]] std::string_view text() const { return text_; }
   [[nodiscard]] std::string_view thought() const { return thought_; }
-  [[nodiscard]] std::span<const tool_call> calls() const { return calls_; }
+  // Every tool it asked for, whole and in the order it asked for them: what
+  // an answer is asked again with.
+  [[nodiscard]] const std::vector<tool_call> &calls() const { return calls_; }
   [[nodiscard]] usage cost() const { return cost_; }
   [[nodiscard]] bool ended() const { return ended_; }
   [[nodiscard]] bool failed() const { return failed_; }

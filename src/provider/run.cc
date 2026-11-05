@@ -47,6 +47,31 @@ struct put_in {
   std::int64_t took_ms = 0;
 };
 
+// One answer written into a message, wherever the answer came from: one run,
+// or one question that had to be asked again before it was answered. Whose it
+// is written as, where it was said, how long it took, and failed where nothing
+// of it came -- said once here so that it is said the same way twice.
+[[nodiscard]] inline message answer_of(const put_in &into, std::string_view said,
+                                       std::string_view thinking,
+                                       std::size_t asking, usage cost,
+                                       bool failed) {
+  message out{.id = into.id,
+              .chat = into.chat,
+              .author = into.author,
+              .outgoing = false,
+              .text = std::string(said),
+              .sent = into.sent,
+              .state = failed ? delivery::failed : delivery::sent};
+  out.tokens = static_cast<std::uint32_t>(cost.in + cost.out);
+  // Said in full: `thought` is what an answer thought, and not the same word
+  // as the type what it thought is kept in.
+  if (!thinking.empty() || into.took_ms != 0 || asking != 0)
+    out.before = ::pchat::thought{.took_ms = into.took_ms,
+                                  .tool_calls = static_cast<std::uint32_t>(asking),
+                                  .said = std::string(thinking)};
+  return out;
+}
+
 // One answer. It owns the body that was asked with and the stream that comes
 // back, and it is the only thing between them: what the screens read while an
 // answer is arriving -- what it has said so far, what it thought, what it
@@ -116,6 +141,11 @@ public:
   [[nodiscard]] std::string_view thought() const { return coming_.thought(); }
   [[nodiscard]] usage cost() const { return coming_.cost(); }
   [[nodiscard]] std::size_t tool_calls() const { return coming_.calls().size(); }
+  // Every tool it stopped to ask for, whole, in the order it asked. Read out
+  // of here and answered nowhere in particular: this does not run anything.
+  [[nodiscard]] const std::vector<tool_call> &called() const {
+    return coming_.calls();
+  }
   // Why the wire says it stopped: stop, length, tool_calls, content_filter.
   [[nodiscard]] std::string_view finish() const { return coming_.finish(); }
 
@@ -129,22 +159,8 @@ public:
   // and nothing here is put into a conversation: where it goes is asked
   // elsewhere.
   [[nodiscard]] message answer_of(const put_in &into) const {
-    message out{
-        .id = into.id,
-        .chat = into.chat,
-        .author = into.author,
-        .outgoing = false,
-        .text = std::string(said()),
-        .sent = into.sent,
-        .state = ended_ == over::failed ? delivery::failed : delivery::sent};
-    out.tokens = static_cast<std::uint32_t>(cost().in + cost().out);
-    // Said in full: inside this class `thought` is what the answer thought,
-    // and not the type what it thought is kept in.
-    if (!thought().empty() || into.took_ms != 0 || tool_calls() != 0)
-      out.before = ::pchat::thought{.took_ms = into.took_ms,
-                           .tool_calls = static_cast<std::uint32_t>(tool_calls()),
-                           .said = std::string(thought())};
-    return out;
+    return provider::answer_of(into, said(), thought(), tool_calls(), cost(),
+                               ended_ == over::failed);
   }
 
 private:

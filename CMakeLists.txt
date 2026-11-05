@@ -203,7 +203,8 @@ target_compile_options(pchat_core PUBLIC ${pchat_std_flags})
 # what carries the bytes is a platform's to do, later.
 add_library(pchat_provider)
 target_sources(pchat_provider PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
-  FILES src/provider.cc src/provider/stream.cc src/provider/run.cc)
+  FILES src/provider.cc src/provider/stream.cc src/provider/run.cc
+        src/provider/loop.cc)
 target_compile_features(pchat_provider PUBLIC cxx_std_26)
 target_compile_options(pchat_provider PUBLIC ${pchat_std_flags})
 target_link_libraries(pchat_provider PUBLIC pchat_core pchat_json)

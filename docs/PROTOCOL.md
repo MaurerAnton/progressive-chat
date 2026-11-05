@@ -124,7 +124,7 @@ elsewhere.
 
 ## 4. What carries the bytes
 
-Nothing yet, and each platform differently. What any of them has to do is
+One platform carries them today, and each of the others will differently. What any of them has to do is
 the same four things, and all four are ordinary:
 
 1. read `wants()` -- url, headers, body;
@@ -136,13 +136,19 @@ the same four things, and all four are ordinary:
 That is the whole contract, which is why there are no callbacks anywhere in
 it: nothing here calls into a transport and nothing calls into anything else.
 
-Where each of them will come from:
+Where each of them comes from today:
 
-- **The page** (web). Emscripten's own `fetch`, or the worker's, which is what
-  the page already runs Skia in. Nothing of it is written yet.
+- **The page** (web). `emscripten_fetch` asked for `EMSCRIPTEN_FETCH_STREAM_DATA`,
+  so what the browser gets from the server is handed over a piece at a time
+  and not whole at the end: an answer arriving is drawn arriving. What it asks
+  of is written relative -- `/v1/chat/completions` -- which is the way in only
+  for the server that served the page, and needs no key, because whose a key
+  is to hold is that server's own business.
 - **The desktop and the phone.** Later: [Boost.Asio on fibers with
   Beast](https://github.com/boostorg/beast), which is what mux carries Matrix
-  with, one strand of reads and writes rather than a thread per answer.
+  with, one strand of reads and writes rather than a thread per answer. Until
+  then `carrying::any` says there is nothing here to carry with, and nothing
+  is asked of anybody.
 - **The server to come.** Written apart from this tree, and so its own side of
   the wire is its own to choose; this side only asks for the shape above.
 
