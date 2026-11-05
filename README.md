@@ -59,46 +59,12 @@ Said again every day this has been a program, newest first: what it was on
 that day, not what it is meant to be one day.
 
 This section is that accumulating: one paragraph for every twenty-four hours
-of this program's development, added each day at **21:00 UTC** and left where
-it was put. Nothing written here is rewritten to say something truer later --
-what was true of it on a day stands said of that day.
+of this program's development, left where it was put. Nothing written here is
+rewritten to say something truer later -- what was true of it on a day stands
+said of that day.
 
-### 2026-11-05
-
-A question is asked again. A model does not answer in one go: it stops, asks
-for a tool, and goes on once somebody has answered it -- so what it asked for
-comes out of the answer whole, is answered here by the program itself
-(`pchat.tools`: read this conversation back, say how much has been said in
-it, say what time it is -- none of which leaves this machine), and the
-question goes out again with what they said (`pchat.provider.loop`), four
-times at most. Nothing here runs anything: a call is read out as data and
-answered as data, so a two-round loop is said by tests with no tools and no
-wire anywhere in it.
-
-And the page was seen asking. Not guessed at: the deployed one, driven in a
-browser, wrote to `https://progressive-chat.github.io/v1/chat/completions`
-the whole conversation as turns -- system, ours, its own -- and was answered
-405 by a host that has no server in it yet, which is the right answer for a
-page that asks a wire nobody is holding the other end of. A tester that can
-catch that asking catches it at the context, because what the client asks
-leaves through a worker and not through the page.
-
-What is not seen arriving yet is the answer. The message said stands in the
-room at 00:00 with the six under it, the asking leaves with the three tools
-offered in it, and nothing above it changes however long the wire takes to be
-said yes to -- so what is still wrong is the coming back and not the going
-out, and that is where it goes next.
-
-The client spoke to a wire. What one conversation asks of a model is written
-out (`pchat.provider`), carried by whatever carries bytes here
-(`pchat.platform.carry` -- the browser's fetch on a page, and nothing
-anywhere else yet, which every build says), read back a frame at a time
-(`pchat.provider.stream`), and written into the room as it arrives: one
-answer, held and ended and left as a message (`pchat.provider.run`), with
-what it thought before it spoke, how many tools it asked for, and what it
-cost. Every part of it is said by tests with no network under them, and the
-page's own asking can be caught in a browser and read
-(`node tools/probe_painted.mjs`).
+It is written by hand. Nothing writes here that is not that hand, and no
+paragraph of it is written by a model, an agent or a script on its own.
 
 ### 2026-11-04
 
