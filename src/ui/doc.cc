@@ -106,8 +106,8 @@ struct doc_body : nodes::Stack {
       line.setColour(said.kind == logic::doc_kind::gap ? look.dim : look.text);
       line.apply({.fillX = true,
                   .autoSize = scene::axes::kY,
-                  .visible = true,
-                  .maxWidth = breadth});
+                  .maxWidth = breadth,
+                  .visible = true});
     }
     for (std::size_t rest = at; rest < max_doc_lines; ++rest) {
       (*fLines)[rest].said.setVisible(false);
@@ -167,10 +167,9 @@ struct doc_screen : scene::Node {
     fCard.apply({.anchor = scene::anchor::kTopCentre,
                  .origin = scene::anchor::kTopLeft,
                  .y = 12.0f,
-                 .relativeSize = scene::axes::kNone,
                  .width = breadth,
-                 .fillY = false,
                  .height = height - 24.0f,
+                 .relativeSize = scene::axes::kNone,
                  .cornerRadius = 24.0f});
     std::get<0>(fBody.fChildren).again(look, logic::read_doc(logic::the_design()),
                                        breadth - 4.0f * edge);
@@ -178,9 +177,9 @@ struct doc_screen : scene::Node {
                  .origin = scene::anchor::kTopCentre,
                  .x = 0.0f,
                  .y = 12.0f + top_bar_height,
-                 .relativeSize = scene::axes::kNone,
                  .width = breadth,
                  .height = std::max(height - top_bar_height - 36.0f, 40.0f),
+                 .relativeSize = scene::axes::kNone,
                  .visible = true});
   }
 

@@ -255,18 +255,20 @@ struct settings_screen : scene::Node {
                                              : theme_mode::light});
     // The design, offered under the switches: a plate the whole breadth of
     // the rows, and what it is called written in it.
+    const float row_height = row.height.value_or(48.0f);
     fReadPlate.again(asked, app::open_design{}, look.raised);
     fReadPlate.apply({.anchor = row.anchor,
+                      .origin = scene::anchor::kTopLeft,
                       .x = row.x,
                       .y = top + 156.0f,
-                      .relativeSize = scene::axes::kNone,
                       .width = row.width,
-                      .height = row.height,
+                      .height = row_height,
+                      .relativeSize = scene::axes::kNone,
                       .cornerRadius = row.cornerRadius});
     fRead.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
                  .x = 32.0f,
-                 .y = top + 156.0f + row.height / 2.0f,
+                 .y = top + 156.0f + row_height / 2.0f,
                  .autoSize = scene::axes::kBoth});
   }
 
