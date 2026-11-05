@@ -369,6 +369,7 @@ struct settings_rows : scene::Node {
                  .relativeSize = scene::axes::kNone,
                  .width = breadth,
                  .height = at + edge});
+  }
 
   void forEachChild(auto &&f) {
     f(fHeading);
