@@ -220,17 +220,22 @@ private:
     // and ask; and it is kept here, because answering those calls later is
     // this program's and nobody else's.
     tools::owned mine{turns, now_ms()};
-    answer_coming coming{.chat = chat,
-                         .said = message_id{chat.value + "-" +
-                                            std::to_string(root_.messages.size())},
-                         .going = provider::loop{at,
-                                                 turns,
-                                                 4,
-                                                 provider::wanted{
-                                                     .tools = mine.offered()}},
-                         .carried = std::move(carried),
-                         .mine = std::move(mine),
-                         .began = now_ms()};
+    // Put where it will stay before anything is given to it: what a platform
+    // carries for is answerable at the address it was given, and a carrying
+    // that is moved afterwards answers into what was left behind -- it came,
+    // it answered, it was done, and the one asking never heard a word of it.
+    answer_coming &coming = answering_.emplace(
+        answer_coming{.chat = chat,
+                      .said = message_id{chat.value + "-" +
+                                         std::to_string(root_.messages.size())},
+                      .going = provider::loop{at,
+                                              turns,
+                                              4,
+                                              provider::wanted{
+                                                  .tools = mine.offered()}},
+                      .carried = std::move(carried),
+                      .mine = std::move(mine),
+                      .began = now_ms()});
     // The answer as a message before anything of it has come: written into as
     // it arrives, and kept whole when nothing more is.
     carry(coming);
@@ -240,7 +245,6 @@ private:
                                      .outgoing = false,
                                      .sent = coming.began,
                                      .state = delivery::writing});
-    answering_ = std::move(coming);
   }
 
   // One round of the asking given to whatever carries it here.
