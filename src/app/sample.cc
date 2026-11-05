@@ -29,16 +29,18 @@ export namespace pchat::app {
       // sample keeps apart from another's yet.
       {conversation_id{"kitchen"}, mine.id, "What is in the kitchen",
        conversation_kind::direct, 1'763'000'400'000, 0, true, false,
-       {"haiku-4", "opus-4"}, 4'120, 1'000'000, 0.31f},
+       {"haiku-4", "opus-4"}, "", 4'120, 1'000'000, 0.31f},
       {conversation_id{"sieve"}, mine.id, "A sieve of Eratosthenes",
        conversation_kind::direct, 1'763'000'200'000, 0, false, false,
-       {"opus-4"}, 18'940, 1'000'000, 0.78f},
+       {"opus-4"}, "Answer in whole sentences, and say how you know.",
+       18'940, 1'000'000, 0.78f},
       {conversation_id{"notices"}, mine.id, "Notices",
        conversation_kind::channel, 1'763'000'100'000, 0, false, false,
-       {"haiku-4"}, 640, 200'000, 0.05f},
+       {"haiku-4"}, "Post only notices: who, what, and when.", 640, 200'000,
+       0.05f},
       {conversation_id{"weekend"}, mine.id, "Weekend",
        conversation_kind::group, 1'763'000'050'000, 0, false, false,
-       {"sonnet-4"}, 2'310, 1'000'000, 0.12f},
+       {"sonnet-4"}, "", 2'310, 1'000'000, 0.12f},
   };
   root.opened = conversation_id{"kitchen"};
   root.messages = {

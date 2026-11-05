@@ -71,10 +71,11 @@ struct conversation {
   // above an answer of it -- one or more, and the first of them the one the
   // foot writes to today. What this chat has been worth so far, how much room
   // an answerer's window has: none of it to all of it.
-  // What every one of them is told before anything else is said to it: its
-  // own, and what every answer is given where it has none.
-  std::string told;
   std::vector<std::string> models;
+  // What every one of them is told before anything else is said to it: this
+  // conversation's own words, and, where it has none, what every answer is
+  // given wherever nothing else has been said.
+  std::string told;
   std::uint32_t tokens = 0;
   std::uint32_t window = 0;
   float context_used = 0.0f;

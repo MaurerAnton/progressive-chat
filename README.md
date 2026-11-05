@@ -63,8 +63,14 @@ of this program's development, left where it was put. Nothing written here is
 rewritten to say something truer later -- what was true of it on a day stands
 said of that day.
 
-It is written by hand. Nothing writes here that is not that hand, and no
-paragraph of it is written by a model, an agent or a script on its own.
+It (this readme section's workdays summaries) is written by hand. Nothing
+writes here that is not that hand, and no paragraph of it is written by a
+model, an agent or a script on its own.
+
+### 2026-11-05
+
+The amount of source code more than doubled. The build system works and the
+app runs. A (test) UI skeleton is almost there.
 
 ### 2026-11-04
 
