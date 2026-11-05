@@ -65,7 +65,8 @@ struct app_window : scene::Node {
   // Everything drawn again from the model, for this size of window.
   void again(const paints &look, const chats_root &root, const looks &shown,
              const std::string &query, bool dark, bool settings_open,
-             bool design_open, bool drawer_open, float width, float height,
+             bool design_open, bool more_open, bool drawer_open, float width,
+             float height,
              app::requests *asked) {
     // The conversation the window has open, as it is named: none of them,
     // where none is open.
@@ -127,8 +128,8 @@ struct app_window : scene::Node {
         open_chat = &one;
     // The bar says what the chat has been worth; the card under it names the
     // model that answers in it and how full its window this chat has made it.
-    fTop.again(asked, look, !wide, title_of(root, opened),
-               open_chat ? open_chat->tokens : 0u);
+    fTop.again(asked, look, !wide, !wide, more_open, title_of(root, opened),
+               open_chat);
     // Over what the messages were, where the drawer has come over them:
     // pressed, it puts the drawer away again.
     fShade.apply({.anchor = scene::anchor::kTopLeft,

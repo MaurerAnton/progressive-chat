@@ -59,6 +59,21 @@ struct set_query {
 struct toggle_drawer {};
 struct open_settings {};
 struct close_settings {};
+// What the top edge asks for: another answerer in this same conversation,
+// this conversation taken whole into one of its own, this conversation given
+// out, and what every answerer in it is told before anything is said to it.
+struct add_answerer {
+  conversation_id chat;
+};
+struct fork_conversation {
+  conversation_id chat;
+};
+struct share_conversation {
+  conversation_id chat;
+};
+// Three dots, and what stands behind them: one press to open what they hold
+// and one to put it away again.
+struct toggle_more {};
 // The design said in the room itself: what stands written at the top of the
 // tree is read here too, and put away again.
 struct open_design {};
@@ -87,8 +102,10 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              copy_answer, regenerate_answer, fork_answer,
                              share_answer, delete_answer, edit_draft, set_query,
                              toggle_drawer, open_settings, close_settings,
-                             open_design, close_design, pick_seed, set_amoled,
-                             set_font_scale, pick_theme>;
+                             add_answerer, fork_conversation,
+                             share_conversation, toggle_more, open_design,
+                             close_design,
+                             pick_seed, set_amoled, set_font_scale, pick_theme>;
 
 class requests {
 public:

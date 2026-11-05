@@ -175,6 +175,20 @@ namespace shape {
            {marks::circle{0.0f, -4.6f, 1.0f}, 0.0f, true},
            {marks::line{0.0f, -1.6f, 0.0f, 4.6f}, 1.8f}}};
 }
+// Three lines said one under the other, and nothing else: what every model
+// is told before anything else is said to it.
+[[nodiscard]] inline IconShape system_prompt() {
+  return {{{marks::line{-7.0f, -5.0f, 7.0f, -5.0f}, 1.7f},
+           {marks::line{-7.0f, 0.0f, 4.0f, 0.0f}, 1.7f},
+           {marks::line{-7.0f, 5.0f, 7.0f, 5.0f}, 1.7f}}};
+}
+// Three dots in a row: what stands behind one press, where there is no room
+// for what it holds to stand by itself.
+[[nodiscard]] inline IconShape more() {
+  return {{{marks::circle{-6.0f, 0.0f, 1.6f}, 0.0f, true},
+           {marks::circle{0.0f, 0.0f, 1.6f}, 0.0f, true},
+           {marks::circle{6.0f, 0.0f, 1.6f}, 0.0f, true}}};
+}
 // A bin: what rubs an answer out.
 [[nodiscard]] inline IconShape bin() {
   return {{{marks::path{{steps::move{-6.0f, -4.0f}, steps::line{-5.0f, 8.0f},

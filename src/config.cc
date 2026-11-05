@@ -53,4 +53,20 @@ struct settings_root {
 
 inline constexpr looks default_looks{};
 
+// The answerers offered, and the room each one's window has: named here
+// because which ones there are to answer with is not a screen's to decide,
+// and because adding one to a conversation has to add one that answers.
+struct answerer_choice {
+  std::string_view name;
+  std::uint32_t window = 0;
+};
+inline constexpr std::array<answerer_choice, 6> answerers_offered{{
+    {"haiku-4", 1'000'000},
+    {"sonnet-4", 1'000'000},
+    {"opus-4", 1'000'000},
+    {"o4-mini", 200'000},
+    {"local-8b", 32'000},
+    {"local-70b", 128'000},
+}};
+
 }  // namespace pchat

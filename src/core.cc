@@ -61,12 +61,19 @@ struct conversation {
   std::uint32_t unread = 0;
   bool pinned = false;
   bool muted = false;
-  // Which model answers in it -- said once in what is written in, and never
-  // above an answer of it -- what this chat has been worth so far, and how
-  // much of the model's window it has taken: none of it to all of it.
-  std::string model;
+  // Which models answer in it -- said once in what is written in, and never
+  // above an answer of it -- one or more, and the first of them the one the
+  // foot writes to today. What this chat has been worth so far, how much room
+  // an answerer's window has: none of it to all of it.
+  std::vector<std::string> models;
   std::uint32_t tokens = 0;
+  std::uint32_t window = 0;
   float context_used = 0.0f;
+  // Which model writes here when nothing else has been said: the first of
+  // them, and nothing where there is none.
+  [[nodiscard]] std::string leading_model() const {
+    return models.empty() ? std::string{} : models.front();
+  }
   friend bool operator==(const conversation &, const conversation &) = default;
 };
 

@@ -143,7 +143,8 @@ struct composer : scene::Node {
     // ring said in the outline's colour, and as much of it as this chat has
     // taken said in the primary one, from the top and clockwise.
     const float used = std::clamp(chat.context_used, 0.0f, 1.0f);
-    fModel.setText(chat.model.empty() ? std::string{} : chat.model);
+    const std::string model = chat.leading_model();
+    fModel.setText(model);
     fModel.setColour(look.primary);
     fGauge.setShape(context_ring(used, look.outline, look.primary));
     fGauge.setColour(look.primary);

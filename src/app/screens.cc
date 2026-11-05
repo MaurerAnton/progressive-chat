@@ -71,8 +71,8 @@ public:
                   root_.accounts.empty() ? account_id{}
                                          : root_.accounts.front().id,
                   "New chat", conversation_kind::direct, ++said_count_};
-              fresh.model =
-                  root_.opened ? model_of(*root_.opened) : std::string{};
+              if (root_.opened)
+                fresh.models.push_back(model_of(*root_.opened));
               root_.conversations.insert(root_.conversations.begin(),
                                          std::move(fresh));
               root_.opened = made;
@@ -94,7 +94,7 @@ public:
                   root_.accounts.empty() ? account_id{}
                                          : root_.accounts.front().id,
                   "Forked chat", conversation_kind::direct, ++said_count_};
-              forked.model = model_of(asking.chat);
+              forked.models.push_back(model_of(asking.chat));
               forked.tokens = tokens_up_to(asking.chat, asking.said);
               root_.conversations.insert(root_.conversations.begin(),
                                          std::move(forked));
@@ -118,6 +118,79 @@ public:
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
             [&](const open_settings &) { settings_ = true; },
             [&](const close_settings &) { settings_ = false; },
+            // Another answerer in the same conversation: the first of those
+            // offered that is not answering in it already, which is what
+            // "another" means and all it can mean until what is offered is
+            // what the reader has said it is.
+            [&](const add_answerer &asking) {
+              for (conversation &one : root_.conversations) {
+                if (one.id != asking.chat)
+                  continue;
+                if (one.models.size() >= ui::max_answerers)
+                  break;
+                for (const answerer_choice &offered : answerers_offered) {
+                  const bool taken =
+                      std::ranges::any_of(one.models, [&](const auto &said) {
+                        return said == offered.name;
+                      });
+                  if (taken)
+                    continue;
+                  one.models.push_back(std::string(offered.name));
+                  break;
+                }
+                break;
+              }
+            },
+            // This conversation taken whole into one of its own: everything
+            // said in it so far, and nothing said in either of them after.
+            [&](const fork_conversation &asking) {
+              conversation *said = nullptr;
+              for (conversation &one : root_.conversations)
+                if (one.id == asking.chat)
+                  said = &one;
+              if (!said)
+                return;
+              const conversation_id made{"chat-" +
+                                         std::to_string(++chat_count_)};
+              conversation forked{
+                  made, said->account, said->title + " (forked)",
+                  said->kind, ++said_count_};
+              forked.models = said->models;
+              forked.tokens = said->tokens;
+              forked.window = said->window;
+              forked.context_used = said->context_used;
+              std::vector<message> taken;
+              for (message copy : root_.messages)
+                if (copy.chat == asking.chat) {
+                  copy.chat = made;
+                  copy.id = message_id{made.value + "-" + copy.id.value};
+                  taken.push_back(std::move(copy));
+                }
+              const conversation_id kept = root_.opened
+                                              ? *root_.opened
+                                              : conversation_id{};
+              root_.conversations.insert(root_.conversations.begin(),
+                                         std::move(forked));
+              for (message &copy : taken)
+                root_.messages.push_back(std::move(copy));
+              root_.opened = made;
+              (void)kept;
+            },
+            // Given away as it reads, until the program has somewhere to give
+            // it to: everything said in the conversation, in the order it was
+            // said in.
+            [&](const share_conversation &asking) {
+              std::string whole;
+              for (const conversation &one : root_.conversations)
+                if (one.id == asking.chat)
+                  whole += one.title + "\n";
+              for (const message &one : root_.messages)
+                if (one.chat == asking.chat)
+                  whole += (one.outgoing ? "You: " : "") + one.text + "\n";
+              if (!whole.empty())
+                copied_ = std::move(whole);
+            },
+            [&](const toggle_more &) { more_ = !more_; },
             // Read where it is asked for, over the room and over nothing
             // else: the page it was asked from is put away under it, so
             // that putting the design away leaves the conversation and not
@@ -165,7 +238,7 @@ public:
       take(one);
     read_what_arrived();
     scene_.root().again(look_, root_, shown_, query_, dark_, settings_, design_,
-                        drawer_, width_, height_, &asked_);
+                        more_, drawer_, width_, height_, &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -356,7 +429,7 @@ private:
   [[nodiscard]] std::string model_of(const conversation_id &chat) const {
     for (const conversation &one : root_.conversations)
       if (one.id == chat)
-        return one.model;
+        return one.leading_model();
     return {};
   }
   // What one said and everything before it in its chat was worth.
@@ -413,6 +486,9 @@ private:
   bool drawer_ = false;
   // Whether the design said in the room is being read.
   bool design_ = false;
+  // Whether what stands behind the three dots is out: put away again by one
+  // press of anything it holds, or of the dots themselves.
+  bool more_ = false;
   moment said_count_ = 1;
   std::size_t chat_count_ = 0;
   // What copy last took whole: said nowhere yet, because what a host's
