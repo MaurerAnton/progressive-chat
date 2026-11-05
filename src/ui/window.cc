@@ -169,7 +169,7 @@ struct app_window : scene::Node {
       fComposer.again(look, *open_chat, asked);
     // The settings page, over everything, when it is opened.
     if (settings_open)
-      fSettings.again(asked, look, shown, dark, std::min(width, 720.0f));
+      fSettings.again(asked, look, shown, dark, width, height);
     else
       fSettings.hide();
     // The design said in the room, when it is opened: over everything, as a

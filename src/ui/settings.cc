@@ -41,6 +41,15 @@ inline constexpr std::array<seed_choice, max_seeds> seeds_offered{{
     {scheme_preset::ocean, "Ocean"},
 }};
 
+// How tall the whole of what the card holds is: down to the foot of the
+// last row in it, and the room left under that.
+inline constexpr float settings_said_height = 792.0f;
+// How much room the page leaves over and under its card, and how wide the
+// card ever is: a page wider than this would ask its rows to stretch over
+// a breadth no one reads across.
+inline constexpr float settings_card_room = 12.0f;
+inline constexpr float settings_card_widest = 720.0f;
+
 // A switch, as a row: what it is called, and the pill that says which way it
 // is put -- lit when it is on.
 struct switch_row : scene::Node {
@@ -101,17 +110,13 @@ struct switch_row : scene::Node {
   }
 };
 
-// The page itself: its own colour over everything, its card, the seeds, and
-// the switches.
-struct settings_screen : scene::Node {
-  nodes::Box<> fPaper{0u};
-  nodes::Box<> fCard{0u};
+// What the card holds: the seeds, the switches, and what else is said in
+// the page. Of its own node, and not drawn straight into the page, so that
+// what scrolls is these and not the card they are said in -- a page that
+// grows past its room has to be scrolled where the words run out, as the
+// column of messages is, and not pushed down into nothing.
+struct settings_rows : scene::Node {
   nodes::Text fHeading{"Settings", 26.0f, 0u, true};
-  // Put away again: the one control the page has that is not a row of its
-  // own kind -- pressed anywhere, the page closes and the room is where it
-  // was left.
-  ask_box fClosePlate{};
-  nodes::Icon fCloseMark{shape::close(), 0u};
   nodes::Text fLooks{"Appearance", 16.0f, 0u, true};
   std::array<seed_row, max_seeds> fSeeds;
   nodes::Box<> fDivider{0u};
@@ -126,15 +131,7 @@ struct settings_screen : scene::Node {
   // the number and the commit they were made of.
   nodes::Text fVersion{"", 12.0f, 0u};
 
-  settings_screen() {
-    this->apply({.fill = true});
-    fPaper.apply({.fill = true});
-    fCard.apply({.anchor = scene::anchor::kTopCentre,
-                 .origin = scene::anchor::kTopLeft,
-                 .y = 12.0f,
-                 .fillX = true,
-                 .fillY = true,
-                 .cornerRadius = 24.0f});
+  settings_rows() {
     fHeading.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
                     .y = 24.0f,
@@ -143,19 +140,6 @@ struct settings_screen : scene::Node {
                   .x = 20.0f,
                   .y = 76.0f,
                   .autoSize = scene::axes::kBoth});
-    fClosePlate.apply({.width = 36.0f,
-                       .height = 36.0f,
-                       .cornerRadius = 18.0f,
-                       .anchor = scene::anchor::kTopRight,
-                       .origin = scene::anchor::kTopRight,
-                       .x = -20.0f,
-                       .y = 20.0f});
-    fCloseMark.apply({.width = 18.0f,
-                      .height = 18.0f,
-                      .anchor = scene::anchor::kTopRight,
-                      .origin = scene::anchor::kCentre,
-                      .x = -(20.0f + 18.0f),
-                      .y = 38.0f});
     for (std::size_t at = 0; at < max_seeds; ++at)
       fSeeds[at].blank();
     fBlack.fName.setText("Pure black");
@@ -165,18 +149,20 @@ struct settings_screen : scene::Node {
     fVersion.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
                     .autoSize = scene::axes::kBoth});
-    this->setVisible(false);
   }
-
-  void hide() { this->setVisible(false); }
 
   void again(app::requests *asked, const paints &look, const looks &shown,
              bool dark, float breadth) {
-    this->setVisible(true);
-    fClosePlate.again(asked, app::close_settings{}, look.raised);
-    fCloseMark.setColour(look.text);
-    fPaper.setColour(look.paper);
-    fCard.setColour(look.drawer);
+    // How tall: what the last row in it is said at, and how tall that row
+    // is, and the room left under it. Said out loud rather than measured,
+    // because every row in here says where it stands -- and a column that
+    // knows how tall it is need not be asked.
+    this->apply({.anchor = scene::anchor::kTopLeft,
+                 .x = 0.0f,
+                 .y = 0.0f,
+                 .relativeSize = scene::axes::kNone,
+                 .width = breadth,
+                 .height = settings_said_height});
     fHeading.setColour(look.text);
     fLooks.setColour(look.dim);
     fRead.setColour(look.text);
@@ -273,11 +259,7 @@ struct settings_screen : scene::Node {
   }
 
   void forEachChild(auto &&f) {
-    f(fPaper);
-    f(fCard);
     f(fHeading);
-    f(fClosePlate);
-    f(fCloseMark);
     f(fLooks);
     for (auto &seed : fSeeds)
       f(seed);
@@ -288,6 +270,89 @@ struct settings_screen : scene::Node {
     f(fReadPlate);
     f(fRead);
     f(fVersion);
+  }
+};
+
+// The page itself: its own colour over everything, one card standing in the
+// middle of the room, and what the card holds in what scrolls. What is put
+// away is put away whole -- pressed beside the rows or above them, the page
+// closes and the room is where it was left.
+struct settings_screen : scene::Node {
+  nodes::Box<> fPaper{0u};
+  nodes::Box<> fCard{0u};
+  // Put away again: the one control the page has that is not a row of its
+  // own kind, and so drawn outside what scrolls, over the card's own corner.
+  ask_box fClosePlate{};
+  nodes::Icon fCloseMark{shape::close(), 0u};
+  nodes::ScrollContainer<settings_rows> fRows{settings_rows{}};
+
+  settings_screen() {
+    this->apply({.fill = true});
+    fPaper.apply({.fill = true});
+    fClosePlate.apply({.width = 36.0f,
+                       .height = 36.0f,
+                       .cornerRadius = 18.0f});
+    fCloseMark.apply({.width = 18.0f, .height = 18.0f});
+    this->setVisible(false);
+  }
+
+  void hide() { this->setVisible(false); }
+
+  void again(app::requests *asked, const paints &look, const looks &shown,
+             bool dark, float width, float height) {
+    this->setVisible(true);
+    const float breadth = std::min(width, settings_card_widest);
+    fClosePlate.again(asked, app::close_settings{}, look.raised);
+    fCloseMark.setColour(look.text);
+    fPaper.setColour(look.paper);
+    fCard.setColour(look.drawer);
+    // One card, standing in the middle of the room and reaching almost its
+    // whole height: what is read in a page this size is read across its
+    // breadth and not down its whole length, which is what scrolls for.
+    fCard.apply({.anchor = scene::anchor::kTopCentre,
+                 .origin = scene::anchor::kTopCentre,
+                 .x = 0.0f,
+                 .y = settings_card_room,
+                 .relativeSize = scene::axes::kNone,
+                 .width = breadth,
+                 .height = height - 2.0f * settings_card_room,
+                 .cornerRadius = 24.0f});
+    // The one control: inside the card's own corner, wherever the card is.
+    fClosePlate.apply({.anchor = scene::anchor::kTopCentre,
+                       .origin = scene::anchor::kTopRight,
+                       .x = breadth / 2.0f - 20.0f,
+                       .y = settings_card_room + 20.0f,
+                       .relativeSize = scene::axes::kNone,
+                       .width = 36.0f,
+                       .height = 36.0f,
+                       .cornerRadius = 18.0f});
+    fCloseMark.apply({.anchor = scene::anchor::kTopCentre,
+                      .origin = scene::anchor::kCentre,
+                      .x = breadth / 2.0f - 20.0f - 18.0f,
+                      .y = settings_card_room + 38.0f,
+                      .relativeSize = scene::axes::kNone,
+                      .width = 18.0f,
+                      .height = 18.0f});
+    std::get<0>(fRows.fChildren)
+        .again(asked, look, shown, dark, breadth - 2.0f * edge);
+    fRows.apply({.anchor = scene::anchor::kTopCentre,
+                 .origin = scene::anchor::kTopCentre,
+                 .x = 0.0f,
+                 .y = settings_card_room + 8.0f,
+                 .relativeSize = scene::axes::kNone,
+                 .width = breadth - 2.0f * edge,
+                 .height = std::max(height - 2.0f * settings_card_room -
+                                        2.0f * 8.0f,
+                                    40.0f),
+                 .visible = true});
+  }
+
+  void forEachChild(auto &&f) {
+    f(fPaper);
+    f(fCard);
+    f(fRows);
+    f(fClosePlate);
+    f(fCloseMark);
   }
 };
 
