@@ -23,7 +23,7 @@ await page.mouse.click(1166, 26);
 await page.waitForTimeout(1000);
 console.log('fields open:', JSON.stringify(await page.evaluate(values)));
 
-await page.mouse.click(640, 440);
+await page.mouse.click(640, 388);
 await page.waitForTimeout(700);
 console.log('after pressing in the field:', await page.evaluate(focused));
 await page.keyboard.type('Answer in one line.');

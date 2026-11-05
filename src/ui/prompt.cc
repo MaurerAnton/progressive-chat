@@ -50,12 +50,15 @@ struct prompt_told {
   }
 };
 
-// How wide the card is said, how much room its words have either side, and
-// how tall the field is before it grows with what is written in it.
+// How wide the card is said, how tall it stands, and how much room its words
+// have either side. The field says its own height from the lines it holds,
+// three of them at most: nothing is said to a field to make it taller than
+// what is written in it.
 inline constexpr float prompt_card_width = 560.0f;
+inline constexpr float prompt_card_height = 216.0f;
 inline constexpr float prompt_head_size = 19.0f;
 inline constexpr float prompt_words_size = 13.0f;
-inline constexpr float prompt_field_height = 132.0f;
+inline constexpr int prompt_field_lines = 3;
 
 // The card over the room: its own colour whole underneath, the card in the
 // middle of it said in the drawer's, a head and what the head means, the
@@ -83,21 +86,13 @@ struct prompt_screen : scene::Node {
     fCard.apply({.anchor = scene::anchor::kCentre,
                  .origin = scene::anchor::kCentre,
                  .cornerRadius = 24.0f});
-    fHead.apply({.anchor = scene::anchor::kTopCentre,
-                 .origin = scene::anchor::kTopCentre,
-                 .y = 28.0f,
-                 .autoSize = scene::axes::kBoth});
-    fSaid.apply({.anchor = scene::anchor::kTopCentre,
-                 .origin = scene::anchor::kTopCentre,
-                 .y = 62.0f,
-                 .autoSize = scene::axes::kBoth});
+    // One field of a few lines: what is told before an answer is a sentence
+    // or two, kept whole when it is longer than that.
+    fField.setMaxLines(prompt_field_lines);
     fField.apply({.anchor = scene::anchor::kTopCentre,
                   .origin = scene::anchor::kTopCentre,
                   .x = 0.0f,
-                  .y = 104.0f,
                   .relativeSize = scene::axes::kNone,
-                  .width = prompt_card_width - 4.0f * edge,
-                  .height = prompt_field_height,
                   .cornerRadius = 16.0f,
                   .padding = scene::Margin::all(edge)});
     fClosePlate.apply({.width = 36.0f,
@@ -124,7 +119,7 @@ struct prompt_screen : scene::Node {
     fPaper.setColour(look.scrim);
     fCard.setColour(look.drawer);
     const float breadth = std::min(prompt_card_width, width - 2.0f * edge);
-    const float tall = std::min(360.0f, height - 2.0f * edge);
+    const float tall = std::min(prompt_card_height, height - 2.0f * edge);
     // Where the card starts, down from the top of the room: everything in it
     // is said from there and not from the room's own top, because the card
     // is put in the middle of the room and not against its edge.
@@ -158,18 +153,22 @@ struct prompt_screen : scene::Node {
     fField.apply({.anchor = scene::anchor::kTopCentre,
                   .origin = scene::anchor::kTopCentre,
                   .x = 0.0f,
-                  .y = above + 104.0f,
-                  .relativeSize = scene::axes::kNone,
+                  .y = above + 92.0f,
                   .width = breadth - 4.0f * edge,
-                  .height = prompt_field_height,
-                  .cornerRadius = 16.0f,
-                  .padding = scene::Margin::all(edge),
                   .visible = true});
     fHead.setText("System prompt");
     fHead.setColour(look.text);
+    fHead.apply({.anchor = scene::anchor::kTopCentre,
+                 .origin = scene::anchor::kTopCentre,
+                 .y = above + 22.0f,
+                 .autoSize = scene::axes::kBoth});
     fSaid.setText("Told to every model that answers here, before anything "
                   "else is said to it.");
     fSaid.setColour(look.faint);
+    fSaid.apply({.anchor = scene::anchor::kTopCentre,
+                 .origin = scene::anchor::kTopCentre,
+                 .y = above + 56.0f,
+                 .autoSize = scene::axes::kBoth});
     fClosePlate.again(asked, app::close_system_prompt{}, look.raised);
     fClosePlate.apply({.width = 36.0f,
                        .height = 36.0f,
