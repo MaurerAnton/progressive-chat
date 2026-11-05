@@ -12,6 +12,18 @@ build and the next.
       The same picture has still not been given to the browser's tab
       (`web/icon.svg`) or to a desktop window, which nobody has looked at.
 
+## Wrong today
+
+- [x] **The middle of a narrow window is empty** -- done 2026-11-05: the
+      drawer was asked for from the first frame onwards, which a wide
+      window answered by putting it beside the messages and a narrower
+      one -- where there is no beside -- by putting it over them and the
+      conversation nowhere. It is beside them wherever there is room for
+      both now, and over them only where the pill asked for it
+      (`src/app/screens.cc`, `drawer_`). Read off the page, driven at nine
+      widths: below 960 the conversation, the footer and the composer are
+      all still said, and widening gives the drawer back.
+
 ## Known not to be done
 
 - [ ] **The program goes as soon as it starts -- on an android.** In a
