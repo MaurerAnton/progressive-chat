@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 
 const values = () =>
-  Array.from(document.querySelectorAll('textarea')).map((t) => t.value);
+  Array.from(document.querySelectorAll('textarea, input')).map((t) => t.value);
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
