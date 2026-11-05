@@ -285,9 +285,6 @@ private:
   // Where it stopped because it asked for something this program owns, those
   // calls are answered here and the question is asked again with them.
   void read_what_arrived() {
-#if defined(__EMSCRIPTEN__)
-    told("read: asked of it");
-#endif
     if (!answering_ || !answering_->asked)
       return;
     answer_coming &one = *answering_;
@@ -302,16 +299,15 @@ private:
 #endif
     if (!arrived.empty())
       one.asked->arrive(arrived);
-    if (message *there = found(one.said))
-      there->text = std::string(one.going.said()) +
-                    std::string(one.asked->said());
 #if defined(__EMSCRIPTEN__)
-    {
-      char said[96];
-      std::snprintf(said, sizeof said, "read: the message says %zu",
-                    found(one.said) ? found(one.said)->text.size() : 0u);
-      told(said);
-    }
+    const std::size_t parsed = one.asked->said().size();
+    char said[128];
+    std::snprintf(
+        said, sizeof said,
+        "read: %zu came, parsed %zu, standing %d, found %d, trouble %d",
+        arrived.size(), parsed, static_cast<int>(one.asked->where()),
+        found(one.said) ? 1 : 0, one.asked->trouble() ? 1 : 0);
+    told(said);
 #endif
     if (message *there = found(one.said))
       there->text = std::string(one.going.said()) +
