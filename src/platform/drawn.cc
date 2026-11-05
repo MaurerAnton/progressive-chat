@@ -32,7 +32,7 @@ bool gpu_can_be_had() {
     return false;
   const bool there =
       (SDL_GetWindowFlags(seen_by_nobody) & SDL_WINDOW_OPENGL) != 0u;
-  SDL_GL_Context held =
+  SDL_GLContext held =
       there ? SDL_GL_CreateContext(seen_by_nobody) : nullptr;
   if (held)
     SDL_GL_DestroyContext(held);
