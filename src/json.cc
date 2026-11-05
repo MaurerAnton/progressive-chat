@@ -16,6 +16,21 @@ export namespace pchat::json {
 // ---- what a value is -----------------------------------------------------
 
 struct value;
+struct list;
+struct thing;
+
+// One value: nothing, a truth, a number, a string, a list or a thing. The two
+// that hold others are held through a shared pointer -- not because they are
+// shared, but because a value cannot be written out in full inside itself, and
+// this is the only way it says "a list" without already knowing what one is.
+struct value {
+  std::variant<std::monostate, bool, double, std::string, std::shared_ptr<list>,
+               std::shared_ptr<thing>>
+      held;
+  friend bool operator==(const value &, const value &) = default;
+};
+
+using nothing = std::monostate;
 
 // A list, in the order it was written.
 struct list {
@@ -23,21 +38,20 @@ struct list {
   friend bool operator==(const list &, const list &) = default;
 };
 
+// One member of a thing: its name, and what it says.
+struct member {
+  std::string name;
+  value said;
+  friend bool operator==(const member &, const member &) = default;
+};
+
 // A thing, its members in the order they were written: kept as a list and not
 // as a map, because two members of one name are allowed to arrive and nothing
 // here decides what that means -- what asked for it does.
 struct thing {
-  std::vector<std::pair<std::string, value>> members;
+  std::vector<member> members;
   friend bool operator==(const thing &, const thing &) = default;
 };
-
-// One value: nothing, a truth, a number, a string, a list or a thing.
-struct value {
-  std::variant<std::monostate, bool, double, std::string, list, thing> held;
-  friend bool operator==(const value &, const value &) = default;
-};
-
-using nothing = std::monostate;
 
 enum class kind { nothing, truth, number, text, list, thing };
 
@@ -89,10 +103,18 @@ private:
     if (at_ >= text_.size())
       return std::unexpected(read_error{at_, "it ended before a value did"});
     switch (text_[at_]) {
-    case '{':
-      return thing_value();
-    case '[':
-      return list_value();
+    case '{': {
+      auto got = thing_value();
+      if (!got)
+        return std::unexpected(got.error());
+      return json::value{std::make_shared<json::thing>(std::move(*got))};
+    }
+    case '[': {
+      auto got = list_value();
+      if (!got)
+        return std::unexpected(got.error());
+      return json::value{std::make_shared<json::list>(std::move(*got))};
+    }
     case '"': {
       auto got = string();
       if (!got)
@@ -129,7 +151,7 @@ private:
       auto got = value_of();
       if (!got)
         return std::unexpected(got.error());
-      out.members.emplace_back(std::move(*name), std::move(*got));
+      out.members.push_back(member{.name = std::move(*name), .said = std::move(*got)});
       spaces();
       if (at_ >= text_.size())
         return std::unexpected(read_error{at_, "a thing left open"});
@@ -326,19 +348,19 @@ private:
 }
 // The member of a thing by its name, its first one where two share a name.
 [[nodiscard]] inline const value *member_of(const value &one, std::string_view name) {
-  const auto *as_thing = std::get_if<thing>(&one.held);
-  if (!as_thing)
+  const auto *as_thing = std::get_if<std::shared_ptr<thing>>(&one.held);
+  if (!as_thing || !*as_thing)
     return nullptr;
-  for (const auto &[written, said] : as_thing->members)
-    if (written == name)
-      return &said;
+  for (const member &written : (*as_thing)->members)
+    if (written.name == name)
+      return &written.said;
   return nullptr;
 }
 [[nodiscard]] inline const value *item_of(const value &one, std::size_t at) {
-  const auto *as_list = std::get_if<list>(&one.held);
-  if (!as_list || at >= as_list->items.size())
+  const auto *as_list = std::get_if<std::shared_ptr<list>>(&one.held);
+  if (!as_list || !*as_list || at >= (*as_list)->items.size())
     return nullptr;
-  return &as_list->items[at];
+  return &(*as_list)->items[at];
 }
 // Where a member's own member is, and its member's after it: no path is
 // spelled out by a part that only wants one thing out of an answer.
