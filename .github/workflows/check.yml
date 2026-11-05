@@ -44,7 +44,7 @@ jobs:
         run: cmake --build build --target pchat_core --parallel 4
       - name: Build and run the tests
         run: |
-          cmake --build build --target pchat-core-test pchat-theme-test pchat-logic-test --parallel 4
+          cmake --build build --target pchat-tests --parallel 4
           ctest --test-dir build --output-on-failure
       - name: Build the window and the program
         run: cmake --build build --target progressive-chat --parallel 4

@@ -10,6 +10,10 @@
 #   pchat-provider-test    a body written for a model, and its stream read back
 #   pchat-json-test    what comes in off the wire, read and written back
 
+# Every test together, for one build and one ctest: what the check asks for by
+# name, so that a test added here is run without adding it there too.
+add_custom_target(pchat-tests)
+
 function(pchat_test name libraries)
   add_executable(pchat-${name}-test)
   target_sources(pchat-${name}-test PRIVATE
@@ -18,6 +22,7 @@ function(pchat_test name libraries)
   target_compile_options(pchat-${name}-test PRIVATE ${pchat_std_flags})
   target_link_libraries(pchat-${name}-test PRIVATE ${libraries})
   add_test(NAME pchat-${name}-test COMMAND pchat-${name}-test)
+  add_dependencies(pchat-tests pchat-${name}-test)
 endfunction()
 
 pchat_test(core pchat_core)
