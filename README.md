@@ -125,11 +125,11 @@ src/ui.cc, src/ui/*.cc   the window: every screen, drawn with skiff
 
 Three targets, one program:
 
-| target  | how it is built                             | what it is                     |
-| ------- | ------------------------------------------- | ------------------------------ |
-| desktop | `cmake` + Ninja, clang 23, SDL3             | a window of its own            |
-| web     | the same cmake through Emscripten           | a page served by GitHub Pages  |
-| android | the same cmake through a self-built NDK     | an APK                         |
+| target  | how it is built                         | what it is                             |
+| ------- | --------------------------------------- | -------------------------------------- |
+| desktop | `cmake` + Ninja, clang 23, SDL3         | a window of its own: x86_64 and arm64  |
+| web     | the same cmake through Emscripten       | a page served by GitHub Pages          |
+| android | the same cmake through a self-built NDK | an APK                                 |
 
 The page is built and published by `web.yml`, and is served at
 <https://progressive-chat.github.io/progressive-chat/>.
