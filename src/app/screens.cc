@@ -191,6 +191,18 @@ public:
                 copied_ = std::move(whole);
             },
             [&](const toggle_more &) { more_ = !more_; },
+            // What every model is told before anything is said to it: read
+            // and written whole, the conversation keeping it as it is typed.
+            [&](const set_system_prompt &asking) {
+              for (conversation &one : root_.conversations)
+                if (one.id == asking.chat)
+                  one.told = asking.text;
+            },
+            [&](const open_system_prompt &) {
+              more_ = false;
+              system_ = true;
+            },
+            [&](const close_system_prompt &) { system_ = false; },
             // Read where it is asked for, over the room and over nothing
             // else: the page it was asked from is put away under it, so
             // that putting the design away leaves the conversation and not
@@ -238,7 +250,7 @@ public:
       take(one);
     read_what_arrived();
     scene_.root().again(look_, root_, shown_, query_, dark_, settings_, design_,
-                        more_, drawer_, width_, height_, &asked_);
+                        system_, more_, drawer_, width_, height_, &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -290,7 +302,7 @@ private:
       return;
     const provider::endpoint at{.base = opened_.base,
                                 .model = ending_of(chat),
-                                .told = opened_.told};
+                                .told = told_of(chat)};
     // Not const: a view over messages asked of more than once is read more
     // than once, and reading it again is not a thing a const view of it says
     // yes to.
@@ -432,6 +444,13 @@ private:
         return one.leading_model();
     return {};
   }
+  // What every answerer in a chat is told before anything is said to it.
+  [[nodiscard]] std::string told_of(const conversation_id &chat) const {
+    for (const conversation &one : root_.conversations)
+      if (one.id == chat)
+        return one.told_for();
+    return std::string(default_told);
+  }
   // What one said and everything before it in its chat was worth.
   [[nodiscard]] std::uint32_t tokens_up_to(const conversation_id &chat,
                                            const message_id &said) const {
@@ -486,6 +505,9 @@ private:
   bool drawer_ = false;
   // Whether the design said in the room is being read.
   bool design_ = false;
+  // Whether what every model is told in this conversation is being read and
+  // written: one card, over everything, for the conversation that is open.
+  bool system_ = false;
   // Whether what stands behind the three dots is out: put away again by one
   // press of anything it holds, or of the dots themselves.
   bool more_ = false;

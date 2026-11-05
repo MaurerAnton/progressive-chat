@@ -23,6 +23,7 @@ import :message_list;
 import :composer;
 import :settings;
 import :doc;
+import :prompt;
 
 export namespace pchat::ui {
 
@@ -42,6 +43,7 @@ struct app_window : scene::Node {
   composer fComposer{};
   settings_screen fSettings{};
   doc_screen fDesign{};
+  prompt_screen fPrompt{};
 
   app_window() {
     this->apply({.fill = true});
@@ -65,7 +67,8 @@ struct app_window : scene::Node {
   // Everything drawn again from the model, for this size of window.
   void again(const paints &look, const chats_root &root, const looks &shown,
              const std::string &query, bool dark, bool settings_open,
-             bool design_open, bool more_open, bool drawer_open, float width,
+             bool design_open, bool prompt_open, bool more_open,
+             bool drawer_open, float width,
              float height,
              app::requests *asked) {
     // The conversation the window has open, as it is named: none of them,
@@ -187,6 +190,12 @@ struct app_window : scene::Node {
       fDesign.again(asked, look, std::min(width, 760.0f), height);
     else
       fDesign.hide();
+    // What every model is told here, when it is opened: over everything, and
+    // put away again with what was written in it kept.
+    if (prompt_open)
+      fPrompt.again(asked, look, open_chat, width, height);
+    else
+      fPrompt.hide();
   }
 
   void forEachChild(auto &&f) {
@@ -199,6 +208,7 @@ struct app_window : scene::Node {
     f(fComposer);
     f(fSettings);
     f(fDesign);
+    f(fPrompt);
   }
 };
 

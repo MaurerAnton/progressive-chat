@@ -73,6 +73,16 @@ struct share_conversation {
 };
 // Three dots, and what stands behind them: one press to open what they hold
 // and one to put it away again.
+// What every answerer in a conversation is told: opened to be read, written
+// into the conversation as it is typed, and put away again.
+struct open_system_prompt {
+  conversation_id chat;
+};
+struct close_system_prompt {};
+struct set_system_prompt {
+  conversation_id chat;
+  std::string text;
+};
 struct toggle_more {};
 // The design said in the room itself: what stands written at the top of the
 // tree is read here too, and put away again.
@@ -103,8 +113,9 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              share_answer, delete_answer, edit_draft, set_query,
                              toggle_drawer, open_settings, close_settings,
                              add_answerer, fork_conversation,
-                             share_conversation, toggle_more, open_design,
-                             close_design,
+                             share_conversation, open_system_prompt,
+                             close_system_prompt, set_system_prompt,
+                             toggle_more, open_design, close_design,
                              pick_seed, set_amoled, set_font_scale, pick_theme>;
 
 class requests {

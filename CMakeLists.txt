@@ -334,6 +334,7 @@ if(PCHAT_UI)
           src/ui/base.cc src/ui/theme.cc src/ui/icons.cc src/ui/controls.cc
           src/ui/drawer.cc src/ui/top_bar.cc src/ui/message_list.cc
           src/ui/composer.cc src/ui/settings.cc src/ui/doc.cc src/ui/appearance.cc
+          src/ui/prompt.cc
           src/ui/window.cc)
   target_compile_features(pchat_ui PUBLIC cxx_std_26)
   target_compile_options(pchat_ui PUBLIC ${pchat_std_flags})

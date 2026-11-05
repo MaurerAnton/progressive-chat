@@ -52,6 +52,12 @@ struct account {
 
 // A conversation: one row of the drawer, whatever the protocol's own name
 // for it is.
+// What every answer is told before anything else is said to it, where a
+// conversation has said nothing of its own: brief, plain, and named for the
+// program it is said in.
+inline constexpr std::string_view default_told =
+    "You are answering in Progressive Chat, briefly and plainly.";
+
 struct conversation {
   conversation_id id;
   account_id account;
@@ -65,6 +71,9 @@ struct conversation {
   // above an answer of it -- one or more, and the first of them the one the
   // foot writes to today. What this chat has been worth so far, how much room
   // an answerer's window has: none of it to all of it.
+  // What every one of them is told before anything else is said to it: its
+  // own, and what every answer is given where it has none.
+  std::string told;
   std::vector<std::string> models;
   std::uint32_t tokens = 0;
   std::uint32_t window = 0;
@@ -73,6 +82,12 @@ struct conversation {
   // them, and nothing where there is none.
   [[nodiscard]] std::string leading_model() const {
     return models.empty() ? std::string{} : models.front();
+  }
+  // What they are told, said once for all of them: this conversation's own
+  // words where it has them, and what the program tells every answer where
+  // it has not.
+  [[nodiscard]] std::string told_for() const {
+    return told.empty() ? std::string(default_told) : told;
   }
   friend bool operator==(const conversation &, const conversation &) = default;
 };

@@ -73,7 +73,7 @@ inline constexpr float bar_press_width = 36.0f;
 inline constexpr float bar_press_step = 40.0f;
 inline constexpr float bar_gap = 8.0f;
 // What the three dots hold, and how far under them what they hold hangs.
-inline constexpr std::size_t max_bar_more = 2u;
+inline constexpr std::size_t max_bar_more = 3u;
 inline constexpr float more_row_height = 44.0f;
 inline constexpr float more_card_width = 208.0f;
 
@@ -239,9 +239,11 @@ struct more_menu : scene::Node {
                  .cornerRadius = 16.0f,
                  .visible = true});
     fCard.setColour(look.drawer);
-    fRows[0].again(sink, look, edge, "Fork conversation",
+    fRows[0].again(sink, look, edge, "System prompt",
+                   app::open_system_prompt{.chat = chat});
+    fRows[1].again(sink, look, edge + more_row_height, "Fork conversation",
                    app::fork_conversation{.chat = chat});
-    fRows[1].again(sink, look, edge + more_row_height, "Share",
+    fRows[2].again(sink, look, edge + 2.0f * more_row_height, "Share",
                    app::share_conversation{.chat = chat});
   }
 
@@ -266,6 +268,7 @@ struct top_bar : scene::Node {
   // Another answerer in this conversation: a plus of its own, and not the
   // plus that begins a chat, which stands beside it.
   bar_press fAddAnswerer{};
+  bar_press fSystem{};
   bar_press fFork{};
   bar_press fShare{};
   bar_press fMore{};
@@ -342,16 +345,20 @@ struct top_bar : scene::Node {
     if (narrow) {
       fMore.again(sink, look, shape::more(), inset, app::toggle_more{});
       fAddAnswerer.hide();
+      fSystem.hide();
       fFork.hide();
       fShare.hide();
     } else {
       fAddAnswerer.again(sink, look, shape::plus(), inset,
                          app::add_answerer{.chat = chat ? chat->id
                                                          : conversation_id{}});
-      fFork.again(sink, look, shape::fork(), inset + bar_press_step,
+      fSystem.again(sink, look, shape::system_prompt(), inset + bar_press_step,
+                    app::open_system_prompt{
+                        .chat = chat ? chat->id : conversation_id{}});
+      fFork.again(sink, look, shape::fork(), inset + 2.0f * bar_press_step,
                   app::fork_conversation{.chat = chat ? chat->id
                                                        : conversation_id{}});
-      fShare.again(sink, look, shape::share(), inset + 2.0f * bar_press_step,
+      fShare.again(sink, look, shape::share(), inset + 3.0f * bar_press_step,
                    app::share_conversation{.chat = chat ? chat->id
                                                          : conversation_id{}});
       fMore.hide();
@@ -414,6 +421,7 @@ struct top_bar : scene::Node {
     for (answerer_bubble &one : fAnswerers)
       f(one);
     f(fAddAnswerer);
+    f(fSystem);
     f(fFork);
     f(fShare);
     f(fMore);
