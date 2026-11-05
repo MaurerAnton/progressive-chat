@@ -38,12 +38,20 @@ inline constexpr float doc_gap = 4.0f;
 // What a line of a list says in front of itself.
 inline constexpr std::string_view doc_bullet = "•  ";
 
+// One line of it: the words in their own size. Of its own kind, and not an
+// array of text: text asks for the size it is said in before there is a
+// size to say, so it cannot be made first and told later, and three hundred
+// of them want a made one each.
+struct doc_line_node {
+  nodes::Text said{"", doc_size_words, 0u};
+};
+
 // The lines themselves, one under the next.
 struct doc_body : nodes::Stack {
   // Kept on the heap: three hundred nodes is not a thing a machine's stack
   // was asked to hold, as a member it would be twice over.
-  std::unique_ptr<std::array<nodes::Text, max_doc_lines>> fLines =
-      std::make_unique<std::array<nodes::Text, max_doc_lines>>();
+  std::unique_ptr<std::array<doc_line_node, max_doc_lines>> fLines =
+      std::make_unique<std::array<doc_line_node, max_doc_lines>>();
 
   doc_body() {
     this->apply({.fillX = true,
@@ -52,9 +60,9 @@ struct doc_body : nodes::Stack {
     fStack = {.direction = nodes::direction::vertical{},
               .spacingY = doc_gap,
               .wrap = false};
-    for (nodes::Text &one : *fLines) {
-      one.setText(std::string{});
-      one.setVisible(false);
+    for (doc_line_node &one : *fLines) {
+      one.said.setText(std::string{});
+      one.said.setVisible(false);
     }
   }
 
@@ -64,7 +72,7 @@ struct doc_body : nodes::Stack {
     for (const logic::doc_line &said : read) {
       if (at >= max_doc_lines)
         break;
-      nodes::Text &line = (*fLines)[at++];
+      nodes::Text &line = (*fLines)[at++].said;
       float size = doc_size_words;
       bool bold = false;
       std::string words = said.said;
@@ -102,14 +110,14 @@ struct doc_body : nodes::Stack {
                   .maxWidth = breadth});
     }
     for (std::size_t rest = at; rest < max_doc_lines; ++rest) {
-      (*fLines)[rest].setVisible(false);
-      (*fLines)[rest].setText(std::string{});
+      (*fLines)[rest].said.setVisible(false);
+      (*fLines)[rest].said.setText(std::string{});
     }
   }
 
   void forEachChild(auto &&f) {
-    for (nodes::Text &one : *fLines)
-      f(one);
+    for (doc_line_node &one : *fLines)
+      f(one.said);
   }
 };
 
