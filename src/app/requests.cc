@@ -11,6 +11,7 @@ export module pchat.app.requests;
 import std;
 import pchat.core;
 import pchat.config;
+import pchat.theme;
 
 export namespace pchat::app {
 
