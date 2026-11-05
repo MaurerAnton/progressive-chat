@@ -182,6 +182,7 @@ private:
   // Answered at all: a server may answer a status and a body, and what it
   // says may still be that it will not.
   static void went_on(emscripten_fetch_t *one) {
+    auto &self = *static_cast<carrying *>(one->userData);
     if (one->readyState != 4 /* done */)
       return;
     // Answered, and answered that it will not: the body it says that in
