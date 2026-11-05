@@ -105,7 +105,8 @@ SAID(json, what_is_written_is_read_back_the_same) {
 
 SAID(json, a_list_of_numbers_and_a_member_nothing) {
   json::writing body;
-  body.thing().name("stop").list().number(1).number(2).shut().name("note").nothing().shut();
+  body.thing().name("stop").list().number(1.0).number(2.0).shut()
+      .name("note").nothing().shut();
   const auto read_back = json::read(body.said());
   EXPECT_TRUE(read_back.has_value());
   EXPECT_EQ(json::which(*json::said(*read_back, "stop")), json::kind::list);
