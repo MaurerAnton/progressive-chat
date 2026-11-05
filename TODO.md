@@ -47,6 +47,13 @@ build and the next.
 - [ ] Copy to the clipboard only keeps the text in the program
       (`copied_`); nothing carries it to the host's own clipboard.
 - [ ] Search does nothing yet.
+- [x] **Nothing could install a browser to drive the page with** -- done
+      2026-11-05: a playwright is put out before the core it is said on
+      top of, so asking for the newest asked for a `playwright-core` that
+      was not there yet and nothing was read of the page at all
+      (`.github/workflows/probe.yml`). One version, said by name, and
+      moved on by hand when the next one has settled.
+
 - [x] **The probe** -- done 2026-11-04: it asks for SwiftShader now and so
       has a WebGL to draw through, and it came back with 1532 nodes and the
       page's whole text. What it still comes back without is the narrow

@@ -45,9 +45,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: painted
+          # Every shot of the page, whatever the probe that made it named
+          # them: a probe driven by hand names them as it likes.
           path: |
-            painted-wide.png
-            painted-narrow.png
-            painted-answering.png
-            painted-tools.png
+            *.png
           if-no-files-found: error
