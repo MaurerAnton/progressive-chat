@@ -5,7 +5,9 @@ description: >-
   The toolchain a build of progressive-chat has to have: clang 23 with its
   libc++ (there is no other way to `import std` here), CMake 4.3.4 or newer,
   Ninja, which is the only generator CMake scans modules under, and gn, which
-  is what Skia itself is built with.
+  is what Skia itself is built with. Both machines a Linux runs on are
+  given their own, because neither a CMake nor a gn built for one will
+  execute on the other.
 
 runs:
   using: composite
@@ -49,11 +51,18 @@ runs:
       run: |
         set -euo pipefail
         cd /tmp
+        # Kept for both machines: CMake names them as the uname does, which
+        # is x86_64 on one and aarch64 on the other.
+        case "$(uname -m)" in
+          x86_64) machine=x86_64 ;;
+          aarch64) machine=aarch64 ;;
+          *) echo "no CMake is kept for $(uname -m)"; exit 1 ;;
+        esac
         curl -fsSL -o cmake.tar.gz \
-          https://github.com/Kitware/CMake/releases/download/v4.4.4/cmake-4.4.4-linux-x86_64.tar.gz
+          "https://github.com/Kitware/CMake/releases/download/v4.4.4/cmake-4.4.4-linux-${machine}.tar.gz"
         sudo tar xzf cmake.tar.gz -C /opt
-        sudo ln -sf /opt/cmake-4.4.4-linux-x86_64/bin/cmake /usr/local/bin/cmake
-        sudo ln -sf /opt/cmake-4.4.4-linux-x86_64/bin/ctest /usr/local/bin/ctest
+        sudo ln -sf "/opt/cmake-4.4.4-linux-${machine}/bin/cmake" /usr/local/bin/cmake
+        sudo ln -sf "/opt/cmake-4.4.4-linux-${machine}/bin/ctest" /usr/local/bin/ctest
 
     # Skia is a GN project: gn is what turns its BUILD.gn files into ninja
     # rules. No distribution keeps a release of it, so it comes from
@@ -63,7 +72,13 @@ runs:
       run: |
         set -euo pipefail
         cd /tmp
-        curl -fsSL -o gn.zip https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest
+        # Chromium's own name for each machine, which is not the uname's.
+        case "$(uname -m)" in
+          x86_64) machine=linux-amd64 ;;
+          aarch64) machine=linux-arm64 ;;
+          *) echo "no gn is kept for $(uname -m)"; exit 1 ;;
+        esac
+        curl -fsSL -o gn.zip "https://chrome-infra-packages.appspot.com/dl/gn/gn/${machine}/+/latest"
         python3 -c "import zipfile; zipfile.ZipFile('gn.zip').extract('gn', 'gn-unpacked')"
         sudo install -m 755 gn-unpacked/gn /usr/local/bin/gn
         gn --version
