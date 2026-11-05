@@ -310,6 +310,11 @@ private:
     told(said);
     if (one.asked->trouble())
       told(one.asked->trouble()->c_str());
+    // The first of what came, said whole: nothing above this file decides
+    // anything by it, and nothing in it is read by anybody but whoever is
+    // watching a page be driven and answered.
+    if (!arrived.empty())
+      told(("read: it began with [" + arrived.substr(0, 80) + "]").c_str());
 #endif
     if (message *there = found(one.said))
       there->text = std::string(one.going.said()) +
