@@ -31,7 +31,6 @@ namespace scene = skiff::scene;
 namespace nodes = skiff::nodes;
 
 // How many messages the list keeps room for.
-inline constexpr std::size_t max_messages = 32;
 // What goes between a bubble and its words, and between two messages.
 inline constexpr float bubble_pad_x = 14.0f;
 inline constexpr float bubble_pad_y = 10.0f;
@@ -434,14 +433,13 @@ struct message_row : nodes::Stack {
 // The messages of one conversation, in a column of their own: the rows' own
 // flow, so each begins under the height the one before it came to.
 struct message_screen : nodes::Stack {
-  // Kept on the heap, and not as a member of this node: a column of
-  // thirty-two rows is a third of a thousand nodes, which is not a thing a
-  // machine's stack was asked to hold. As a member it was, twice over --
-  // once where it was made, once where it was moved to -- and what it is
-  // built on, a browser's megabyte and an activity's thread alike, went
-  // before the first frame was drawn.
-  std::unique_ptr<std::array<message_row, max_messages>> fRows =
-      std::make_unique<std::array<message_row, max_messages>>();
+  // One row for every message there is, made as they are asked for and kept
+  // once made: a column of thirty-two of them was a third of a thousand
+  // nodes, and as a member of this node -- where it was made, and again
+  // where it was moved to -- it was not a thing a machine's stack was asked
+  // to hold. What it is built on, a browser's megabyte and an activity's
+  // thread alike, went before the first frame was drawn.
+  std::vector<std::unique_ptr<message_row>> fRows;
 
   message_screen() {
     // What is said begins below the band the bar fades out in: the band is
@@ -454,8 +452,15 @@ struct message_screen : nodes::Stack {
     fStack = {.direction = nodes::direction::vertical{},
               .spacingY = bubble_gap,
               .wrap = false};
-    for (auto &row : *fRows)
-      row.blank();
+  }
+
+  // The row for this place in the column, made there where there is none:
+  // every message said has one, and none of them is said a second time for
+  // being asked for again.
+  [[nodiscard]] message_row &at(std::size_t place) {
+    while (fRows.size() <= place)
+      fRows.push_back(std::make_unique<message_row>());
+    return *fRows[place];
   }
 
   // Called by the program whenever what is shown moved.
@@ -468,22 +473,22 @@ struct message_screen : nodes::Stack {
         said.push_back(&one);
     const float room = std::max(0.0f, breadth - 2.0f * edge);
     bool last_outgoing = false;
-    for (std::size_t at = 0; at < max_messages; ++at) {
-      if (at >= said.size()) {
-        (*fRows)[at].blank();
-        continue;
-      }
-      const message &one = *said[at];
+    for (std::size_t place = 0; place < said.size(); ++place) {
+      const message &one = *said[place];
       // Left above it: room, where it is an answer, or where it follows one.
       const bool head = !one.outgoing || last_outgoing;
-      (*fRows)[at].again(sink, look, one, head, room, model);
+      this->at(place).again(sink, look, one, head, room, model);
       last_outgoing = one.outgoing;
     }
+    // What is left of the column where fewer messages were said than were
+    // said here before: said by nobody.
+    for (std::size_t place = said.size(); place < fRows.size(); ++place)
+      fRows[place]->blank();
   }
 
   void forEachChild(auto &&f) {
-    for (auto &row : *fRows)
-      f(row);
+    for (auto &row : fRows)
+      f(*row);
   }
 };
 

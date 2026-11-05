@@ -28,10 +28,6 @@ namespace scene = skiff::scene;
 namespace nodes = skiff::nodes;
 namespace widgets = skiff::widgets;
 
-// How many conversations the drawer keeps room for: made once, and only as
-// many of them shown as there are conversations.
-inline constexpr std::size_t max_rows = 24;
-
 // What the field is told through: the field is made once, so what it asks for
 // goes by this -- which the drawer keeps -- and not by anything of its own.
 struct search_sink {
@@ -169,7 +165,23 @@ struct drawer_screen : scene::Node {
   std::shared_ptr<search_sink> fSink = std::make_shared<search_sink>();
   widgets::TextArea<search_given> fSearch{
       widgets::Theme{}, "Search conversations", search_given{fSink}};
-  std::array<conversation_row, max_rows> fRows;
+  // One row for every conversation the search kept, made as they are asked
+  // for and kept once made: nothing here is said two ways for being asked
+  // for twice, and no conversation is left out for there being many.
+  std::vector<std::unique_ptr<conversation_row>> fRows;
+
+  // The row for this place down the drawer, made there where there is none:
+  // every row says where it stands, told the place it was asked for.
+  [[nodiscard]] conversation_row &row_at(std::size_t place) {
+    while (fRows.size() <= place)
+      fRows.push_back(std::make_unique<conversation_row>());
+    conversation_row &row = *fRows[place];
+    row.apply({.anchor = scene::anchor::kTopLeft,
+               .x = edge,
+               .y = edge + 86.0f +
+                    static_cast<float>(place) * (row_height + 4.0f)});
+    return row;
+  }
 
   explicit drawer_screen(float breadth) {
     this->apply({.width = breadth, .fillY = true});
@@ -203,13 +215,6 @@ struct drawer_screen : scene::Node {
                  .y = edge + 86.0f,
                  .autoSize = scene::axes::kBoth});
     fNone.setVisible(false);
-    for (std::size_t at = 0; at < max_rows; ++at)
-      fRows[at].apply(
-          {.anchor = scene::anchor::kTopLeft,
-           .x = edge,
-           .y = edge + 86.0f + static_cast<float>(at) * (row_height + 4.0f)});
-    for (auto &row : fRows)
-      row.blank();
   }
 
   // The colours, then what each row says: called by the program whenever the
@@ -226,11 +231,7 @@ struct drawer_screen : scene::Node {
     fSink->asked = asked;
     const auto rows = logic::matching(root, query);
     fNone.setVisible(rows.empty());
-    for (std::size_t at = 0; at < max_rows; ++at) {
-      if (at >= rows.size()) {
-        fRows[at].blank();
-        continue;
-      }
+    for (std::size_t at = 0; at < rows.size(); ++at) {
       const conversation &chat = *rows[at];
       // What the row says under the name: the last message in it, if there is
       // one, else what the conversation is.
@@ -242,9 +243,14 @@ struct drawer_screen : scene::Node {
           said = one.text;
       // How long ago, as the clock reads it: the moment the last thing was
       // said in it, which is what the order of these rows comes from too.
-      fRows[at].again(asked, look, chat, said, clock_of(chat.last_activity),
-                      chat.id.value == opened);
+      this->row_at(at).again(asked, look, chat, said,
+                             clock_of(chat.last_activity),
+                             chat.id.value == opened);
     }
+    // What is left of the list where fewer conversations were kept than were
+    // kept here before: said by nobody.
+    for (std::size_t at = rows.size(); at < fRows.size(); ++at)
+      fRows[at]->blank();
   }
 
   void forEachChild(auto &&f) {
@@ -255,7 +261,7 @@ struct drawer_screen : scene::Node {
     f(fSettingsMark);
     f(fSearch);
     for (auto &row : fRows)
-      f(row);
+      f(*row);
   }
 };
 
