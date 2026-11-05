@@ -163,7 +163,7 @@ template <std::ranges::forward_range Turns>
                                   const wanted &wants = {}) {
   json::writing out;
   out.thing();
-  out.name("model").text(one.leading_model());
+  out.name("model").text(one.model);
   out.name("stream").truth(wants.stream);
   const bool any_turn = std::ranges::begin(turns) != std::ranges::end(turns);
   if (!one.told.empty() || any_turn) {
