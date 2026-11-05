@@ -22,6 +22,33 @@ begins a new chat, and beside it **how many tokens this chat is** (for example
 put together. Nothing else is in the top. No search of its own: the drawer
 searches.
 
+### What the top holds that is not drawn yet
+
+Everything below this line is said because it is wanted, and none of it stands
+in the program today.
+
+* **The models that answer this conversation** stand on the top edge of the
+  main panel, one bubble each, and the name in a bubble is **pressed**: pressing
+  it is how you say which model this is, and read which it has been. Inside the
+  same bubble, with the name, is **what it has used of its window**, said as a
+  share of the whole — `~23.6K / 1M tokens` — so that the model you are writing
+  to and how near the edge this chat has brought it are one thing and not two.
+* **A plus beside them adds another model.** One conversation may be answered by
+  more than one: each takes a bubble of its own on that edge, with its own share
+  of its own window said in it. This plus is not the plus that begins a chat; it
+  begins *another answerer in this one*.
+* **A button for the system prompt**: what is told to every model before
+  anything else is said to it — `You are answering in Progressive Chat, briefly
+  and plainly.` — read and written from here. Not only a plus is in the top;
+  this is beside it.
+* **Fork conversation** and **share** stand in the top as well: the one takes
+  this conversation as a new one written from here on apart, the other gives it
+  out.
+* **Where the screen is narrow**, four of these go behind **three dots** beside
+  the plus and come out of it: **search**, **system prompt**, **fork
+  conversation**, **share**. Wide, they stand as themselves; narrow, they are
+  one press deep.
+
 The foot is the editor. It always says **which model it will send to**, even
 before anything has been written, and beside that a **circle that shows how full
 the context is** — filled by the share of the model's window this conversation
