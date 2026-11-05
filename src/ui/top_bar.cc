@@ -126,9 +126,7 @@ struct top_bar : scene::Node {
                       .visible = menu});
     fMenuPlate.again(sink, app::toggle_drawer{}, look.search_bar);
     fMenuMark.setVisible(menu);
-    fSearchPlate.setColour(look.search_bar);
     fMenuMark.setColour(look.text);
-    fSearchMark.setColour(look.text);
     fTitle.setText(std::string(title));
     fTitle.setColour(look.text);
     fPlusMark.setColour(look.text);
