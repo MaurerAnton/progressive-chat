@@ -1,7 +1,4 @@
 module;
-#if defined(__EMSCRIPTEN__)
-#include <emscripten/console.h>
-#endif
 #if defined(__ANDROID__)
 #include <android/log.h>
 #endif
@@ -55,10 +52,6 @@ struct program {
         __android_log_print(ANDROID_LOG_INFO, "progressive-chat",
                             "a frame took %d ms", static_cast<int>(took));
     }
-#endif
-#if defined(__EMSCRIPTEN__)
-    if (frames_++ % 60u == 0u)
-      emscripten_console_log("before a frame");
 #endif
     const auto &bounds = view.window().root().fState.fBounds;
     if (bounds.width() > 1.0f && bounds.height() > 1.0f)

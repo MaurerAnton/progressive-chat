@@ -1,11 +1,3 @@
-module;
-// What it says about itself while it is being found: the page answers no
-// questions of its own, so what is said here is said in the console a tester
-// reads, and nowhere else -- and nowhere at all off the page.
-#if defined(__EMSCRIPTEN__)
-#include <emscripten/console.h>
-#endif
-#include <cstdio>
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.app.screens -- What the window shows, and what a control's asking is
 // answered with: one model, one set of looks, one scene. Every request a
@@ -35,18 +27,6 @@ import pchat.logic.composer;
 import pchat.logic.lists;
 
 namespace scene = skiff::scene;
-
-namespace {
-// What it says while it is being found: nothing off the page, and on the page
-// only in the console a tester reads.
-void told(const char *said) {
-#if defined(__EMSCRIPTEN__)
-  emscripten_console_log(said);
-#else
-  (void)said;
-#endif
-}
-} // namespace
 
 export namespace pchat::app {
 
@@ -289,33 +269,8 @@ private:
       return;
     answer_coming &one = *answering_;
     const std::string arrived = one.carried.take();
-#if defined(__EMSCRIPTEN__)
-    {
-      char said[96];
-      std::snprintf(said, sizeof said, "read: %zu bytes came, over is %d",
-                    arrived.size(), one.carried.over() ? 1 : 0);
-      told(said);
-    }
-#endif
     if (!arrived.empty())
       one.asked->arrive(arrived);
-#if defined(__EMSCRIPTEN__)
-    const std::size_t parsed = one.asked->said().size();
-    char said[128];
-    std::snprintf(
-        said, sizeof said,
-        "read: %zu came, parsed %zu, standing %d, found %d, trouble %d",
-        arrived.size(), parsed, static_cast<int>(one.asked->where()),
-        found(one.said) ? 1 : 0, one.asked->trouble() ? 1 : 0);
-    told(said);
-    if (one.asked->trouble())
-      told(one.asked->trouble()->c_str());
-    // The first of what came, said whole: nothing above this file decides
-    // anything by it, and nothing in it is read by anybody but whoever is
-    // watching a page be driven and answered.
-    if (!arrived.empty())
-      told(("read: it began with [" + arrived.substr(0, 80) + "]").c_str());
-#endif
     if (message *there = found(one.said))
       there->text = std::string(one.going.said()) +
                     std::string(one.asked->said());
