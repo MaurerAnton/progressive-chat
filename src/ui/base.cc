@@ -8,6 +8,7 @@ import std;
 import skia;
 import skiff.scene;
 import skiff.nodes;
+import pchat.core;
 import pchat.config;
 import pchat.app.requests;
 import :theme;
