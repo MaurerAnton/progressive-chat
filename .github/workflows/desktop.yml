@@ -48,7 +48,8 @@ jobs:
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
             -DCMAKE_CXX_FLAGS="-stdlib=libc++" \
-            -DCMAKE_BUILD_RPATH='$ORIGIN'
+            -DCMAKE_BUILD_RPATH='$ORIGIN' \
+            -DPCHAT_REVISION="$(git rev-parse --short=12 HEAD)"
       - name: Build
         run: cmake --build build-desktop --target progressive-chat --parallel 4
       # What it is called: the version CMake says, the commit it is of, and

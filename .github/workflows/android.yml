@@ -80,9 +80,15 @@ jobs:
             -DANDROID_ABI=${{ matrix.abi }} \
             -DANDROID_PLATFORM=android-28 \
             -DPCHAT_ANDROID_SDL_DEX_DIR="$HOME/pchat-tools/sdl-dex/build-scripts/native-activity/dex" \
+            -DPCHAT_REVISION="$(git rev-parse --short=12 HEAD)" \
             -DPCHAT_TESTS=OFF
       - name: Build
         run: cmake --build build-android --target progressive-chat -- -k 0
+      # What commit it says it is of, said where the commit is known: asked
+      # of git by the build itself otherwise, and what it asked is kept in
+      # CMakeCache.txt, which the cache above restores -- so a build that
+      # configures nothing anew says the commit of the build that first
+      # filled that cache, and is named for it.
       # Nothing packaged before this commit: the cache keeps the whole build
       # directory, keyed on what the build is made of and not on the commit it
       # is of, so what it restores may hold an APK packaged out of another
