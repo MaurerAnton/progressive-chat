@@ -66,7 +66,7 @@ public:
   // because it could not be had, or because it has been asked as many times
   // as it may be.
   [[nodiscard]] bool again(std::vector<call_answered> answered) {
-    if (ended_ != over::complete || asked_.empty())
+    if (ended_ != provider::over::complete || asked_.empty())
       return false;
     if (rounds_ >= rounds_at_most_)
       return false;
@@ -80,7 +80,7 @@ public:
           turn{.who = role::tool, .text = one.said, .own = one.own});
     ++rounds_;
     asked_.clear();
-    ended_ = over::none;
+    ended_ = provider::over::none;
     return true;
   }
 
@@ -88,7 +88,7 @@ public:
 
   // Whether it is over for good: it stopped on its own, or it could not be
   // had. Nothing about whether it may still be asked again.
-  [[nodiscard]] bool over() const { return ended_ != over::none; }
+  [[nodiscard]] bool over() const { return ended_ != provider::over::none; }
   [[nodiscard]] std::size_t rounds() const { return rounds_; }
   // What it asked for in the answer that came back last, whole, and empty
   // once it has been answered.
@@ -107,7 +107,7 @@ public:
   // all of it cost -- and failed where it could not be had at all.
   [[nodiscard]] message answer_of(const put_in &into) const {
     return provider::answer_of(into, said_, thinking_, calls_, cost_,
-                               ended_ == over::failed);
+                               ended_ == provider::over::failed);
   }
 
 private:
@@ -134,7 +134,7 @@ private:
   std::size_t calls_ = 0;
   usage cost_;
   std::vector<tool_call> asked_;
-  over ended_ = over::none;
+  provider::over ended_ = provider::over::none;
   std::optional<std::string> trouble_;
 };
 

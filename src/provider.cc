@@ -134,6 +134,24 @@ template <std::ranges::forward_range Said>
   return turn{.who = role::system, .text = std::string(said)};
 }
 
+// What a model may be told it can ask for on its way to answering: named,
+// told what it does, and told what each thing it takes is -- all of it in the
+// shape a wire reads it back in, and none of it anything this tree runs.
+struct offered {
+  std::string name;
+  std::string told;
+  // What it takes, each of them named and said about, and every one of them
+  // a string: nothing here asks a model to write JSON that is more than text.
+  std::vector<std::pair<std::string, std::string>> taken;
+};
+
+// What a body is written with besides the turns: that it streams, and what
+// tools it may ask for on its way.
+struct wanted {
+  bool stream = true;
+  std::vector<offered> tools;
+};
+
 // ---- the body ------------------------------------------------------------
 
 // What a chat wire wants said to it: the model, that it is asked to stream,
@@ -142,11 +160,11 @@ template <std::ranges::forward_range Said>
 template <std::ranges::forward_range Turns>
   requires std::same_as<std::ranges::range_value_t<Turns>, turn>
 [[nodiscard]] std::string body_of(const endpoint &one, Turns &&turns,
-                                  bool stream = true) {
+                                  const wanted &wants = {}) {
   json::writing out;
   out.thing();
   out.name("model").text(one.model);
-  out.name("stream").truth(stream);
+  out.name("stream").truth(wants.stream);
   const bool any_turn = std::ranges::begin(turns) != std::ranges::end(turns);
   if (!one.told.empty() || any_turn) {
     out.name("messages").list();
@@ -183,6 +201,25 @@ template <std::ranges::forward_range Turns>
   // no choice in it, and without this there would be nothing in it to read.
   if (stream)
     out.name("stream_options").thing().name("include_usage").truth(true).shut();
+  if (!wants.tools.empty()) {
+    out.name("tools").list();
+    for (const offered &one_tool : wants.tools) {
+      out.thing().name("type").text("function").name("function").thing();
+      out.name("name").text(one_tool.name);
+      out.name("description").text(one_tool.told);
+      out.name("parameters").thing().name("type").text("object");
+      out.name("properties").thing();
+      for (const auto &[takes, said] : one_tool.taken)
+        out.name(takes).thing().name("type").text("string").name("description").text(said).shut();
+      out.shut();
+      out.name("required").list();
+      for (const auto &[takes, said] : one_tool.taken)
+        out.text(takes);
+      out.shut();
+      out.shut().shut();
+    }
+    out.shut();
+  }
   out.shut();
   return out.take();
 }
