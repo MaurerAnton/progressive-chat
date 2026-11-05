@@ -46,6 +46,17 @@ runs:
           libxss-dev libxtst-dev libwayland-dev libxkbcommon-dev libdbus-1-dev libudev-dev \
           libgl1-mesa-dev libegl1-mesa-dev libasound2-dev libpulse-dev
 
+    # A download asked for again at every run is asked for again of a machine
+    # that says no often enough to be noticed: a 504 out of Kitware's own
+    # releases took the whole of a build for one phone out of three, and
+    # nothing about the build was wrong. So: kept between runs, and where it
+    # has to be asked for, asked again rather than once.
+    - name: What is kept of the toolchain
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pchat-toolchain
+        key: toolchain-${{ runner.arch }}-cmake-4.4.4-gn
+
     - name: CMake 4
       shell: bash
       run: |
@@ -58,11 +69,19 @@ runs:
           aarch64) machine=aarch64 ;;
           *) echo "no CMake is kept for $(uname -m)"; exit 1 ;;
         esac
-        curl -fsSL -o cmake.tar.gz \
-          "https://github.com/Kitware/CMake/releases/download/v4.4.4/cmake-4.4.4-linux-${machine}.tar.gz"
-        sudo tar xzf cmake.tar.gz -C /opt
-        sudo ln -sf "/opt/cmake-4.4.4-linux-${machine}/bin/cmake" /usr/local/bin/cmake
-        sudo ln -sf "/opt/cmake-4.4.4-linux-${machine}/bin/ctest" /usr/local/bin/ctest
+        # Not under /opt, where nothing can be written but through sudo and
+        # nothing that was kept can be brought back: here instead, where a
+        # cache owns it.
+        kept="$HOME/.cache/pchat-toolchain"
+        mkdir -p "$kept"
+        if [ ! -x "$kept/cmake-4.4.4-linux-${machine}/bin/cmake" ]; then
+          curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors \
+            -o cmake.tar.gz \
+            "https://github.com/Kitware/CMake/releases/download/v4.4.4/cmake-4.4.4-linux-${machine}.tar.gz"
+          tar xzf cmake.tar.gz -C "$kept"
+        fi
+        sudo ln -sf "$kept/cmake-4.4.4-linux-${machine}/bin/cmake" /usr/local/bin/cmake
+        sudo ln -sf "$kept/cmake-4.4.4-linux-${machine}/bin/ctest" /usr/local/bin/ctest
 
     # Skia is a GN project: gn is what turns its BUILD.gn files into ninja
     # rules. No distribution keeps a release of it, so it comes from
@@ -78,9 +97,15 @@ runs:
           aarch64) machine=linux-arm64 ;;
           *) echo "no gn is kept for $(uname -m)"; exit 1 ;;
         esac
-        curl -fsSL -o gn.zip "https://chrome-infra-packages.appspot.com/dl/gn/gn/${machine}/+/latest"
-        python3 -c "import zipfile; zipfile.ZipFile('gn.zip').extract('gn', 'gn-unpacked')"
-        sudo install -m 755 gn-unpacked/gn /usr/local/bin/gn
+        kept="$HOME/.cache/pchat-toolchain"
+        mkdir -p "$kept"
+        if [ ! -x "$kept/gn-${machine}" ]; then
+          curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors \
+            -o gn.zip "https://chrome-infra-packages.appspot.com/dl/gn/gn/${machine}/+/latest"
+          python3 -c "import zipfile; zipfile.ZipFile('gn.zip').extract('gn', 'gn-unpacked')"
+          install -m 755 gn-unpacked/gn "$kept/gn-${machine}"
+        fi
+        sudo ln -sf "$kept/gn-${machine}" /usr/local/bin/gn
         gn --version
 
     - name: Say the toolchain
