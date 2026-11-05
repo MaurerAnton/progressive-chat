@@ -1,7 +1,14 @@
 import { chromium } from 'playwright';
 
+// What each field is for is said in its label, which is what it shows empty:
+// that, and what it holds, said for every field on the page.
 const values = () =>
-  Array.from(document.querySelectorAll('textarea, input')).map((t) => t.value);
+  Array.from(document.querySelectorAll('textarea, input')).map(
+      (t) => `${t.getAttribute('aria-label') || t.type} = ${t.value}`);
+const focused = () => {
+  const one = document.activeElement;
+  return `${one.tagName}:${one.getAttribute('aria-label') || ''}`;
+};
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -18,6 +25,7 @@ console.log('fields open:', JSON.stringify(await page.evaluate(values)));
 
 await page.mouse.click(640, 440);
 await page.waitForTimeout(700);
+console.log('after pressing in the field:', await page.evaluate(focused));
 await page.keyboard.type('Answer in one line.');
 await page.waitForTimeout(900);
 console.log('fields typed:', JSON.stringify(await page.evaluate(values)));
