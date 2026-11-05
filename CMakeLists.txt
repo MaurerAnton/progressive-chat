@@ -201,6 +201,11 @@ target_compile_options(pchat_core PUBLIC ${pchat_std_flags})
 # What one conversation asks of a model, and what one answer coming back says:
 # the body written for a wire, and its stream read again. No socket in it --
 # what carries the bytes is a platform's to do, later.
+add_library(pchat_tools)
+  FILES src/tools.cc
+
+target_link_libraries(pchat_tools PUBLIC pchat_core pchat_json pchat_provider)
+
 add_library(pchat_provider)
 target_sources(pchat_provider PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
   FILES src/provider.cc src/provider/stream.cc src/provider/run.cc

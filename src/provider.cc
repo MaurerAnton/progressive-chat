@@ -199,7 +199,7 @@ template <std::ranges::forward_range Turns>
   }
   // What it cost comes at the end of the stream too: the last frame of one has
   // no choice in it, and without this there would be nothing in it to read.
-  if (stream)
+  if (wants.stream)
     out.name("stream_options").thing().name("include_usage").truth(true).shut();
   if (!wants.tools.empty()) {
     out.name("tools").list();
