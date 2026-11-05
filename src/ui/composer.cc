@@ -68,6 +68,10 @@ struct composer : scene::Node {
   nodes::Icon fSendMark{shape::send(), 0u};
 
   composer() {
+    // One line, which is what makes Enter send rather than put a line break
+    // in: what is written here is said once, as a message, and what it keeps
+    // of its shape is kept by the room and not by this field.
+    fField.setSingleLine(true);
     // Two rows in the card: over what is written, which model answers in this
     // chat and how full its window is; and under them the field itself.
     this->apply({.fillX = true,

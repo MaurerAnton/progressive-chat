@@ -144,7 +144,7 @@ const shoot_answering = async (browser, name) => {
   // all one canvas, so where a composer is is not a question a browser can
   // answer, and it is put instead to the bottom of it by pointer, then typed.
   try {
-    await page.mouse.click(640, 830);
+    await page.mouse.click(640, 855);
     await page.keyboard.type('Say something, anything.');
     await page.keyboard.press('Enter');
     await page.waitForTimeout(12000);
@@ -192,7 +192,7 @@ const shoot_with_tools = async (browser, name) => {
   }
   await page.waitForTimeout(4000);
   try {
-    await page.mouse.click(640, 830);
+    await page.mouse.click(640, 855);
     await page.keyboard.type('Ask me something you have to look up.');
     await page.keyboard.press('Enter');
     await page.waitForTimeout(16000);
