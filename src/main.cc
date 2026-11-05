@@ -9,6 +9,7 @@
 import std;
 import skiff.platform.window;
 import skiff.platform.events;
+import pchat.platform.kept;
 import pchat.app.program;
 
 using namespace pchat::app;
@@ -28,6 +29,13 @@ int pchat_main() {
   // needs.
   static std::optional<program> held;
   program &one = held.emplace();
-  const skiff::platform::window::options how{.title = "progressive-chat", .width = 1100, .height = 720};
+  // Where the programs the GPU compiled are kept between runs: compiled
+  // again at every run without it, and a phone is slow at it.
+  const skiff::platform::window::options how{.title = "progressive-chat",
+                                             .width = 1100,
+                                             .height = 720,
+                                             .programs =
+                                                 pchat::platform::
+                                                     where_programs_are_kept()};
   return pchat_run(one, how, kinds);
 }

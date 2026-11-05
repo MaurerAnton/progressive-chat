@@ -6,12 +6,18 @@
 #include <android/log.h>
 #include <android/native_activity.h>
 
+#include <fcntl.h>
+#include <unistd.h>
+
+#include <atomic>
 #include <csignal>
 #include <cstddef>
 #include <cstdint>
-#include <atomic>
+#include <cstdio>
 #include <initializer_list>
 #include <pthread.h>
+#include <string>
+#include <thread>
 
 int pchat_main();
 
@@ -100,7 +106,57 @@ void said_how_tall_the_stack_is() {
                       "the stack it stands on is %zu bytes", tall);
 }
 
+// What it says goes to stderr -- everything skiff and SDL print, among them
+// the one line saying whether it is drawn through OpenGL or in software --
+// and Android throws stderr away: none of it was ever seen, and every
+// question a phone could have answered was guessed at instead. A pipe is put
+// in its place and a thread of its own gives each line to logcat, under this
+// program's name, where `adb logcat -d -s progressive-chat` reads it. Once a
+// process: an activity made again keeps it.
+void stderr_to_logcat() {
+  static bool done = false;
+  if (std::exchange(done, true))
+    return;
+  int ends[2];
+  if (pipe(ends) != 0)
+    return;
+  // Room for a burst of lines: a full pipe would hold the writer -- the app
+  // thread itself, as it prints -- until the reader caught up.
+  (void)fcntl(ends[1], F_SETPIPE_SZ, 1 << 20);
+  if (dup2(ends[1], STDERR_FILENO) < 0) {
+    close(ends[0]);
+    close(ends[1]);
+    return;
+  }
+  close(ends[1]);
+  std::setvbuf(stderr, nullptr, _IONBF, 0);
+  std::thread([from = ends[0]] {
+    std::string pending;
+    char chunk[1024];
+    for (;;) {
+      const ssize_t got = read(from, chunk, sizeof chunk);
+      if (got <= 0)
+        return;
+      pending.append(chunk, static_cast<std::size_t>(got));
+      for (std::size_t end;
+           (end = pending.find('\n')) != std::string::npos;
+           pending.erase(0, end + 1)) {
+        pending[end] = '\0';
+        __android_log_write(ANDROID_LOG_INFO, what_it_is_called,
+                            pending.c_str());
+      }
+      // A line longer than logcat takes: given as it is.
+      if (pending.size() > 3000) {
+        __android_log_write(ANDROID_LOG_INFO, what_it_is_called,
+                            pending.c_str());
+        pending.clear();
+      }
+    }
+  }).detach();
+}
+
 int run(int, char **) {
+  stderr_to_logcat();
   // Said before it starts, so that it can be told from a program that went
   // before this ever was: nothing at all in the log is as much of an answer
   // as a line saying it began.
