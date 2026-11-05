@@ -33,14 +33,18 @@ console.log('what is told where nothing is written:',
 await page.screenshot({ path: 'prompt.png' });
 
 // Written into the field: what is typed goes into the conversation whole.
-await page.keyboard.type(' Answer in one line.');
+// The field is where the card keeps it, in the middle of the card.
+await page.mouse.click(640, 440);
+await page.waitForTimeout(600);
+await page.keyboard.type('Answer in one line.');
 await page.waitForTimeout(1200);
 const typed = await page.evaluate(page_mirror);
 console.log('typed said:', typed.includes('Answer in one line.'));
 await page.screenshot({ path: 'prompt-typed.png' });
 
-// Put away again, and the room read once more.
-await page.mouse.click(1166, 26);
+// Put away again, and the room read once more: the press is in the card's
+// own top corner, over the room and over nothing else.
+await page.mouse.click(882, 308);
 await page.waitForTimeout(1200);
 const again1 = await page.evaluate(page_mirror);
 console.log('put away:', !again1.includes('Told to every model that answers here'));
