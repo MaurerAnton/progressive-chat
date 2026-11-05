@@ -10,6 +10,7 @@ import std;
 import skiff.platform.window;
 import skiff.platform.events;
 import pchat.platform.kept;
+import pchat.platform.drawn;
 import pchat.app.program;
 
 using namespace pchat::app;
@@ -31,11 +32,13 @@ int pchat_main() {
   program &one = held.emplace();
   // Where the programs the GPU compiled are kept between runs: compiled
   // again at every run without it, and a phone is slow at it.
-  const skiff::platform::window::options how{.title = "progressive-chat",
-                                             .width = 1100,
-                                             .height = 720,
-                                             .programs =
-                                                 pchat::platform::
-                                                     where_programs_are_kept()};
+  // Drawn in software where there is no GPU to draw through: without this
+  // it went before its first frame wherever GL was not to be had.
+  const skiff::platform::window::options how{
+      .title = "progressive-chat",
+      .width = 1100,
+      .height = 720,
+      .software = !pchat::platform::gpu_can_be_had(),
+      .programs = pchat::platform::where_programs_are_kept()};
   return pchat_run(one, how, kinds);
 }

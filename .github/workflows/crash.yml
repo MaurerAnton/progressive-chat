@@ -3,6 +3,14 @@ name: crash
 
 on:
   workflow_dispatch:
+    inputs:
+      # Asked when what is wrong is not a crash but no GL at all: the machine
+      # is left without one, so that what the program does where there is
+      # none -- draw in software, or go before its first frame -- is said.
+      no_gl:
+        description: 'Give it no GL at all, and see whether it draws in software'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -34,6 +42,7 @@ jobs:
       # an X server in front of it, so that what is asked of GL is asked of
       # something that answers.
       - name: A GL that answers
+        if: ${{ !inputs.no_gl }}
         run: |
           sudo apt-get install -y --no-install-recommends \
             xvfb libgl1-mesa-dri libglx-mesa0 libegl-mesa0
@@ -62,6 +71,7 @@ jobs:
       - name: Run it, and say where it went
         env:
           SDL_AUDIODRIVER: dummy
+          SDL_VIDEODRIVER: ${{ inputs.no_gl && 'dummy' || '' }}
           LIBGL_ALWAYS_SOFTWARE: "1"
           GALLIUM_DRIVER: llvmpipe
           ASAN_OPTIONS: detect_leaks=0:abort_on_error=0
