@@ -109,6 +109,73 @@ The answer keeps a **footer** of its own, a row of small ones at its left:
 They are there whenever an answer is, whether the pointer is over it or not:
 what an answer can be asked for should be seen before it is looked for.
 
+## The settings
+
+One panel, and in it **eight groups**, in this order. What is in each is what
+this program has to be able to say yes or no to, and to what degree.
+
+**Services**
+
+* **Providers** — the keys, the base URL each one is asked at, and which of
+  them this program talks to at all.
+* **Models** — which models are enabled, which are not, and how each one is
+  configured.
+
+**Responses**
+
+* **System prompts** — the instructions every answer is given before it is
+  asked, created and kept here.
+* **Generation** — the parameters an answer is asked with.
+* **Context** — what is kept of a conversation when the window is smaller than
+  the talking.
+* **Title generation** — a conversation named for itself, without being asked.
+
+**Multimodal**
+
+* **Image transcription** — a vision model asked what is in a picture, so that
+  what cannot see can still be told.
+* **Image generation** — pictures made out of what was written.
+
+**Tools**
+
+* **Web search** — one search tool, configured once, for every provider.
+* **Conversation search** — the history of this conversation, and how it is
+  looked through.
+* **Shell** — commands run on a machine elsewhere.
+* **Tor** — an asking put through the Tor network. *Where this belongs is not
+  settled:* it is a tool here, and it could as well be under Network, or under
+  Services beside what routes the asking.
+* **MCP** — tool servers outside this program, connected to.
+* **Automation** — tasks, loops, and how precisely they are scheduled.
+* **Interaction** — the questions the assistant asks back.
+
+**Network**
+
+* **Proxy** — everything asked routed through an HTTP or a SOCKS proxy.
+* **WebUI** — this program driven from a browser, from another machine.
+
+**Memory & Data**
+
+* **Memory** — what is remembered while it runs, and what is kept in files.
+* **Skills** — instruction files the model can be given.
+* **Data control** — everything of yours given out as a file, or taken back in.
+
+**Appearance & Language**
+
+* **Appearance** — the theme, its scheme of colours, and whether the colours
+  follow the machine's own.
+* **Language** — which language the program itself speaks on the screen.
+
+**About**
+
+* **About** — what this program is, and where it lives on the net. *Whether it
+  also asks the holder to rate it is not decided: nothing of it is drawn, and
+  it may never be needed.*
+
+Of all this, what is drawn today is **Appearance** alone — the theme, its
+scheme, its type and its dark. The other seven groups stand empty, each with
+its name, waiting for the thing behind it.
+
 ## What this design does not do
 
 * It does not say "user" or "model" anywhere on the screen. The side says it,
