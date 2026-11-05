@@ -13,6 +13,7 @@ The whole of it is four modules:
 | `pchat.provider` | the door: which wire, which url, which headers, and the body |
 | `pchat.provider.stream` | one answer arriving a frame at a time, read back |
 | `pchat.provider.run` | one answer whole: what is carried, what comes back, why it is over, and the message it leaves |
+| `pchat.provider.loop` | one question asked again with what the tools answered, as many times as it takes |
 
 None of the four opens anything. There is no socket in this tree today, and
 that is on purpose: what carries bytes is different on a page, on a desk and
@@ -122,7 +123,36 @@ came out), and `delivery::failed` where nothing of it came to be read. It is
 not put into a conversation by anything here; where it goes is asked
 elsewhere.
 
-## 4. What carries the bytes
+## 4. The loop: one question, several answers
+
+A model does not always answer in one go. It stops, asks for a tool, and goes
+on once somebody has answered it -- and `loop` is that going on:
+
+1. `answering()` gives the run to carry, as above.
+2. When it is over, `came_back()` is said with it: what it said is kept, what
+   it cost is added to the rounds before it, and the tools it stopped to ask
+   for are read out of it (`asked_for()`).
+3. Whoever owns those tools answers them -- anything at all, anywhere -- and
+   gives what they said back as `call_answered`: the name of the call, and
+   what the call answered.
+4. `again()` asks the question again with them, and it is carried again, like
+   the first time.
+
+It stops asking where the model stopped on its own, where nothing asked it for
+anything, where something failed, or where it has been asked `rounds_at_most`
+times (four, unless told another number) -- so a model that always asks for
+one more thing is still answered in this lifetime.
+
+Nothing here runs a tool and nothing here could be given one to run. A call is
+read out as data and answered as data, which is the whole of the seam, and
+which is why a two-round loop is said by a test with no tools and no wire
+under it.
+
+Calls are named: a wire that named them is answered by its own names, and one
+that named none has names made for it here (`asked-<round>-<place>`), because
+an answer of a call is read against the call and against nothing else.
+
+## 5. What carries the bytes
 
 One platform carries them today, and each of the others will differently. What any of them has to do is
 the same four things, and all four are ordinary:
@@ -152,14 +182,14 @@ Where each of them comes from today:
 - **The server to come.** Written apart from this tree, and so its own side of
   the wire is its own to choose; this side only asks for the shape above.
 
-## 5. What is deliberately not here
+## 6. What is deliberately not here
 
 - No retry, and no backoff: one `run` is one answer. Whether a failed answer
   is asked again, and how long it waits, is a question for whoever owns the
   screen, later.
-- No tool results going back out. Calls are gathered and shown; that the model
-  be given what a tool answered, and that the answer go on after it, is a
-  round trip this tree does not make yet.
+- No tools of its own. Calls are gathered, shown and answered by whoever owns
+  them -- in this tree nobody yet, which is why the screens carry one answer
+  and not a loop. Going back out they go; who answers them does not here.
 - No second provider's own shape: Anthropic's frames, Gemini's, a local
   Ollama's. The three names thought arrives under are gathered already, which
   is most of what differs.
@@ -167,7 +197,7 @@ Where each of them comes from today:
   when it is written into a message, because a clock is the program's and not
   the protocol's.
 
-## 6. How all of it is said
+## 7. How all of it is said
 
 `test/provider_test.cc` writes a body and reads it back; feeds one stream
 whole and fed three characters at a time; counts the events of a stream; and
@@ -176,4 +206,8 @@ with no transport under it at all: through a stop, through a transport that
 could not carry it, through a frame that was not written in JSON, and out the
 other side as a message.
 
-Everything above is only believed where one of those says it.
+Everything above is only believed where one of those says it. The loop is
+said in `test/provider_loop_test.cc`: asked once and answered whole, asked
+again with what a tool said, a call with no name given one here, stopped
+asking after as many rounds as it may, and not asked again where it failed or
+where its reader stopped it.

@@ -16,16 +16,6 @@ import pchat.json;
 
 export namespace pchat::provider {
 
-// A tool the model asked for on its way: gathered out of deltas that arrive
-// one key at a time, some of which name it and some of which are a piece of
-// one argument.
-struct tool_call {
-  std::string id;
-  std::string name;
-  std::string arguments;
-  friend bool operator==(const tool_call &, const tool_call &) = default;
-};
-
 // What one frame of one answer said.
 struct event {
   enum class kind { text, thought, tool, usage, ended, failed } what = kind::text;

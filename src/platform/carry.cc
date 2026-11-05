@@ -38,7 +38,7 @@ public:
       : place_(std::move(gone.place_)), wrote_(std::move(gone.wrote_)),
         fields_(std::move(gone.fields_)), flat_(std::move(gone.flat_)),
         arrived_(std::move(gone.arrived_)), trouble_(std::move(gone.trouble_)),
-        over_(gone.over_) {
+        over_(gone.over_), read_(gone.read_) {
 #if defined(__EMSCRIPTEN__)
     held_ = std::exchange(gone.held_, nullptr);
 #endif
@@ -53,6 +53,7 @@ public:
       arrived_ = std::move(gone.arrived_);
       trouble_ = std::move(gone.trouble_);
       over_ = gone.over_;
+      read_ = gone.read_;
 #if defined(__EMSCRIPTEN__)
       held_ = std::exchange(gone.held_, nullptr);
 #endif
@@ -92,6 +93,7 @@ public:
     flat_.push_back(nullptr);
     wrote_ = std::string(body);
     place_ = std::string(url);
+    read_ = 0;
 
     emscripten_fetch_attr_t asking;
     emscripten_fetch_attr_init(&asking);
@@ -99,11 +101,13 @@ public:
     asking.requestHeaders = flat_.data();
     asking.requestData = wrote_.data();
     asking.requestDataSize = wrote_.size();
-    // Not LOAD_TO_MEMORY: what answers comes a piece at a time, which is what
-    // an answer arriving while it is read looks like.
-    asking.attributes = EMSCRIPTEN_FETCH_STREAM_DATA;
+    // Both: the whole of it is wanted even where a browser never hands it
+    // over a piece at a time, and where it does, what answers arrives while
+    // it is read, which is what an arriving answer looks like.
+    asking.attributes =
+        EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_STREAM_DATA;
     asking.userData = this;
-    asking.ondata = &carrying::arrived;
+    asking.onprogress = &carrying::went_along;
     asking.onerror = &carrying::went_wrong;
     asking.onreadystatechange = &carrying::went_on;
     asking.onsuccess = &carrying::went_well;
@@ -144,10 +148,22 @@ private:
   // through a pointer to a function and not to anything of ours: each one is
   // given this object back in `userData` and says everything to it.
 #if defined(__EMSCRIPTEN__)
-  static void arrived(emscripten_fetch_t *one, void *bytes, std::size_t how_many) {
+  // A piece arrived, and where the piece says it arrived: take what of it has
+  // not been taken yet, and nothing of it twice. A browser that hands the
+  // whole body over at once instead says this too, once.
+  static void went_along(emscripten_fetch_t *one) {
     auto &self = *static_cast<carrying *>(one->userData);
-    if (bytes && how_many)
-      self.arrived_.append(static_cast<const char *>(bytes), how_many);
+    if (!one->data || one->numBytes == 0)
+      return;
+    const std::uint64_t said = static_cast<std::uint64_t>(one->numBytes);
+    const std::uint64_t began = one->dataOffset;
+    if (began + said <= self.read_)
+      return;
+    const std::size_t from =
+        began < self.read_ ? static_cast<std::size_t>(self.read_ - began) : 0;
+    self.arrived_.append(one->data + from,
+                         static_cast<std::size_t>(said - from));
+    self.read_ = began + said;
   }
   static void went_wrong(emscripten_fetch_t *one) {
     auto &self = *static_cast<carrying *>(one->userData);
@@ -157,20 +173,29 @@ private:
   }
   static void went_well(emscripten_fetch_t *one) {
     auto &self = *static_cast<carrying *>(one->userData);
+    // Everything in one piece, where the browser never handed it over in
+    // pieces: taken once, and not again on top of what already came.
+    if (self.read_ == 0 && one->data && one->numBytes)
+      self.arrived_.append(one->data, static_cast<std::size_t>(one->numBytes));
     self.over_ = true;
   }
   // Answered at all: a server may answer a status and a body, and what it
   // says may still be that it will not.
   static void went_on(emscripten_fetch_t *one) {
-    auto &self = *static_cast<carrying *>(one->userData);
     if (one->readyState != 4 /* done */)
       return;
-    if (one->status >= 400 && !self.trouble_)
-      self.trouble_ =
-          "the server answered " + std::to_string(one->status) +
-          (one->statusText[0] != '\0' ? ": " + std::string(one->statusText)
-                                      : std::string{});
-    self.over_ = true;
+    // Answered, and answered that it will not: the body it says that in
+    // is not the answer asked for, so it is said here and nothing of it
+    // is taken.
+    if (one->status >= 400) {
+      if (!self.trouble_)
+        self.trouble_ =
+            "the server answered " + std::to_string(one->status) +
+            (one->statusText[0] != '\0'
+                                     ? ": " + std::string(one->statusText)
+                                     : std::string{});
+      self.over_ = true;
+    }
   }
 #endif
 
@@ -192,6 +217,7 @@ private:
   std::string arrived_;
   std::optional<std::string> trouble_;
   bool over_ = false;
+  std::uint64_t read_ = 0;   // how much of the body has been taken already
 };
 
 } // namespace pchat::platform

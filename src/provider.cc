@@ -37,6 +37,16 @@ enum class role { system, user, assistant, tool };
 // One thing said: by whom, and what. Where thinking came before an answer it
 // is kept here too -- said back to nobody yet, because the wires that take it
 // back are few and the ones that refuse it are many.
+// A tool the model asked for on its way: gathered out of deltas that arrive
+// one key at a time, some of which name it and some of which are a piece of
+// one argument.
+struct tool_call {
+  std::string id;
+  std::string name;
+  std::string arguments;
+  friend bool operator==(const tool_call &, const tool_call &) = default;
+};
+
 struct turn {
   role who = role::user;
   std::string text;
