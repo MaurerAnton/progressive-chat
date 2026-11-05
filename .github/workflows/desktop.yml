@@ -19,12 +19,23 @@ permissions:
 # tree, drawn through SDL3 into an X11 or a Wayland window, which is what a
 # build of the program is before it is either of those.
 #
-# Linux x86_64 today. The other two desktops are the same build with another
-# toolchain in front of it, and are added when that toolchain says `import std`
-# too: this one is the only one the program is known to be drawn on.
+# Linux, on both machines a Linux is: x86_64 on one runner and arm64 on
+# another, the same build and the same toolchain in front of it, differing in
+# nothing but the machine it is asked to be built for. The other two desktops
+# are the same again with another toolchain in front of them, and are added
+# when that toolchain says `import std` too.
 jobs:
   linux:
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - machine: x86_64
+            runs: ubuntu-24.04
+          - machine: arm64
+            runs: ubuntu-24.04-arm
+    name: linux (${{ matrix.machine }})
+    runs-on: ${{ matrix.runs }}
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/desktop-setup
@@ -34,13 +45,13 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: build-desktop
-          key: desktop-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake', '.github/workflows/desktop.yml', '.github/actions/desktop-setup/action.yml') }}
+          key: desktop-${{ matrix.machine }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake', '.github/workflows/desktop.yml', '.github/actions/desktop-setup/action.yml') }}
       # Nothing packaged before this commit: what the cache keeps may hold a
       # bundle of another commit's sources, and two bundles of two commits
       # under one name is a download that says it is of one and is of the
       # other. What was packaged before is put away first.
       - name: Nothing packaged before
-        run: rm -f build-desktop/progressive-chat-*-linux-x86_64.tar.gz
+        run: rm -f build-desktop/progressive-chat-*-linux-${{ matrix.machine }}.tar.gz
       - name: Configure
         run: |
           cmake -S . -B build-desktop -G Ninja \
@@ -60,7 +71,7 @@ jobs:
         run: |
           version="$(sed -n 's/^CMAKE_PROJECT_VERSION:STATIC=//p' build-desktop/CMakeCache.txt)"
           commit="$(git rev-parse --short=12 HEAD)"
-          echo "name=progressive-chat-${version}-${commit}-linux-x86_64" >> "$GITHUB_OUTPUT"
+          echo "name=progressive-chat-${version}-${commit}-linux-${{ matrix.machine }}" >> "$GITHUB_OUTPUT"
       # Packaged as what is carried home: the program itself, the libraries
       # that were built beside it and that no distribution keeps, the license
       # it is under, and the license of the faces it ships -- all in one
@@ -90,5 +101,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.called.outputs.name }}
-          path: build-desktop/progressive-chat-*-linux-x86_64.tar.gz
+          path: build-desktop/progressive-chat-*-linux-${{ matrix.machine }}.tar.gz
           if-no-files-found: error
