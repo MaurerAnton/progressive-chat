@@ -71,6 +71,32 @@ SAID(provider_run, what_is_asked_is_carried_whole_and_read_back) {
   EXPECT_EQ(one.cost().out, 7u);
 }
 
+// Three frames handed over in one piece, the last of which says the stream
+// is over: what a server that answers whole answers with, and what every
+// piece came in together as on a page.
+constexpr std::string_view whole_answer =
+    "data: {\"choices\":[{\"delta\":{\"content\":\"painted-by-the-wire\"},\"index\":0}]}\n"
+    "\n"
+    "data: {\"choices\":[{\"delta\":{},\"finish_reason\":\"stop\"}],\"usage\":"
+    "{\"prompt_tokens\":7,\"completion_tokens\":3}}\n"
+    "\n"
+    "data: [DONE]\n"
+    "\n";
+
+SAID(provider_run, one_answer_handed_over_whole_is_read_whole) {
+  provider::run one{an_endpoint(), std::vector<provider::turn>{}};
+  one.carried();
+  one.arrive(whole_answer);
+  one.carried_over(std::nullopt);
+  EXPECT_TRUE(one.done());
+  EXPECT_EQ(one.ended(), provider::over::complete);
+  EXPECT_EQ(one.trouble().value_or(std::string{"nothing"}),
+            std::string{"nothing"});
+  EXPECT_EQ(std::string(one.said()), std::string("painted-by-the-wire"));
+  EXPECT_EQ(one.cost().in, 7u);
+  EXPECT_EQ(one.cost().out, 3u);
+}
+
 SAID(provider_run, nothing_is_taken_before_it_is_carried) {
   provider::run one{an_endpoint(), std::vector<provider::turn>{}};
   one.arrive(first_frame);

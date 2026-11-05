@@ -308,6 +308,8 @@ private:
         arrived.size(), parsed, static_cast<int>(one.asked->where()),
         found(one.said) ? 1 : 0, one.asked->trouble() ? 1 : 0);
     told(said);
+    if (one.asked->trouble())
+      told(one.asked->trouble()->c_str());
 #endif
     if (message *there = found(one.said))
       there->text = std::string(one.going.said()) +
