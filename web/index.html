@@ -42,5 +42,38 @@
   </style>
   <div id="waiting" role="status">Starting progressive-chat…</div>
   <div id="skiff"></div>
+  <script>
+    // Two things a page is asked for that the program inside it answers "no"
+    // to, because it takes every key and every press for its own: what is
+    // chosen with the mouse being put where the rest of the machine keeps it,
+    // and the menu a right press asks for. Both are heard here, in the
+    // capture, before the program does -- for the program hears them last,
+    // and hearing them at all is enough for it to say no to the browser.
+    addEventListener(
+      'keydown',
+      function (said) {
+        if ((!said.ctrlKey && !said.metaKey) || said.key !== 'c') return;
+        const chosen = String(getSelection() ?? '');
+        if (chosen === '') return;
+        said.stopPropagation();
+        said.preventDefault();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(chosen).catch(function () {
+            document.execCommand('copy');
+          });
+        } else {
+          document.execCommand('copy');
+        }
+      },
+      true,
+    );
+    addEventListener(
+      'contextmenu',
+      function (said) {
+        said.stopPropagation();
+      },
+      true,
+    );
+  </script>
   <script src="./bootstrap.js"></script>
 </html>
