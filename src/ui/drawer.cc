@@ -37,13 +37,17 @@ inline constexpr std::size_t max_rows = 24;
 struct search_sink {
   app::requests *asked = nullptr;
 };
-// What the field gives back when Enter is pressed in it: the search asked
-// for, as a request.
+// What the field gives back at every edit of it: the search asked for, as a
+// request, so that the rows are what is being typed and not what Enter last
+// said of it.
 struct search_given {
   std::shared_ptr<search_sink> sink;
-  void operator()(std::string_view text) const {
+  using Answer = bool;
+  static constexpr bool kEveryEdit = true;
+  Answer operator()(std::string_view text) const {
     if (sink && sink->asked)
       sink->asked->ask(app::set_query{std::string(text)});
+    return true;
   }
 };
 
@@ -155,6 +159,9 @@ struct conversation_row : scene::Node {
 struct drawer_screen : scene::Node {
   nodes::Box<> fPaper{0u};
   nodes::Text fHeading{"Chats", 21.0f, 0u, true};
+  // Said where the search kept nothing at all: the drawer standing empty
+  // says less than a line saying why.
+  nodes::Text fNone{"No conversation is named that, or says it.", 13.0f, 0u};
   // The page over the room, opened from here: the drawer is the only part
   // with a way in, because nothing else on the screen has room to spare.
   ask_box fSettingsPlate{};
@@ -191,6 +198,11 @@ struct drawer_screen : scene::Node {
                          .origin = scene::anchor::kCentre,
                          .x = -(edge + 18.0f),
                          .y = edge + 18.0f});
+    fNone.apply({.anchor = scene::anchor::kTopLeft,
+                 .x = edge,
+                 .y = edge + 86.0f,
+                 .autoSize = scene::axes::kBoth});
+    fNone.setVisible(false);
     for (std::size_t at = 0; at < max_rows; ++at)
       fRows[at].apply(
           {.anchor = scene::anchor::kTopLeft,
@@ -208,10 +220,12 @@ struct drawer_screen : scene::Node {
              app::requests *asked) {
     fPaper.setColour(look.drawer);
     fHeading.setColour(look.text);
+    fNone.setColour(look.faint);
     fSettingsPlate.again(asked, app::open_settings{}, look.raised);
     fSettingsMark.setColour(look.text);
     fSink->asked = asked;
     const auto rows = logic::matching(root, query);
+    fNone.setVisible(rows.empty());
     for (std::size_t at = 0; at < max_rows; ++at) {
       if (at >= rows.size()) {
         fRows[at].blank();
@@ -236,6 +250,7 @@ struct drawer_screen : scene::Node {
   void forEachChild(auto &&f) {
     f(fPaper);
     f(fHeading);
+    f(fNone);
     f(fSettingsPlate);
     f(fSettingsMark);
     f(fSearch);
