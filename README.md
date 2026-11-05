@@ -18,6 +18,21 @@ a piece at a time, and written into the room as it comes
 (`docs/PROTOCOL.md`). A desk and a phone do not carry anything yet, and every
 build says so rather than pretending otherwise.
 
+## Why it is called Progressive Chat
+
+Because it is meant to be seen improving. **Progressive**: each day this is a
+program it is a better one, and the progression is meant to be visible to
+everybody who looks -- in what it draws, in what it answers, and in what
+stands said here. Development is **twenty-four hours a day, three hundred and
+sixty-five days a year**, and this section of the README accumulates the
+record of that: one paragraph for every day of it, added at 21:00 UTC.
+
+Roughly: the main concepts are expected to take **about a year**. The hope is
+that it is already amazing in **half** of that -- somewhere in, or a little
+before, **summer**. Until then what is in this repository is **not yet a
+product**: it is a test bench. Everything in it may be rewritten, and what it
+draws today is here so that the next thing has something to be drawn over.
+
 ## Why this project exists
 
 It did not begin as this. What was wanted first was a modern client for
