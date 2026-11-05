@@ -138,10 +138,10 @@ public:
         .sent = into.sent,
         .state = ended_ == over::failed ? delivery::failed : delivery::sent};
     out.tokens = static_cast<std::uint32_t>(cost().in + cost().out);
-    // core::thought, said in full: inside this class `thought` is what the
-    // answer thought, which is not the same word as the type it is kept in.
+    // Said in full: inside this class `thought` is what the answer thought,
+    // and not the type what it thought is kept in.
     if (!thought().empty() || into.took_ms != 0 || tool_calls() != 0)
-      out.before = core::thought{.took_ms = into.took_ms,
+      out.before = ::pchat::thought{.took_ms = into.took_ms,
                            .tool_calls = static_cast<std::uint32_t>(tool_calls()),
                            .said = std::string(thought())};
     return out;
