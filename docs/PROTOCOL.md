@@ -5,7 +5,7 @@ in this repository, which asks. What answers is not here yet -- the server is
 being written apart from this tree, in C++, and this document is written so
 that the two can be finished without either guessing what the other meant.
 
-The whole of it is four modules:
+The whole of it is these modules:
 
 | module | what it is |
 | --- | --- |
@@ -14,8 +14,9 @@ The whole of it is four modules:
 | `pchat.provider.stream` | one answer arriving a frame at a time, read back |
 | `pchat.provider.run` | one answer whole: what is carried, what comes back, why it is over, and the message it leaves |
 | `pchat.provider.loop` | one question asked again with what the tools answered, as many times as it takes |
+| `pchat.tools` | what this program answers itself, and nothing else |
 
-None of the four opens anything. There is no socket in this tree today, and
+None of them opens anything. There is no socket in this tree today, and
 that is on purpose: what carries bytes is different on a page, on a desk and
 on a phone, and a protocol that can only be tested through one of them is a
 protocol nobody can say anything about. So the seam is drawn where the bytes
@@ -143,7 +144,7 @@ anything, where something failed, or where it has been asked `rounds_at_most`
 times (four, unless told another number) -- so a model that always asks for
 one more thing is still answered in this lifetime.
 
-Nothing here runs a tool and nothing here could be given one to run. A call is
+Nothing in the loop runs a tool and nothing in it could be given one to run. A call is
 read out as data and answered as data, which is the whole of the seam, and
 which is why a two-round loop is said by a test with no tools and no wire
 under it.
@@ -151,6 +152,22 @@ under it.
 Calls are named: a wire that named them is answered by its own names, and one
 that named none has names made for it here (`asked-<round>-<place>`), because
 an answer of a call is read against the call and against nothing else.
+
+### Who answers them here: `pchat.tools`
+
+What may be asked for goes out with the asking, written into the body as any
+other provider says it, so a model knows it may stop. This tree answers three
+things, and all three are answered out of what this program already has:
+
+| asked for | takes | answers |
+| --- | --- | --- |
+| `look_up_in_this_conversation` | `what` | every message holding it, oldest first, five at most |
+| `how_much_has_been_said` | -- | how many messages, how many outgoing, how many tokens |
+| `when_this_is_being_asked` | -- | the time, as milliseconds since 1970 |
+
+None of them leaves the machine: no file read, no socket, no command run. A
+call in another name is answered with a sentence saying nothing here answers
+it, which lets a model go on to its own answer rather than lose the round.
 
 ## 5. What carries the bytes
 
@@ -187,9 +204,11 @@ Where each of them comes from today:
 - No retry, and no backoff: one `run` is one answer. Whether a failed answer
   is asked again, and how long it waits, is a question for whoever owns the
   screen, later.
-- No tools of its own. Calls are gathered, shown and answered by whoever owns
-  them -- in this tree nobody yet, which is why the screens carry one answer
-  and not a loop. Going back out they go; who answers them does not here.
+- No tools that are not this program's own business: nothing here reads a
+  file, opens a socket or runs anything for a model. Who answers a call is
+  whoever owns it -- here a small module of three questions, later a server
+  writing the rest of this client's back end, which answers through the same
+  `call_answered` and nothing else.
 - No second provider's own shape: Anthropic's frames, Gemini's, a local
   Ollama's. The three names thought arrives under are gathered already, which
   is most of what differs.

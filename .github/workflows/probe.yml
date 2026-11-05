@@ -6,6 +6,15 @@ name: probe
 # push pays them.
 on:
   workflow_dispatch:
+    inputs:
+      # What to say to the page instead of what the tester says every time: a
+      # whole script, written here and run instead of tools/probe_painted.mjs,
+      # so that one question can be asked of the page without a push and
+      # without waiting for it to be built again.
+      script:
+        description: 'A probe script, in place of the one in the tree'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -24,8 +33,11 @@ jobs:
           npm init -y
           npm install playwright
           npx playwright install --with-deps chromium
+      - name: What to say to the page, when it is said by hand
+        if: ${{ github.event.inputs.script != '' }}
+        run: printf '%s' "${{ github.event.inputs.script }}" > said_by_hand.mjs
       - name: Shoot the page
-        run: node tools/probe_painted.mjs
+        run: node ${{ github.event.inputs.script != '' && 'said_by_hand.mjs' || 'tools/probe_painted.mjs' }}
       - uses: actions/upload-artifact@v4
         with:
           name: painted
