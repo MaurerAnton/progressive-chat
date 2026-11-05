@@ -72,7 +72,7 @@ SAID(logic, marks_make_runs_of_style) {
 int main() { return pchat::tests::run(); }
 
 
-SAID(doc, a document is read one line at a time and each knows what it is) {
+SAID(doc, hashes_counted_and_a_list_told_from_words) {
   const std::vector<logic::doc_line> read = logic::read_doc(
       "# The design of a chat\n"
       "\n"
@@ -101,14 +101,14 @@ SAID(doc, a document is read one line at a time and each knows what it is) {
   EXPECT_TRUE(read[9].kind == logic::doc_kind::subheading);
 }
 
-SAID(doc, a last line with no break after it is read as one too) {
+SAID(doc, a_last_line_with_no_break_after_it) {
   const std::vector<logic::doc_line> read = logic::read_doc("one\ntwo");
   EXPECT_EQ(read.size(), 2u);
   EXPECT_EQ(read[1].said, std::string("two"));
   EXPECT_TRUE(read[1].kind == logic::doc_kind::words);
 }
 
-SAID(doc, a mark alone in front is words and not a list of one) {
+SAID(doc, a_mark_alone_in_front_is_words) {
   const std::vector<logic::doc_line> read = logic::read_doc("*\n-# not a heading");
   EXPECT_TRUE(read[0].kind == logic::doc_kind::words);
   EXPECT_EQ(read[0].said, std::string("*"));
@@ -116,7 +116,7 @@ SAID(doc, a mark alone in front is words and not a list of one) {
   EXPECT_EQ(read[1].said, std::string("-# not a heading"));
 }
 
-SAID(doc, the design this build was made with is read whole) {
+SAID(doc, the_design_this_build_was_made_with_is_read_whole) {
   const std::string_view design = logic::the_design();
   EXPECT_LT(1000u, design.size());
   EXPECT_TRUE(design.find("The design of a chat") != std::string_view::npos);
