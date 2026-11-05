@@ -99,18 +99,18 @@ headers_of(const endpoint &one) {
 
 // What the model keeps of one conversation, as turns a wire is given: what
 // the reader wrote asked, and what the model answered, in the order it was
-// said and nothing of what the screens know about either.
-[[nodiscard]] inline std::vector<turn> turns_of(std::span<const message> said) {
-  std::vector<turn> out;
-  out.reserve(said.size());
-  for (const message &one : said) {
-    turn &written = out.emplace_back();
-    written.who = one.outgoing ? role::user : role::assistant;
-    written.text = one.text;
-    if (one.before)
-      written.thought = one.before->said;
-  }
-  return out;
+// said and nothing of what the screens know about either. Any range that
+// holds messages is given -- a conversation's own vector, a piece of it, a
+// view over one -- and not one container of one type.
+template <std::ranges::forward_range Said>
+  requires std::same_as<std::ranges::range_value_t<Said>, message>
+[[nodiscard]] std::vector<turn> turns_of(Said &&said) {
+  return std::ranges::to<std::vector<turn>>(
+      said | std::views::transform([](const message &one) {
+        return turn{.who = one.outgoing ? role::user : role::assistant,
+                    .text = one.text,
+                    .thought = one.before ? one.before->said : std::string()};
+      }));
 }
 
 [[nodiscard]] inline turn told_as_system(std::string_view said) {
@@ -122,14 +122,16 @@ headers_of(const endpoint &one) {
 // What a chat wire wants said to it: the model, that it is asked to stream,
 // the turns, and that it says what it cost at the end of the stream and not
 // only in the answer no stream gives.
-[[nodiscard]] inline std::string body_of(const endpoint &one,
-                                         std::span<const turn> turns,
-                                         bool stream = true) {
+template <std::ranges::forward_range Turns>
+  requires std::same_as<std::ranges::range_value_t<Turns>, turn>
+[[nodiscard]] std::string body_of(const endpoint &one, Turns &&turns,
+                                  bool stream = true) {
   json::writing out;
   out.thing();
   out.name("model").text(one.model);
   out.name("stream").truth(stream);
-  if (!one.told.empty() || !turns.empty()) {
+  const bool any_turn = std::ranges::begin(turns) != std::ranges::end(turns);
+  if (!one.told.empty() || any_turn) {
     out.name("messages").list();
     // What it is told goes in as the first turn and nowhere else: a wire
     // takes one system turn, and this body is written once for one answer.

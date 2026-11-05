@@ -9,6 +9,7 @@
 // body has to count them.
 export module pchat.json;
 
+import splice;
 import std;
 
 export namespace pchat::json {
@@ -24,10 +25,9 @@ struct thing;
 // shared, but because a value cannot be written out in full inside itself, and
 // this is the only way it says "a list" without already knowing what one is.
 struct value {
-  std::variant<std::monostate, bool, double, std::string, std::shared_ptr<list>,
+  spl::variant<std::monostate, bool, double, std::string, std::shared_ptr<list>,
                std::shared_ptr<thing>>
       held;
-  friend bool operator==(const value &, const value &) = default;
 };
 
 using nothing = std::monostate;
@@ -55,8 +55,16 @@ struct thing {
 
 enum class kind { nothing, truth, number, text, list, thing };
 
+// Which kind it is, said by visiting: one callable per alternative, so that
+// the kinds are never a number an alternative happens to sit at.
 [[nodiscard]] inline kind which(const value &one) {
-  return static_cast<kind>(one.held.index());
+  return spl::visit(spl::overloaded{
+      [](nothing) { return kind::nothing; },
+      [](bool) { return kind::truth; },
+      [](double) { return kind::number; },
+      [](const std::string &) { return kind::text; },
+      [](const std::shared_ptr<list> &) { return kind::list; },
+      [](const std::shared_ptr<thing> &) { return kind::thing; }}, one.held);
 }
 
 // ---- reading what is already written -------------------------------------
@@ -332,35 +340,46 @@ private:
 // ---- what a read value says ----------------------------------------------
 
 [[nodiscard]] inline std::optional<std::string_view> text_of(const value &one) {
-  if (const auto *said = std::get_if<std::string>(&one.held))
-    return std::string_view(*said);
-  return std::nullopt;
+  return spl::visit(spl::overloaded{
+      [](const std::string &said) -> std::optional<std::string_view> {
+        return std::string_view(said);
+      },
+      [](const auto &) -> std::optional<std::string_view> {
+        return std::nullopt;
+      }}, one.held);
 }
 [[nodiscard]] inline std::optional<double> number_of(const value &one) {
-  if (const auto *said = std::get_if<double>(&one.held))
-    return *said;
-  return std::nullopt;
+  return spl::visit(spl::overloaded{
+      [](double said) -> std::optional<double> { return said; },
+      [](const auto &) -> std::optional<double> { return std::nullopt; }},
+      one.held);
 }
 [[nodiscard]] inline std::optional<bool> truth_of(const value &one) {
-  if (const auto *said = std::get_if<bool>(&one.held))
-    return *said;
-  return std::nullopt;
+  return spl::visit(spl::overloaded{
+      [](bool said) -> std::optional<bool> { return said; },
+      [](const auto &) -> std::optional<bool> { return std::nullopt; }},
+      one.held);
 }
 // The member of a thing by its name, its first one where two share a name.
 [[nodiscard]] inline const value *member_of(const value &one, std::string_view name) {
-  const auto *as_thing = std::get_if<std::shared_ptr<thing>>(&one.held);
-  if (!as_thing || !*as_thing)
-    return nullptr;
-  for (const member &written : (*as_thing)->members)
-    if (written.name == name)
-      return &written.said;
-  return nullptr;
+  return spl::visit(spl::overloaded{
+      [name](const std::shared_ptr<thing> &said) -> const value * {
+        if (!said)
+          return nullptr;
+        const auto found = std::ranges::find_if(
+            said->members, [name](const member &written) {
+              return written.name == name;
+            });
+        return found == said->members.end() ? nullptr : &found->said;
+      },
+      [](const auto &) -> const value * { return nullptr; }}, one.held);
 }
 [[nodiscard]] inline const value *item_of(const value &one, std::size_t at) {
-  const auto *as_list = std::get_if<std::shared_ptr<list>>(&one.held);
-  if (!as_list || !*as_list || at >= (*as_list)->items.size())
-    return nullptr;
-  return &(*as_list)->items[at];
+  return spl::visit(spl::overloaded{
+      [at](const std::shared_ptr<list> &said) -> const value * {
+        return said && at < said->items.size() ? &said->items[at] : nullptr;
+      },
+      [](const auto &) -> const value * { return nullptr; }}, one.held);
 }
 // Where a member's own member is, and its member's after it: no path is
 // spelled out by a part that only wants one thing out of an answer.

@@ -114,6 +114,22 @@ set(pchat_std_flags
   $<$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang>:-fconstexpr-steps=${PCHAT_CONSTEXPR_STEPS}>
   $<$<AND:$<COMPILE_LANG_AND_ID:CXX,Clang>,$<VERSION_GREATER_EQUAL:$<CXX_COMPILER_VERSION>,23>>:-fno-experimental-new-constant-interpreter>)
 
+# splice, said before skiff: skiff asks for splice too, and the first request
+# for it is the one that is built -- said after skiff, this pin would be
+# passed over for skiff's. splice is what the family shares, and what every
+# variant here is made of: spl::variant (built in time linear in its
+# alternatives, reached through tables outside a release build) and
+# spl::overloaded, so that every alternative of a request or of a value is
+# handled and a new one cannot be forgotten.
+cme_declare_port(NAME splice PROVIDES splice
+  GITHUB_REPOSITORY j4niwzis/splice
+  GIT_TAG 3197b7cc3a4656916d09b4a49454a43b9bff5556
+  VERSION 0.4.3
+  LICENSE GPL-3.0-only
+  TARGETS splice)
+cme_options(splice "SPLICE_TESTS OFF")
+pchat_find_package(splice 0.4.3 REQUIRED)
+
 # Every library of the family, pinned to a commit. skiff draws the window and
 # reads the settings' values; skiff-widgets has the controls a screen is made
 # of; skiff-framework has the window itself (SDL3 makes it, Skia draws into
@@ -170,6 +186,7 @@ target_sources(pchat_json PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
   FILES src/json.cc)
 target_compile_features(pchat_json PUBLIC cxx_std_26)
 target_compile_options(pchat_json PUBLIC ${pchat_std_flags})
+target_link_libraries(pchat_json PUBLIC splice)
 
 # The model, the settings and the palette: modules of their own, so that they
 # build -- and are tested -- without a window.
@@ -198,7 +215,7 @@ target_sources(pchat_requests PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
   FILES src/app/requests.cc)
 target_compile_features(pchat_requests PUBLIC cxx_std_26)
 target_compile_options(pchat_requests PUBLIC ${pchat_std_flags})
-target_link_libraries(pchat_requests PUBLIC pchat_core)
+target_link_libraries(pchat_requests PUBLIC pchat_core splice)
 
 if(PCHAT_UI)
   pchat_find_package(skiff 0.1.0 COMPONENTS ${pchat_skiff_components} REQUIRED)

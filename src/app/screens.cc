@@ -8,6 +8,7 @@
 // the client is.
 export module pchat.app.screens;
 
+import splice;
 import std;
 import skiff.scene;
 import skiff.nodes;
@@ -39,8 +40,8 @@ public:
 
   // Answered between frames: what the controls asked for, oldest first.
   void take(const request &one) {
-    std::visit(
-        overloaded{
+    spl::visit(
+        spl::overloaded{
             [&](const open_conversation &asking) {
               root_.opened = asking.chat;
               // A drawer that came over the messages has been used:

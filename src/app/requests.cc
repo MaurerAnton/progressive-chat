@@ -8,6 +8,7 @@
 // the program does it before the next frame.
 export module pchat.app.requests;
 
+import splice;
 import std;
 import pchat.core;
 import pchat.config;
@@ -76,7 +77,9 @@ struct pick_theme {
   theme_mode mode = theme_mode::dark;
 };
 
-using request = std::variant<open_conversation, send_message, new_chat,
+// What is asked, as one value: spl::variant, so that every kind of it is
+// handled where it is read and a new one cannot be forgotten.
+using request = spl::variant<open_conversation, send_message, new_chat,
                              copy_answer, regenerate_answer, fork_answer,
                              share_answer, delete_answer, edit_draft, set_query,
                              toggle_drawer, open_settings, close_settings,
@@ -97,13 +100,6 @@ public:
 private:
   std::vector<request> pending_;
 };
-
-// One callable per kind of request: `std::visit(app::overloaded{...}, one)`,
-// so that every kind is handled and a new one cannot be forgotten.
-template <class... callables> struct overloaded : callables... {
-  using callables::operator()...;
-};
-template <class... callables>
-overloaded(callables...) -> overloaded<callables...>;
-
+// A kind of request is read with `spl::visit(spl::overloaded{...}, one)`:
+// one callable per kind, as splice gives it.
 } // namespace pchat::app
