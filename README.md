@@ -43,6 +43,11 @@ end yet. It is **not** designed for people to talk to each other in.
 Said again every day this has been a program, newest first: what it was on
 that day, not what it is meant to be one day.
 
+This section is that accumulating: one paragraph for every twenty-four hours
+of this program's development, added each day at **21:00 UTC** and left where
+it was put. Nothing written here is rewritten to say something truer later --
+what was true of it on a day stands said of that day.
+
 ### 2026-11-05
 
 A question is asked again. A model does not answer in one go: it stops, asks
