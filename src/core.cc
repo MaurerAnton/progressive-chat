@@ -79,23 +79,12 @@ struct conversation {
   std::uint32_t tokens = 0;
   std::uint32_t window = 0;
   float context_used = 0.0f;
-  // Two things asked of a whole conversation and said of no other, both of
-  // them standing last so that what says this struct whole -- said in order,
-  // in src/app/sample.cc -- keeps saying what it said before either existed.
-  // Whether what is thought before every answer but the last is kept back
-  // from what a wire is given: asked once by the three dots' own row
-  // (pchat.logic.compacted).
+  // Asked once by the three dots' own row, and said of this conversation and
+  // no other: whether what is thought before every answer but the last is
+  // kept back from what a wire is given (pchat.logic.compacted). Standing
+  // last, so what says this struct whole -- field after field, in
+  // src/app/sample.cc -- keeps saying what it said before it existed.
   bool given_short = false;
-<<<<<<< HEAD
-  std::uint32_t tokens = 0;
-  std::uint32_t window = 0;
-  float context_used = 0.0f;
-=======
-  // Whether what answers here may look something up as it answers: asked of
-  // the wire when the asking is written, and the looking up itself not this
-  // program's own to do.
-  bool search_the_web = false;
->>>>>>> 1456a31 (both said last in what a conversation is, and said in what may be asked)
   // Which model writes here when nothing else has been said: the first of
   // them, and nothing where there is none.
   [[nodiscard]] std::string leading_model() const {
