@@ -132,6 +132,12 @@ public:
             [&](const delete_answer &asking) { cut_away(asking.said); },
             [&](const set_query &asking) { query_ = asking.text; },
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
+            // Switched for this conversation and no other: every asking
+            // written for it from now on says whether it may search.
+            [&](const set_web_search &asking) {
+              for (conversation &one : root_.conversations)
+                if (one.id == asking.chat) one.search_the_web = asking.now;
+            },
             // Given short from now on: what is said in it is no shorter for
             // it, only what a wire is given of it.
             [&](const compact_context &asking) {
@@ -354,6 +360,15 @@ private:
                                 .told = told_of(chat)};
     // Whether this conversation has been asked to be given short: said of it
     // once by the three dots' own row, and of no other.
+    // Whether what answers here may look something up: said of the
+    // conversation, and carried into the asking written below.
+    const bool may_search = [&] {
+      const auto asked = std::ranges::find(root_.conversations, chat,
+                                          [](const conversation &one) {
+                                            return one.id;
+                                          });
+      return asked != std::end(root_.conversations) && asked->search_the_web;
+    }();
     const bool kept_back = [&] {
       const auto asked = std::ranges::find(root_.conversations, chat,
                                           [](const conversation &one) {
@@ -383,6 +398,7 @@ private:
                                               turns,
                                               4,
                                               provider::wanted{
+                                                  .search = may_search,
                                                   .tools = mine.offered()}},
                       .carried = std::move(carried),
                       .mine = std::move(mine),

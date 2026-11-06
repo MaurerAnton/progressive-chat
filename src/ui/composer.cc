@@ -63,7 +63,7 @@ context_ring(float used, scene::Colour track, scene::Colour filled) {
 // nothing.
 inline constexpr float thinking_menu_width = 232.0f;
 inline constexpr float thinking_menu_row = 34.0f;
-inline constexpr float thinking_menu_rows = 4.0f;
+inline constexpr float thinking_menu_rows = 5.0f;
 
 struct thinking_menu : scene::Node {
   nodes::Box<> fPlate{0u};
@@ -75,6 +75,9 @@ struct thinking_menu : scene::Node {
   nodes::Text fHardNow{"", 13.0f, 0u};
   ask_box fAdvancedPlate{};
   nodes::Text fAdvancedName{"Advanced", 13.0f, 0u};
+  ask_box fSearchPlate{};
+  nodes::Text fSearchName{"Search the web", 13.0f, 0u};
+  nodes::Text fSearchNow{"", 13.0f, 0u};
   ask_box fCompactPlate{};
   nodes::Text fCompactName{"Compact context", 13.0f, 0u};
   nodes::Text fCompactNow{"", 13.0f, 0u};
@@ -95,15 +98,18 @@ struct thinking_menu : scene::Node {
     const float wide = thinking_menu_width - 16.0f;
     fThinkingPlate.apply(row_spec(8.0f, wide));
     fHardPlate.apply(row_spec(8.0f + thinking_menu_row, wide));
-    fCompactPlate.apply(row_spec(8.0f + 2.0f * thinking_menu_row, wide));
-    fAdvancedPlate.apply(row_spec(8.0f + 3.0f * thinking_menu_row, wide));
+    fSearchPlate.apply(row_spec(8.0f + 2.0f * thinking_menu_row, wide));
+    fCompactPlate.apply(row_spec(8.0f + 3.0f * thinking_menu_row, wide));
+    fAdvancedPlate.apply(row_spec(8.0f + 4.0f * thinking_menu_row, wide));
     fThinkingName.apply(name_spec(8.0f));
     fThinkingNow.apply(value_spec(8.0f));
     fHardName.apply(name_spec(8.0f + thinking_menu_row));
     fHardNow.apply(value_spec(8.0f + thinking_menu_row));
-    fCompactName.apply(name_spec(8.0f + 2.0f * thinking_menu_row));
-    fCompactNow.apply(value_spec(8.0f + 2.0f * thinking_menu_row));
-    fAdvancedName.apply(name_spec(8.0f + 3.0f * thinking_menu_row));
+    fSearchName.apply(name_spec(8.0f + 2.0f * thinking_menu_row));
+    fSearchNow.apply(value_spec(8.0f + 2.0f * thinking_menu_row));
+    fCompactName.apply(name_spec(8.0f + 3.0f * thinking_menu_row));
+    fCompactNow.apply(value_spec(8.0f + 3.0f * thinking_menu_row));
+    fAdvancedName.apply(name_spec(8.0f + 4.0f * thinking_menu_row));
   }
 
   void again(app::requests *sink, const paints &look, const asking &how,
@@ -124,6 +130,14 @@ struct thinking_menu : scene::Node {
     fHardName.setColour(look.text);
     fHardNow.setText(std::string(said_how(how.how_hard)));
     fHardNow.setColour(look.dim);
+    // Allowed to look things up as it answers: the searching itself is the
+    // wire's own, and every asking written for this conversation says
+    // whether it may (src/provider.cc, web_search_options).
+    fSearchPlate.again(sink, app::set_web_search{chat.id, !chat.search_the_web},
+                       look.raised);
+    fSearchName.setColour(look.text);
+    fSearchNow.setText(chat.search_the_web ? "on" : "off");
+    fSearchNow.setColour(look.dim);
     // Given short of what every answer but the last thought: one way only,
     // and grey where there is nothing left to keep back -- a conversation of
     // nothing but questions has no thinking in it to give less of.
@@ -144,6 +158,9 @@ struct thinking_menu : scene::Node {
     f(fHardPlate);
     f(fHardName);
     f(fHardNow);
+    f(fSearchPlate);
+    f(fSearchName);
+    f(fSearchNow);
     f(fCompactPlate);
     f(fCompactName);
     f(fCompactNow);
