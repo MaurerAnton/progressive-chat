@@ -200,6 +200,14 @@ cannot say. `tools/package_web.py` puts the four and the client together into
 one directory, named by what the client is made of so that a page left open
 does not keep one that has been replaced.
 
+## To ask the page a question
+
+What the page paints and what it says when something in it is pressed is read
+by **a probe**: a browser driven by a script, asked either of the page
+everybody sees or of the page one pull request makes. `[probe]` in a pull
+request's title asks for its own page to be asked, and `PROBES.md` says what
+there is to ask, how one is written, and how what comes back is read.
+
 ## License
 
 Two licenses, said file by file in every one's first line:
