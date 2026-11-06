@@ -53,9 +53,13 @@ void frame_of(const as::StreamEvent &event, std::vector<anthropic_frame> &out) {
   } else if (const auto *thought = std::get_if<as::ThoughtChunk>(&event)) {
     out.push_back(frame{.what = frame::kind::thought, .said = thought->thought});
   } else if (const auto *usage = std::get_if<as::UsageUpdate>(&event)) {
+    // The wire counts in ints and can name a negative one; a count of tokens
+    // held as unsigned stops at zero, as the counters elsewhere do.
+    const int input = usage->usage.input_token_count.value_or(0);
+    const int output = usage->usage.output_token_count.value_or(0);
     out.push_back(frame{.what = frame::kind::usage,
-                        .used_in = usage->usage.input_token_count.value_or(0),
-                        .used_out = usage->usage.output_token_count.value_or(0)});
+                        .used_in = static_cast<std::uint32_t>(input > 0 ? input : 0),
+                        .used_out = static_cast<std::uint32_t>(output > 0 ? output : 0)});
   } else if (const auto *call = std::get_if<as::ToolCallRequest>(&event)) {
     out.push_back(frame{.what = frame::kind::tool,
                         .call_id = call->id,
