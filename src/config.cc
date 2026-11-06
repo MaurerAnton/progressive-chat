@@ -59,6 +59,33 @@ inline constexpr std::size_t tools_owned = 3u;
 // Said once here and written as each family names it by pchat.provider.
 enum class effort { least, some, most, all };
 
+// What each of the four is called where a person reads it, and not where a
+// wire takes it: the row that says where thinking stands.
+[[nodiscard]] inline std::string_view said_how(effort one) {
+  switch (one) {
+  case effort::least:
+    return "a little";
+  case effort::some:
+    return "some";
+  case effort::most:
+    return "much";
+  case effort::all:
+    break;
+  }
+  return "all it has";
+}
+
+// One step either way round the four, stopped at either end: what a press on
+// either side of that row asks for.
+[[nodiscard]] constexpr effort stepped_of(effort one, int by) {
+  const int at = static_cast<int>(one) + by;
+  if (at <= static_cast<int>(effort::least))
+    return effort::least;
+  if (at >= static_cast<int>(effort::all))
+    return effort::all;
+  return static_cast<effort>(at);
+}
+
 [[nodiscard]] inline std::string_view said_by(effort one) {
   switch (one) {
   case effort::least:
@@ -163,6 +190,20 @@ struct asking_range {
                                       bool on) {
   asking out = one;
   out.tools[static_cast<std::size_t>(which)] = on;
+  return out;
+}
+
+// The same, with whether a model thinks at all and how hard: what the three
+// dots above an answer say (design-doc.md, "The editor's row"), and what
+// every body written after it is then asked with (pchat.provider).
+[[nodiscard]] constexpr asking set_of(const asking &one, bool thinking) {
+  asking out = one;
+  out.thinking = thinking;
+  return out;
+}
+[[nodiscard]] constexpr asking set_of(const asking &one, effort how_hard) {
+  asking out = one;
+  out.how_hard = how_hard;
   return out;
 }
 
