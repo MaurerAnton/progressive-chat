@@ -254,6 +254,9 @@ struct history_fold : nodes::Stack {
   [[nodiscard]] bool hoverChangesAppearance() const { return true; }
   [[nodiscard]] bool onClick(float, float) {
     fOpen = !fOpen;
+    std::printf("fold %u said pressed, open %d\n",
+                static_cast<unsigned>(this->fState.fId),
+                static_cast<int>(fOpen));
     return true;
   }
 
@@ -270,6 +273,16 @@ struct history_fold : nodes::Stack {
     this->apply({.autoSize = scene::axes::kBoth,
                  .maxWidth = widest,
                  .background = fOpen ? look.field : look.field & 0x80ffffffu});
+    static unsigned said = 0u;
+    if (said++ % 90u == 0u) {
+      const auto &box = this->fState.fBounds;
+      const auto &word = fSummary.fState.fBounds;
+      std::printf(
+          "fold %u box %.0f,%.0f %.0fx%.0f shift %.0f,%.0f summary %.0fx%.0f\n",
+          static_cast<unsigned>(this->fState.fId), box.fLeft, box.fTop,
+          box.width(), box.height(), this->fState.fShiftX,
+          this->fState.fShiftY, word.width(), word.height());
+    }
     fSummary.setText("Thought for " + took_of(before.took_ms) + " · " +
                      std::to_string(before.tool_calls) +
                      (before.tool_calls == 1 ? " tool call" : " tool calls"));

@@ -93,8 +93,10 @@ struct program {
     // that said so, and the program delivers them, which is here. Nothing of
     // it runs by itself, and nothing else was asking for any of them.
     for (const skiff::scene::Path &way :
-         std::exchange(skiff::scene::hostWork().pressed, {}))
+         std::exchange(skiff::scene::hostWork().pressed, {})) {
+      std::printf("a press came, a path of %zu\n", way.size());
       skiff::bind::press(view.window().root(), bound_, way);
+    }
     view.before_frame(0.0);
   }
 };
