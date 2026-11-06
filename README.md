@@ -67,6 +67,11 @@ It (this readme section's workdays summaries) is written by hand. Nothing
 writes here that is not that hand, and no paragraph of it is written by a
 model, an agent or a script on its own.
 
+### 2026-11-06
+
+Source code volume grew ~3× versus day one; incremental merge of the client
+backend (Agora C++ Core) began; UI debugging is in full swing.
+
 ### 2026-11-05
 
 The amount of source code more than doubled. The build system works and the
