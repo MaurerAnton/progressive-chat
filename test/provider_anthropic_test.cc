@@ -13,9 +13,9 @@ import pchat.provider.stream;
 
 namespace {
 
-using provider::event;
-using provider::stream;
-using provider::wire;
+using pchat::provider::event;
+using pchat::provider::stream;
+using pchat::provider::wire;
 
 // One answer's bytes as anthropic writes them: `event:` lines beside `data:`,
 // a blank line ending every frame, and a comment left in the stream that
