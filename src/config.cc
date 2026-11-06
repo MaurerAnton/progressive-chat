@@ -94,6 +94,13 @@ struct asking_range {
   return {.least = -2.0, .most = 2.0, .step = 0.1};
 }
 
+// One of them kept inside its lines: what a row asked for, whether it asked
+// by one press or by being set.
+[[nodiscard]] constexpr double kept_asking(asking_what one, double value) {
+  const asking_range there = range_of(one);
+  return std::clamp(value, there.least, there.most);
+}
+
 // What one of them is set to, whichever it is: said as a number everywhere
 // but where it is kept as a count of tokens.
 [[nodiscard]] constexpr double value_of(const asking &one, asking_what field) {
@@ -135,13 +142,6 @@ struct asking_range {
     break;
   }
   return out;
-}
-
-// One of them kept inside its lines: what a row asked for, whether it asked
-// by one press or by being set.
-[[nodiscard]] constexpr double kept_asking(asking_what one, double value) {
-  const asking_range there = range_of(one);
-  return std::clamp(value, there.least, there.most);
 }
 
 // What is kept: the looks, and the small things a reader would miss.
