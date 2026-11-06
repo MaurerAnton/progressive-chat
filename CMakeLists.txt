@@ -260,8 +260,10 @@ endif()
 target_sources(pchat_core PRIVATE src/tokens_worth.cpp "${pchat_vocab_source}")
 # Agora's text counters, and everything they read behind them, linked into the
 # model the screens carry: the first thing this program takes from the ported
-# tree instead of leaving it to ctest alone.
-target_link_libraries(pchat_core PRIVATE agora_core_lib)
+# tree instead of leaving it to ctest alone. Public, because the libraries that
+# compose over pchat_core read the port directly too -- the anthropic folder's
+# classic units and the counters' own unit both name agora's headers.
+target_link_libraries(pchat_core PUBLIC agora_core_lib)
 # The design, as a string the build wrote: said to whoever reads this model,
 # which is every screen and every test of one.
 target_include_directories(pchat_core PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/generated")
