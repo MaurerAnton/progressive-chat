@@ -157,7 +157,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              pick_seed, set_amoled, set_font_scale, pick_theme,
                               set_generation, set_thinking, set_effort, set_tool,
                              toggle_thinking,
-                              set_answerer, copy_text>;
+                             compact_context, set_answerer, copy_text>;
 
 class requests {
 public:
