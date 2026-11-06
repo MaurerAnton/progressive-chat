@@ -13,12 +13,6 @@ implementation `core/src/conversation_runtime.cpp`, test
 
 | File | Role |
 | --- | --- |
-| `model/RuntimeIdentity.kt` | `RunStatus`, `RunEndReason`, `RuntimeRunIdentity`, `RunEffectIdentity`, `RunRecoverySnapshot` |
-| `model/RunEffect.kt` | `SlotReleaseReason` and the `RunEffect` catalogue |
-| `model/RuntimeTransition.kt` | `Transition`, `CommandRejection`, `RunProviderPhase`, `RunToolPhase` |
-| `model/ConversationCommand.kt` | the command catalogue |
-| `model/RunState.kt` | the state catalogue and its `require` invariants |
-| `model/ConversationRuntimeReducer.kt` | the reducer itself |
 
 Every one of these files has **no imports at all** — no Android, no coroutines, no Room, no
 kotlinx — so the whole cluster compiles as written. This stand needs no stubs and no source
@@ -119,11 +113,7 @@ Escaping: `\` `|` `;` `\n` `\r` `\t` → `\\` `\p` `\s` `\n` `\r` `\t`.
 ## Regenerating
 
 ```bash
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 ../../../build/agora_scenarios conversation-runtime .   # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's git-ignored `build/` before each run, so runs are idempotent. The
-C++ test reads `scenarios/` and `golden/` straight from this directory through
-`AGORA_FIXTURE_CONVERSATION_RUNTIME_DIR`.
+The C++ test reads `scenarios/` and `golden/` straight from this directory through `AGORA_FIXTURE_CONVERSATION_RUNTIME_DIR`. 

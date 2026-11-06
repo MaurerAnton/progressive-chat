@@ -49,8 +49,6 @@ rejected|<n> / reject|<i>|<esc>
 ## Regenerating
 
 ```
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios provider-names core/tools/golden/provider-names                                                          # rewrite scenarios
 ```
 

@@ -16,7 +16,8 @@ ChatDao/entity cluster. Four boundaries are substituted:
 
 1. `android.util.JsonReader/JsonWriter/JsonScope/MalformedJsonException` +
    `StringPool` — vendored verbatim from AOSP by the
-   `native-conversation-graph-source` stand, compiled with `javac`;
+   `native-conversation-graph-source` stand, compiled with `javac` then (both now gone
+   with the Java side);
 2. `DataExporter.ExportCategory` — lifted byte-for-byte by
    `agora_extract export-category` (it is the decision-map key; the export root
    is not pulled in);
@@ -34,14 +35,9 @@ ChatDao/entity cluster. Four boundaries are substituted:
 
 | File | Role |
 | --- | --- |
-| `DataImporterTraceDump.kt` | Driver: `preview` / `import` / `font` steps, masking, `<root>` substitution |
-| `DataImporterSettingsSnapshot.kt` | SettingsManager snapshot construction and archive writing |
-| `DataImporterSettingsView.kt` | Settings/memory/skills/files trace rendering |
-| `DataImporterTableDump.kt` | Database table dump for the trace |
 | `platform/` | Android/Room doubles and the stand ChatDatabase |
 | `scenarios/*.json` | 24 inputs: ordered archive entries + `settings` + `appVersion` |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `run_golden.sh` | Generates scenarios, extracts, compiles, verifies (or `--freeze`) |
 
 ## Scenarios (24 files, 31 steps: 6 preview / 22 import / 3 font)
 
@@ -66,9 +62,7 @@ becomes `<root>`.
 ## Regenerating
 
 ```bash
-KOTLINX_JARS=... ./run_golden.sh            # verify scenarios against the frozen traces
-KOTLINX_JARS=... ./run_golden.sh --freeze   # regenerate the frozen traces
-../../../build/agora_scenarios data-importer .   # rewrite scenarios (run_golden.sh does this first)
+../../../build/agora_scenarios data-importer .
 ```
 
 ## Coverage against the import TZ (fork spec)
@@ -92,4 +86,4 @@ Status of each block **in this tree**:
 
 When the missing components land, add their scenarios next to the matching
 group above: the generator is deterministic, so a new scenario needs
-`agora_scenarios data-importer .` and one `run_golden.sh --freeze` pass.
+`agora_scenarios data-importer .` and the traces frozen once more.

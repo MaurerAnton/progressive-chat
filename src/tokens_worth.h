@@ -15,6 +15,11 @@ long long tokens_worth(const char* text, unsigned long long length);
 // The vocabulary every count after it goes through, as the text of its
 // .tiktoken file gives it. Handed in once, kept until another is.
 void tokens_vocabulary(const char* tiktoken_text, unsigned long long length);
+
+// The o200k vocabulary this build carries: the bytes of its .tiktoken file,
+// written into the binary by the build itself.
+const char* o200k_bytes();
+unsigned long long o200k_size();
 }  // namespace pchat
 
 #endif  // PCHAT_TOKENS_WORTH_H

@@ -12,9 +12,7 @@ trace byte for byte.
 | --- | --- |
 | `scenarios/*.json` | One case per file, 29 frozen edge cases across two modes |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `DuckDuckGoTraceDump.kt` | The stand driver: `search()` transcription over the real pieces |
 | ``agora_extract duckduckgo`` | Verbatim extraction of the parsing pieces of the scraper |
-| `run_golden.sh` | Extracts, compiles and regenerates or verifies the traces |
 | `agora_scenarios duckduckgo` | Generates the scenarios (deterministic; rerun after editing) |
 
 ## How the stand works
@@ -77,8 +75,6 @@ Escaping is the shared `\\` `\p` `\s` `\n` `\r` `\t` set.
 ## Regenerating
 
 ```
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios duckduckgo core/tools/golden/duckduckgo                                                          # rewrite scenarios
 ```
 

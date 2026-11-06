@@ -17,10 +17,8 @@ extractor of the `provider-identity` stand (`agora_extract provider-identity`).
 | --- | --- |
 | `scenarios/*.json` | 110 cases: export payloads, restore payloads, accessor/decode probes, deterministic fuzz |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `PortableSettingsArchiveTraceDump.kt` | Driver: runs export/restore against the recording double |
 | `platform/` | DataStore preferences keys, crypto/debug shims, recording `SettingsManager` double |
 | `agora_scenarios portable-settings-archive <stand>` | Deterministic scenario generator (every scenario carries the full 97-key snapshot) |
-| `run_golden.sh` | Extracts the identity policy, compiles, freezes (`--freeze`) or verifies the traces |
 
 ## What is pinned
 
@@ -95,10 +93,5 @@ extractor of the `provider-identity` stand (`agora_extract provider-identity`).
 ## Running
 
 ```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=/home/user/agora-toolchain/jars/kotlinx-serialization-core-jvm-1.11.0.jar:/home/user/agora-toolchain/jars/kotlinx-serialization-json-jvm-1.11.0.jar \
-COROUTINES_JAR=/home/user/agora-toolchain/kotlinc-2.3.21/lib/kotlinx-coroutines-core-jvm.jar \
-./run_golden.sh            # verify
 # add --freeze to regenerate golden/
 ```

@@ -12,8 +12,6 @@ and the canonical trace is frozen under `golden/`; the C++ port
 | --- | --- |
 | `scenarios/*.json` | One case per file, 35 frozen edge cases |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `SelectorTraceDump.kt` | The stand driver (calls the real selector through its suspend entry point) |
-| `run_golden.sh` | Compiles the app sources and regenerates or verifies the traces |
 | `agora_scenarios embedding-selector` | Generates the scenarios (deterministic; rerun after editing) |
 
 ## What is pinned
@@ -75,18 +73,14 @@ Floats are spelled exactly as Kotlin's `Float.toString()`; the C++ side reuses
 
 * Only `EmbeddingSearchRow.kt` and `BoundedSemanticEmbeddingSelector.kt` are compiled, both
   verbatim from the app tree. Nothing in the stand reimplements the logic under test.
-* The `select` entry point is `suspend`, so the driver drives it with `runBlocking` from the
-  kotlinx-coroutines jar kotlinc ships.
+* The `select` entry point is `suspend`, so the driver drives it with `runBlocking` from
+  kotlinx-coroutines.
 * The loader callback stands in for the database; no SQLite, no Room, no Android.
 
 ## Regenerating
 
 ```bash
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios embedding-selector core/tools/golden/embedding-selector                                                                                  # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's `build/` (its git-ignored scratch) before each run, so runs are
-idempotent. Note that kotlinc ≤ 1.9 cannot read the class file version of the JDK it runs on
-(it aborts parsing "27"), hence the explicit `JAVA_HOME`.
+

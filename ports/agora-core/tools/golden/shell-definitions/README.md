@@ -55,8 +55,6 @@ parser, the per-tool result formatting) stay in Kotlin.
 ## Regenerating
 
 ```
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios shell-definitions core/tools/golden/shell-definitions                                                          # rewrite scenarios
 ```
 

@@ -273,8 +273,4 @@ if(NOT ANDROID AND NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
             -Wno-sign-compare -Wno-missing-field-initializers)
     endif()
 
-    # UTF-8 JNI host test (scripts/test-native-utf8.py port): needs a JDK at RUN time,
-    # not at build time.
-    add_executable(agora_utf8_host_test tools/utf8_host_main.cpp)
-    target_link_libraries(agora_utf8_host_test PRIVATE agora_core_lib)
 endif()
