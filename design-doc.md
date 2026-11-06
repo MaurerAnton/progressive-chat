@@ -119,7 +119,12 @@ this program has to be able to say yes or no to, and to what degree.
 * **Providers** — the keys, the base URL each one is asked at, and which of
   them this program talks to at all.
 * **Models** — which models are enabled, which are not, and how each one is
-  configured.
+  configured. What is drawn under this row today is every answerer offered
+  (`pchat.config`), a switch to each of them, and the conversation the window
+  has open is the one a press puts one into or takes it out of: the first of
+  them is what answers where nothing else has been said, and the last of them
+  is never taken out, because nothing can say of a chat that nothing answers
+  in it.
 
 **Responses**
 

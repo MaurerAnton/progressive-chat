@@ -119,6 +119,12 @@ struct set_tool {
   tool_choice which = tool_choice::conversation_search;
   bool on = false;
 };
+// One of the answerers offered (pchat.config), in a conversation or out of
+// it: which of them answers where nothing else has been said.
+struct set_answerer {
+  std::string name;
+  bool wanted = false;
+};
 
 // What is asked, as one value: spl::variant, so that every kind of it is
 // handled where it is read and a new one cannot be forgotten.
@@ -131,7 +137,8 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              close_system_prompt, set_system_prompt,
                              toggle_more, open_design, close_design,
                              pick_seed, set_amoled, set_font_scale, pick_theme,
-                              set_generation, set_tool>;
+                              set_generation, set_tool,
+                              set_answerer>;
 
 class requests {
 public:

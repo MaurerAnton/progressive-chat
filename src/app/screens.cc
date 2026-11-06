@@ -250,6 +250,17 @@ public:
             // it is switched to.
             [&](const set_tool &asking) {
               how_ = set_of(how_, asking.which, asking.on);
+            },
+            // An answerer put into the conversation open, or taken out of
+            // it: what the window then writes to is the first one left, and
+            // how much room it has to answer into is that one's own.
+            [&](const set_answerer &asking) {
+              conversation *open = opened_conversation();
+              if (!open)
+                return;
+              open->models = models_with(open->models, asking.name,
+                                         asking.wanted);
+              open->window = window_of(open->leading_model());
             }},
         one);
   }
@@ -464,6 +475,16 @@ private:
       if (one.id == said)
         return one.text;
     return {};
+  }
+  // The conversation this window has open, where one of them is open: what
+  // a press that is about the open chat changes, and nothing else.
+  [[nodiscard]] conversation *opened_conversation() {
+    if (!root_.opened)
+      return nullptr;
+    for (conversation &one : root_.conversations)
+      if (one.id == *root_.opened)
+        return &one;
+    return nullptr;
   }
   // Which model answers in a chat, as the model keeps it.
   [[nodiscard]] std::string model_of(const conversation_id &chat) const {

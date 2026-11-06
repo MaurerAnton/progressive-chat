@@ -46,48 +46,57 @@ inline constexpr std::array<seed_choice, max_seeds> seeds_offered{{
 }};
 
 // The eight groups the page is made of, and what each holds, said once in
-// the order they are said in (design-doc.md, "The settings"). Of these, two
-// are drawn: Appearance, under Appearance & Language, and Generation, under
-// Responses. The rest stand named and empty, waiting for the thing each of
-// them is named for.
+// the order they are said in (design-doc.md, "The settings"). Of these, four
+// have what they are named for drawn under one of their items: Appearance,
+// under Appearance & Language; what answers in a chat, under Services;
+// Generation, under Responses; and the three tools this program owns, under
+// Tools. The rest stand named and empty, waiting for the thing each of them
+// is named for.
 //
 // Not one row here says what a group would do when it is pressed: none of
 // them is pressed, because there is nothing behind any of them yet to be
 // shown.
+
+// What one of them draws under the item it stands under, where it draws
+// anything: one of these five, and never two of them, because no two of
+// them are what one place in the page is made of.
+enum class group_rows { none, appearance, generation, tools, answerers };
+
 struct settings_group {
   std::string_view name;
   std::array<std::string_view, max_settings_items> items{};
   std::size_t said = 0u;
-  // Which of its items is drawn today: the one at this place in the list,
-  // and where a second of them is too, that one in `drawn_too`. Every other
-  // group says `max_settings_items`, which no item is ever at.
-  std::size_t drawn = max_settings_items;
-  std::size_t drawn_too = max_settings_items;
-  // Where what a group draws is not what the others draw: the three tools
-  // this program owns, under Tools.
-  std::size_t tools_drawn = max_settings_items;
+  // And what, where it draws any at all, stands under it: which item they
+  // stand under, and which rows they are. No item is ever at
+  // `max_settings_items`, so that is what a group with none says.
+  std::size_t drawn_at = max_settings_items;
+  group_rows drawn = group_rows::none;
 };
 inline constexpr std::array<settings_group, max_settings_groups> settings_groups{{
-    {"Services", {{"Providers", "Models"}}, 2u, max_settings_items},
+    {"Services", {{"Providers", "Models"}}, 2u, 1u, group_rows::answerers},
     {"Responses",
      {{"System prompts", "Generation", "Context", "Title generation"}},
      4u,
+     1u,
+     group_rows::generation},
+    {"Multimodal",
+     {{"Image transcription", "Image generation"}},
+     2u,
      max_settings_items,
-     1u},
-    {"Multimodal", {{"Image transcription", "Image generation"}}, 2u,
-     max_settings_items},
+     group_rows::none},
     {"Tools",
      {{"Web search", "Conversation search", "Shell", "Tor", "MCP",
        "Automation", "Interaction"}},
      7u,
-     max_settings_items,
-     max_settings_items,
-     1u},
-    {"Network", {{"Proxy", "WebUI"}}, 2u, max_settings_items},
+     1u,
+     group_rows::tools},
+    {"Network", {{"Proxy", "WebUI"}}, 2u, max_settings_items,
+     group_rows::none},
     {"Memory & Data", {{"Memory", "Skills", "Data control"}}, 3u,
-     max_settings_items},
-    {"Appearance & Language", {{"Appearance", "Language"}}, 2u, 0u},
-    {"About", {{"About"}}, 1u, max_settings_items},
+     max_settings_items, group_rows::none},
+    {"Appearance & Language", {{"Appearance", "Language"}}, 2u, 0u,
+     group_rows::appearance},
+    {"About", {{"About"}}, 1u, max_settings_items, group_rows::none},
 }};
 // How much room the page leaves over and under its card, and how wide the
 // card ever is: a page wider than this would ask its rows to stretch over
@@ -306,6 +315,9 @@ struct settings_rows : scene::Node {
   // The tools, drawn: a switch to each of the three, whether it is offered
   // to a model or not.
   std::array<switch_row, tool_names.size()> fTools;
+  // The answerers, drawn: a switch to each of them, whether it answers in
+  // the conversation the window has open or not.
+  std::array<switch_row, answerers_offered.size()> fAnswerers;
   // What the design is called when it is offered: pressed, the whole of it
   // is said in the room, where it can be read against what is drawn.
   ask_box fReadPlate{};
@@ -344,6 +356,8 @@ struct settings_rows : scene::Node {
       one.setVisible(false);
     for (switch_row &one : fTools)
       one.setVisible(false);
+    for (switch_row &one : fAnswerers)
+      one.setVisible(false);
     fBlack.fName.setText("Pure black");
     fLarge.fName.setText("Larger type");
     fLight.fName.setText("Light colours");
@@ -351,6 +365,57 @@ struct settings_rows : scene::Node {
     fVersion.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
                     .autoSize = scene::axes::kBoth});
+  }
+
+  // The answerers offered (pchat.config), as a row each: which of them
+  // answers in the conversation this window has open, and a press on one of
+  // them putting it in or taking it back out of it.
+  [[nodiscard]] float say_answerers(app::requests *asked, const paints &look,
+                                    std::span<const std::string> answerers,
+                                    float row_width, float base) {
+    float at = base;
+    for (std::size_t one = 0u; one < answerers_offered.size(); ++one) {
+      const std::string_view name = answerers_offered[one].name;
+      const bool in = answers_in(answerers, name);
+      fAnswerers[one].again(asked,
+                            {.anchor = scene::anchor::kTopLeft,
+                             .x = 16.0f,
+                             .y = at,
+                             .relativeSize = scene::axes::kNone,
+                             .width = row_width,
+                             .height = settings_row_height,
+                             .cornerRadius = 14.0f,
+                             .visible = true},
+                            look, name, in,
+                            app::set_answerer{.name = std::string(name),
+                                              .wanted = !in});
+      at += settings_row_stride;
+    }
+    return at;
+  }
+
+  // One group's rows, said by which they are: every one of them kept by the
+  // group that says it, and said here so that the page's layout has nothing
+  // to know of which is which.
+  [[nodiscard]] float say_rows(group_rows rows, app::requests *asked,
+                               const paints &look, const looks &shown,
+                               const asking &how,
+                               std::span<const std::string> answerers,
+                               bool dark, float breadth, float row_width,
+                               float base) {
+    switch (rows) {
+    case group_rows::none:
+      return base;
+    case group_rows::appearance:
+      return say_appearance(asked, look, shown, dark, breadth, row_width, base);
+    case group_rows::generation:
+      return say_generation(asked, look, how, row_width, base);
+    case group_rows::tools:
+      return say_tools(asked, look, how, row_width, base);
+    case group_rows::answerers:
+      return say_answerers(asked, look, answerers, row_width, base);
+    }
+    return base;
   }
 
   // The three tools, drawn: a switch to each, standing under the name of the
@@ -498,7 +563,8 @@ struct settings_rows : scene::Node {
     return top + 156.0f + settings_row_height + settings_group_gap;
   }
   void again(app::requests *asked, const paints &look, const looks &shown,
-             const asking &how, bool dark, float breadth) {
+             const asking &how, std::span<const std::string> answerers,
+             bool dark, float breadth) {
     // Where the next thing said stands: every row in here says where it
     // stands, so the page is laid out as it is read -- one group after the
     // last, and nothing left to count by hand.
@@ -534,18 +600,11 @@ struct settings_rows : scene::Node {
                          .autoSize = scene::axes::kBoth,
                          .visible = true});
         at += settings_row_stride;
-        // Appearance is drawn, and so is said as more than its name: what
-        // it is made of stands under it, in the room it would have left.
-        if (named.drawn == one)
-          at = say_appearance(asked, look, shown, dark, breadth, row_width, at);
-        // Generation is drawn too: the five things an answer is asked with,
-        // each of them moved by a press either side of it.
-        if (named.drawn_too == one)
-          at = say_generation(asked, look, how, row_width, at);
-        // Tools is drawn there too, and what it draws is not the five: it is
-        // the three this program owns, switched on or off.
-        if (named.tools_drawn == one)
-          at = say_tools(asked, look, how, row_width, at);
+        // Under one of its items a group says more than its name: what it
+        // is made of, in the room the items after it would have taken.
+        if (named.drawn_at == one)
+          at = say_rows(named.drawn, asked, look, shown, how, answerers, dark,
+                        breadth, row_width, at);
       }
       at += settings_group_gap;
     }
@@ -581,6 +640,8 @@ struct settings_rows : scene::Node {
       f(one);
     for (switch_row &one : fTools)
       f(one);
+    for (switch_row &one : fAnswerers)
+      f(one);
     f(fReadPlate);
     f(fRead);
   }
@@ -612,7 +673,8 @@ struct settings_screen : scene::Node {
   void hide() { this->setVisible(false); }
 
   void again(app::requests *asked, const paints &look, const looks &shown,
-             const asking &how, bool dark, float width, float height) {
+             const asking &how, std::span<const std::string> answerers,
+             bool dark, float width, float height) {
     this->setVisible(true);
     const float breadth = std::min(width, settings_card_widest);
     fClosePlate.again(asked, app::close_settings{}, look.raised);
@@ -647,7 +709,8 @@ struct settings_screen : scene::Node {
                       .width = 18.0f,
                       .height = 18.0f});
     std::get<0>(fRows.fChildren)
-        .again(asked, look, shown, how, dark, breadth - 2.0f * edge);
+        .again(asked, look, shown, how, answerers, dark,
+               breadth - 2.0f * edge);
     fRows.apply({.anchor = scene::anchor::kTopCentre,
                  .origin = scene::anchor::kTopCentre,
                  .x = 0.0f,

@@ -130,6 +130,11 @@ struct app_window : scene::Node {
     for (const conversation &one : root.conversations)
       if (one.id.value == opened)
         open_chat = &one;
+    // Which answerers answer in the conversation open: what the settings
+    // say of them is said of this one chat, and of no other.
+    std::vector<std::string> answering;
+    if (open_chat)
+      answering = open_chat->models;
     // The bar says what the chat has been worth; the card under it names the
     // model that answers in it and how full its window this chat has made it.
     fTop.again(asked, look, !wide, !wide, more_open, title_of(root, opened),
@@ -182,7 +187,8 @@ struct app_window : scene::Node {
       fComposer.again(look, *open_chat, asked);
     // The settings page, over everything, when it is opened.
     if (settings_open)
-      fSettings.again(asked, look, shown, how, dark, width, height);
+      fSettings.again(asked, look, shown, how, answering, dark, width,
+                      height);
     else
       fSettings.hide();
     // The design said in the room, when it is opened: over everything, as a

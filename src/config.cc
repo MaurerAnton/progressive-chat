@@ -192,6 +192,33 @@ inline constexpr std::array<answerer_choice, 6> answerers_offered{{
     {"local-70b", 128'000},
 }};
 
+// Whether one of them answers in a chat, by its name: a chat keeps the ones
+// that answer in it, and nothing else says of it that it does.
+[[nodiscard]] inline bool answers_in(std::span<const std::string> models,
+                                     std::string_view name) {
+  return std::ranges::find(models, name) != models.end();
+}
+
+// One of them put into a chat, or taken out of it: put in at the end of the
+// ones already answering, taken out from wherever it stood, and never the
+// last one of them -- a chat with nothing to answer in it is not a thing any
+// page can say, so taking out is left undone where it would leave none.
+[[nodiscard]] inline std::vector<std::string>
+models_with(std::span<const std::string> models, std::string_view name,
+            bool wanted) {
+  std::vector<std::string> out(models.begin(), models.end());
+  const auto at = std::ranges::find(out, name);
+  if (wanted) {
+    if (at == out.end())
+      out.emplace_back(name);
+    return out;
+  }
+  if (at == out.end() || out.size() == 1u)
+    return out;
+  out.erase(at);
+  return out;
+}
+
 // How much room an answerer's window has, said by its name: what is offered
 // keeps its own, and one that is not offered yet says the room every answer
 // has been given so far.

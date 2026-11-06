@@ -57,4 +57,35 @@ SAID(theme, what_an_answer_is_asked_with_keeps_inside_its_lines) {
   EXPECT_EQ(one.often, default_asking.often);
 }
 
+SAID(config, an_answerer_is_put_in_and_taken_out_of_a_chat) {
+  std::vector<std::string> models{"haiku-4"};
+  EXPECT_FALSE(answers_in(models, "opus-4"));
+  EXPECT_TRUE(answers_in(models, "haiku-4"));
+  models = models_with(models, "opus-4", true);
+  EXPECT_EQ(models.size(), 2u);
+  EXPECT_EQ(models.front(), "haiku-4");
+  EXPECT_TRUE(answers_in(models, "opus-4"));
+  // Put in again, and it is not in it twice.
+  models = models_with(models, "opus-4", true);
+  EXPECT_EQ(models.size(), 2u);
+  // Taken out: the first of them answers from then on, and the room an
+  // answer has is that one's own, which every answerer here has.
+  models = models_with(models, "haiku-4", false);
+  EXPECT_EQ(models.size(), 1u);
+  EXPECT_EQ(models.front(), "opus-4");
+  EXPECT_EQ(window_of(models.front()), 1'000'000u);
+  // And the last of them is never taken out: a chat nothing answers in is
+  // not a thing any page can say.
+  models = models_with(models, "opus-4", false);
+  EXPECT_EQ(models.size(), 1u);
+  EXPECT_TRUE(answers_in(models, "opus-4"));
+  // Taking out one that was never in it leaves what is there as it was.
+  models = models_with(models, "local-8b", false);
+  EXPECT_EQ(models.size(), 1u);
+  EXPECT_EQ(window_of(models.front()), 1'000'000u);
+  // Every one of them offered is one a chat can be given.
+  for (const answerer_choice &one : answerers_offered)
+    EXPECT_TRUE(answers_in(models_with(models, one.name, true), one.name));
+}
+
 int main() { return pchat::tests::run(); }
