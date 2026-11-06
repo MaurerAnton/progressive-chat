@@ -46,12 +46,19 @@ build and the next.
       counted for real.
 - [ ] Copy to the clipboard only keeps the text in the program
       (`copied_`); nothing carries it to the host's own clipboard.
-- [x] **Search does nothing yet** -- done 2026-11-05: what is typed in the
+- [x] **Search does nothing yet** -- done 2026-11-06: what is typed in the
       drawer's field is asked for at every edit of it and not only when Enter
       is pressed, and what it keeps is every conversation named after it or
       saying it in anything said in it (`src/logic/lists.cc`,
       `message_matches`). A drawer with nothing kept of the search says so in
-      a line where its rows would be.
+      a line where its rows would be; a row kept because a message in it says
+      what was searched for says that message and not the last one.
+
+      Written on 2026-11-05 as done and not so: none of it asked anything of
+      the program until a press a node keeps was delivered by the program,
+      once a frame, which nothing here had done (`src/app/program.cc`,
+      `skiff::bind::press`). Everything a field asks for went the same way --
+      including what the system prompt's card was typed into.
 - [x] **Nothing could install a browser to drive the page with** -- done
       2026-11-05: a playwright is put out before the core it is said on
       top of, so asking for the newest asked for a `playwright-core` that
