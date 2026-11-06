@@ -4,6 +4,7 @@
 # std and flags as the modules it reads -- one std BMI in the whole build.
 #
 #   pchat-core-test    the model: ids, conversations, messages
+#   pchat-config-test  what a room asks a model with: how hard it thinks
 #   pchat-theme-test   the palette and what the looks give
 #   pchat-logic-test   what the screens read out of the model
 #   pchat-json-test    what comes off the wire, read into values and written back
@@ -26,6 +27,7 @@ function(pchat_test name libraries)
 endfunction()
 
 pchat_test(core pchat_core)
+pchat_test(config pchat_core)
 pchat_test(theme pchat_core)
 pchat_test(logic pchat_core)
 pchat_test(json pchat_json)
