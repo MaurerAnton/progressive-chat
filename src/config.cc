@@ -235,6 +235,16 @@ inline constexpr std::array<answerer_choice, 6> answerers_offered{{
   return std::string(name);
 }
 
+// Who one of them is asked through, by its name: the family that says which
+// wire's words a body and a stream are written in. Empty where nothing knows
+// the name, which for a model offered here never happens.
+[[nodiscard]] inline std::string_view family_of(std::string_view name) {
+  for (const answerer_choice &one : answerers_offered)
+    if (one.name == name)
+      return one.alias;
+  return std::string_view{};
+}
+
 // Whether one of them answers in a chat, by its name: a chat keeps the ones
 // that answer in it, and nothing else says of it that it does.
 [[nodiscard]] inline bool answers_in(std::span<const std::string> models,

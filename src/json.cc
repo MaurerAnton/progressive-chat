@@ -471,6 +471,14 @@ public:
     said_ += '"';
     return *this;
   }
+  // A value written as it was given: JSON that is already JSON. Quoting it
+  // would make it a string, and parsing it only to write it again would say
+  // the same thing twice.
+  writing &raw(std::string_view json_text) {
+    before();
+    said_ += json_text;
+    return *this;
+  }
   writing &number(double one) {
     before();
     char digits[64];

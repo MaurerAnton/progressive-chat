@@ -370,57 +370,6 @@ void mask_trace_file(const fs::path& path) {
     out << content;
 }
 
-// native-conversation-graph-source/prepare_vendor.py — stages the vendored android.util sources
-// for javac: the single build-time edit is dropping lines that mention `ravenwood` (the AOSP
-// annotation does not exist on a plain JDK). Reads with Python's universal newlines, writes the
-// translated text back with no further translation.
-void prepare_vendor(const fs::path& source_dir, const fs::path& output_dir) {
-    std::error_code error;
-    fs::create_directories(output_dir, error);
-    std::vector<std::string> names;
-    for (const auto& entry : fs::directory_iterator(source_dir, error)) {
-        if (entry.path().extension() == ".java") names.push_back(entry.path().filename().string());
-    }
-    std::sort(names.begin(), names.end());
-    if (names.empty()) fail("no vendored java files found in " + source_dir.string());
-    int copied = 0;
-    for (const std::string& name : names) {
-        std::ifstream in(source_dir / name, std::ios::binary);
-        if (!in) fail("error: cannot read " + (source_dir / name).string());
-        std::string text((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-        in.close();
-        // Python universal newlines on read: \r\n and \r become \n.
-        std::string normalized;
-        normalized.reserve(text.size());
-        for (std::size_t i = 0; i < text.size(); ++i) {
-            if (text[i] == '\r') {
-                normalized += '\n';
-                if (i + 1 < text.size() && text[i + 1] == '\n') ++i;
-            } else {
-                normalized += text[i];
-            }
-        }
-        // keep every line that does not mention ravenwood
-        std::string kept;
-        std::size_t start = 0;
-        while (start <= normalized.size()) {
-            std::size_t end = normalized.find('\n', start);
-            if (end == std::string::npos) {
-                if (start < normalized.size()) kept += normalized.substr(start);
-                break;
-            }
-            const std::string line = normalized.substr(start, end - start + 1); // with \n
-            if (line.find("ravenwood") == std::string::npos) kept += line;
-            start = end + 1;
-        }
-        std::ofstream out(output_dir / name, std::ios::binary | std::ios::trunc);
-        if (!out) fail("error: cannot write " + (output_dir / name).string());
-        out << kept;
-        ++copied;
-    }
-    std::cout << "staged " << copied << " vendored android.util sources\n";
-}
-
 // portable-settings-reset/gen_schema_keys.py — SchemaKeys.kt from
 // data/SettingsPreferenceSchema.kt: the names of every settings key, so the golden stand can
 // seed the preference store with the full schema instead of a hand-written list.
@@ -25435,10 +25384,6 @@ void profile_shell_tool_provider(const fs::path& scenarios) {
 
 int main(int argc, char** argv) {
     if (argc == 4) {
-        if (std::string(argv[1]) == "prepare-vendor") {
-            prepare_vendor(argv[2], argv[3]);
-            return 0;
-        }
         if (std::string(argv[1]) == "gen-corpus") {
             gen_corpus(argv[2], argv[3]);
             return 0;
@@ -25545,7 +25490,6 @@ int main(int argc, char** argv) {
                   << "  gen-reset-keys <stand>     portable-settings-reset/gen_reset_keys.py\n"
                   << "  gen-pow10-table <stand>    openai/pow10/generate_table.py\n"
                   << "  gen-codec-fixtures <stand> openai/codec/generate_codec_fixtures.py\n"
-                  << "  prepare-vendor <dir> <out> native-conversation-graph-source/prepare_vendor.py\n"
                   << "  gen-corpus <root> <file>   generate_corpus.py\n";
         return 2;
     }

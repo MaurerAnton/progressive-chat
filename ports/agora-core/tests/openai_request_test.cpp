@@ -81,7 +81,7 @@ TEST(sha256_fips180_vectors) {
 }
 
 TEST(kotlin_float_to_string_vectors) {
-    // Captured from the JVM via kotlinc: Float.toString on each value below.
+    // Captured from a JVM's Float.toString on each value below.
     const std::vector<std::pair<float, const char*>> vectors = {
         {1.0e-7f, "1.0E-7"},
         {std::numeric_limits<float>::max(), "3.4028235E38"},

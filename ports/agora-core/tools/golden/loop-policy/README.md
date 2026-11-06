@@ -14,8 +14,6 @@ stand needs no stubs and no source extraction. The whole file compiles as writte
 | --- | --- |
 | `scenarios/*.json` | One case per file, 47 frozen cases |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `LoopPolicyTraceDump.kt` | The stand driver |
-| `run_golden.sh` | Compiles and regenerates or verifies the traces |
 | `agora_scenarios loop-policy` | Generates the scenarios (deterministic; rerun after editing) |
 
 ## What is pinned
@@ -85,9 +83,6 @@ Escaping: `\` `|` `;` `\n` `\r` `\t` → `\\` `\p` `\s` `\n` `\r` `\t`.
 ## Regenerating
 
 ```bash
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios loop-policy core/tools/golden/loop-policy                                                                                  # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's git-ignored `build/` before each run, so runs are idempotent.

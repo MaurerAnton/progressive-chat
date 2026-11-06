@@ -17,7 +17,6 @@ replaces it with two documented pieces:
 
 | Path | Purpose |
 | --- | --- |
-| `platform/MiniRoom.kt` | Reflective executor: reads the `@Query` SQL from the RUNTIME-retained stand annotations, binds Kotlin parameter names (expanding collections like Room's `appendPlaceholders`), implements `@Insert`/`@Upsert` with Room's documented algorithm (insert, on a constraint conflict update by primary key), runs `@Transaction` methods in the transaction stack, maps rows back onto the entity data classes |
 | `platform/schema.sql` | The Room-generated DDL: the two ledger tables, the `embeddings` table (unique `(messageId, modelId)`, `ON DELETE CASCADE`), and the observable subset of `messages`/`conversations` that the ledger queries (documented there) |
 
 The SQL text itself is never duplicated: it is read from the compiled application source. The
@@ -35,10 +34,8 @@ unmarked level rolls the whole stack back) and `platform/StandChatDatabase.kt` (
 | --- | --- |
 | `scenarios/*.json` | 13 scenarios, 115 steps |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `SemanticIndexLedgerTraceDump.kt` | Driver: seeds SQLite, runs the steps, dumps the tables |
 | `agora_extract embedding-entity` | Lifts `EmbeddingEntity` out of `ChatEntities.kt` |
 | `agora_scenarios semantic-index-ledger <stand>` | Deterministic scenario generator |
-| `run_golden.sh` | Extracts, compiles, freezes (`--freeze`) or verifies the traces |
 
 ## What is pinned
 
@@ -86,11 +83,6 @@ in declared column order, serialized exactly like `Json.encodeToString`.
 ## Regenerating
 
 ```bash
-export JAVA_HOME=/path/to/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar:coroutines.jar:sqlite-jdbc.jar \
-  ./run_golden.sh          # verify
-KOTLINC=... KOTLINX_JARS=... ./run_golden.sh --freeze   # regenerate
 ../../../build/agora_scenarios semantic-index-ledger .   # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's git-ignored `build/` before each run, so runs are idempotent.

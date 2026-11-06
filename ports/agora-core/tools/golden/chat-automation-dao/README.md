@@ -8,17 +8,12 @@ updates, loop deactivation, and every delete shape.
 
 | Source | Why |
 | --- | --- |
-| `data/local/ChatAutomationDao.kt` | the module under test — a plain interface, so **no extraction is needed** |
-| `data/local/ChatEntities.kt` | `TaskEntity`, `LoopEntity`, the other entities and the converters; compiles whole, no lifting |
-| `data/local/RunEntity.kt`, `model/RuntimeIdentity.kt` | the run row referenced by `messages.runId` |
 | `model/ChatMessage.kt` and its model dependencies | the enum types behind the converters |
 
 ## The platform boundary
 
 | Path | Purpose |
 | --- | --- |
-| `platform/MiniRoom.kt` | reflective executor: `@Query` SQL against real SQLite, named-parameter binding, `@Upsert` as insert-then-update-by-primary-key, and cold single-emission Flows |
-| `platform/Room.kt`, `platform/RoomDatabase.kt` | annotation shapes and the database surface |
 | `platform/schema.sql` | the Room-generated DDL: `conversations`, `runs`, `messages`, and the 12-column `tasks` / 8-column `loops` tables (with the loop → conversation foreign key) |
 
 The observed members (`getAllTasks`, `getLoop`, `observeActiveLoops`) return Room Flows. The stand
@@ -74,12 +69,3 @@ a row count, `null`, or `{error, message}`) followed by `tables`, serialized exa
 
 ## Regenerating
 
-```bash
-export JAVA_HOME=/path/to/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/path/to/kotlinc \
-KOTLINX_JARS=kotlinx-serialization-core.jar:kotlinx-serialization-json.jar:kotlinx-coroutines-core.jar:sqlite-jdbc.jar \
-  ./run_golden.sh          # regenerate scenarios and verify
-KOTLINC=... KOTLINX_JARS=... ./run_golden.sh --freeze   # regenerate the frozen traces
-```
-
-`run_golden.sh` wipes the stand's git-ignored `build/` before each run, so runs are idempotent.

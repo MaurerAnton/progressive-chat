@@ -35,16 +35,6 @@ message-preparation golden stays green.
 
 | File | Role |
 | --- | --- |
-| `api/util/tokens/ImageTokenCost.kt` | `ImageDescriptor` |
-| `api/util/tokens/PixelImageTokenCost.kt` | pixel fallback, `blocksCovering`, `proportionalEdge` |
-| `api/util/tokens/AnthropicModelId.kt` | id parsing and `versionAtLeast` |
-| `api/util/tokens/AnthropicImageCost.kt` | 28x28 visual tokens with tier caps |
-| `api/util/tokens/GeminiImageCost.kt` | fixed 258-token crops and the crop-unit formula |
-| `api/util/tokens/OpenAiImageCost.kt` | patch/tile pricing and the published model table |
-| `api/util/tokens/FamilyEnvelopeCosts.kt` | `EnvelopeCost`, `SafetyMargin`, Anthropic/OpenAI framing |
-| `api/util/tokens/TextTokenCounter.kt` | heuristic counter |
-| `api/util/tokens/LocalModelTextCounter.kt` | exact-with-fallback counter |
-| `api/util/tokens/ContextCostModel.kt` | `ContextCostModel.Default` wiring |
 
 All ten files are host-compilable; the only imports are `kotlin.math` in three of them (stdlib),
 so the stand needs no stubs and no source extraction. The estimator and family mapping above this
@@ -154,11 +144,7 @@ inside a printed data class Kotlin prints `null`, which the describes reproduce.
 ## Regenerating
 
 ```bash
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios token-pricing core/tools/golden/token-pricing                                # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's git-ignored `build/` before each run, so runs are idempotent. The
-C++ test reads `scenarios/` and `golden/` straight from this directory through
-`AGORA_FIXTURE_TOKEN_PRICING_DIR`.
+The C++ test reads `scenarios/` and `golden/` straight from this directory through `AGORA_FIXTURE_TOKEN_PRICING_DIR`. 

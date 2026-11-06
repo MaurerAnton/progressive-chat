@@ -10,9 +10,6 @@ it byte for byte (`core/tests/message_source_parity_test.cpp`).
 
 | File | Role |
 | --- | --- |
-| `model/MessageSource.kt` | data class, `Kind`/`AskUserItem`, encode/decode/sanitize |
-| `extracted/Participant.kt` | `Participant` only, lifted declaration-for-declaration from `ChatMessage.kt` by `agora_extract participant` |
-| `stubs/androidx/compose/runtime/Immutable.kt` | compile-only Compose stability annotation (same platform stub as the other stands) |
 
 `ChatMessage.kt` drags the Room entity graph, Compose and kotlinx.serialization along, but
 `MessageSource` only needs the three-value `Participant` enum. The extraction script regenerates
@@ -60,13 +57,5 @@ app's own: `ignoreUnknownKeys = true`, `encodeDefaults = false`.
 
 ## Running
 
-```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=...core.jar:...json.jar ./run_golden.sh           # verify
-KOTLINX_JARS=... ./run_golden.sh --freeze                      # refreeze traces
-```
 
-`core/build/agora_scenarios message-source core/tools/golden/message-source` rewrites `scenarios/` deterministically (86 cases); rerun
-`./run_golden.sh --freeze` afterwards. The stand needs the kotlinx-serialization compiler plugin
-(found next to `kotlinc` by default).
+`core/build/agora_scenarios message-source core/tools/golden/message-source` rewrites `scenarios/` deterministically (86 cases); rerun.

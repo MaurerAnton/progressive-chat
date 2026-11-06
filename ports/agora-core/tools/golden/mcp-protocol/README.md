@@ -16,9 +16,7 @@ Transport (`McpClientTransport.kt`), session lifecycle, mutexes and the registry
 | --- | --- |
 | `scenarios/*.json` | One case per file, 64 frozen edge cases across eight modes |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `McpProtocolTraceDump.kt` | The stand driver (real pieces + four transcribed helpers) |
 | ``agora_extract mcp-pieces`` | Verbatim extraction from `McpModels.kt` + `McpProtocolClient.kt` |
-| `run_golden.sh` | Extracts, compiles and regenerates or verifies the traces |
 | `agora_scenarios mcp-protocol` | Generates the scenarios (deterministic; rerun after editing) |
 | `stubs/` | Leaf stubs for Android-only types the model sources touch |
 
@@ -89,8 +87,6 @@ pinned surface is the pure decision/parsing half the protocol client performs ar
 ## Regenerating
 
 ```
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios mcp-protocol core/tools/golden/mcp-protocol                                                          # rewrite scenarios
 ```
 

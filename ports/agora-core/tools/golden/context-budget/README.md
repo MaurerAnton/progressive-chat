@@ -43,12 +43,5 @@ in `agora::core::context_budget`:
 
 ## Running
 
-```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=...core.jar:...json.jar ./run_golden.sh           # verify
-KOTLINX_JARS=... ./run_golden.sh --freeze                      # refreeze traces
-```
 
 `core/build/agora_scenarios context-budget core/tools/golden/context-budget` rewrites `scenarios/` deterministically (45 cases); rerun
-`./run_golden.sh --freeze` afterwards.

@@ -12,10 +12,6 @@ Kotlin sources compiled verbatim from the app tree** and the canonical trace is 
 | --- | --- |
 | `scenarios/*.json` | One case per file, 35 frozen edge cases |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `SkillManagerTraceDump.kt` | The stand driver (calls the real `SkillManager`) |
-| `PlatformStub.kt` | `android.content.Context` reduced to `filesDir` |
-| `StateFlowStub.kt` | `kotlinx.coroutines.flow.StateFlow` as an aliasing counter |
-| `run_golden.sh` | Compiles the app sources and regenerates or verifies the traces |
 | `agora_scenarios skill-manager` | Generates the scenarios (deterministic; rerun after editing) |
 
 ## What is pinned
@@ -104,10 +100,6 @@ Escaping: `\` `|` `;` `\n` `\r` `\t` → `\\` `\p` `\s` `\n` `\r` `\t`.
 ## Regenerating
 
 ```bash
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios skill-manager core/tools/golden/skill-manager                                                          # rewrite scenarios
 ```
 
-The Kotlin reference is compiled from the app tree on every run; `run_golden.sh` wipes the
-per-scenario working directories first so the run is idempotent.
