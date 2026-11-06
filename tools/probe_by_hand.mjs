@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // One question asked of the things drawn in this tree that no probe has ever
 // pressed: the plus at the editor's left and the three dots beside it, the
-// fold above an answer, and what a press of Copy keeps for the machine.
+// fold above an answer, and what a press of Copy keeps for the machine. Asked
+// beside them, because they are asked of the same page: whether the page even
+// starts, in each of the sizes and of the threads a tester's browser has said
+// it could not be asked in.
 //
 // Everything is said where it stands, so nothing here needs to know where a
 // thing is: the mirror skiff keeps in the page says every line as an element
@@ -60,9 +63,56 @@ const press = async (page, wants) => {
   return true;
 };
 
+// Whether it starts at all, asked of one kind of browser at a time: how wide
+// the room is, whether the browser says it is a phone, and whether the worker
+// that isolates the client is kept. Narrow and alone together is the one that
+// has never answered yes, and nobody has said which of the three stops it.
+const starts = async (browser, name, viewport, phone, alone) => {
+  const context = await browser.newContext({
+    viewport,
+    deviceScaleFactor: 1,
+    isMobile: phone,
+    hasTouch: phone,
+    ...(alone ? { serviceWorkers: 'block' } : {}),
+  });
+  const page = await context.newPage();
+  page.on('console', message =>
+    console.log(`console[${name}] ${message.type()}: ${String(message.text()).slice(0, 300)}`));
+  page.on('pageerror', error => console.log(`pageerror[${name}]: ${String(error).slice(0, 400)}`));
+  await page.goto(url, { waitUntil: 'load' });
+  let started = 'no -- still saying it is starting';
+  try {
+    await page.waitForFunction(() => window.__pchat_started === true, null, { timeout: 120000 });
+    started = 'yes';
+  } catch {
+    // Said as it is said by every probe before it.
+  }
+  await page.waitForTimeout(4000);
+  const said = await page.evaluate(() => {
+    const host = document.getElementById('skiff');
+    return {
+      nodes: host ? host.querySelectorAll('*').length : 0,
+      text: (host?.innerText ?? host?.textContent ?? '').replace(/\s+/g, ' ').slice(0, 400),
+    };
+  });
+  console.log(`started[${name}]: ${started} -- ${said.nodes} nodes -- ${said.text}`);
+  await page.screenshot({ path: `started-${name}.png` }).catch(() => {});
+  await context.close().catch(() => {});
+};
+
 const browser = await chromium.launch({
   args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
 });
+
+for (const [name, viewport, phone, alone] of [
+  ['narrow-and-alone', { width: 390, height: 844 }, true, true],
+  ['narrow-and-a-phone-only', { width: 390, height: 844 }, true, false],
+  ['narrow-and-alone-only', { width: 390, height: 844 }, false, true],
+  ['narrow-and-neither', { width: 390, height: 844 }, false, false],
+  ['half-of-a-room-and-alone', { width: 700, height: 900 }, true, true],
+])
+  await starts(browser, name, viewport, phone, alone);
+
 const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });
 await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(url).origin });
 const page = await context.newPage();

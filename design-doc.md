@@ -130,10 +130,13 @@ in the panel is a plus:
 * **Three dots after the circle** open one menu above the card, and in it:
   **thinking**, switched on and off, with what it stands at said beside it;
   **how hard it thinks**, one press round the four it keeps to and back again
-  at the least of them; and **Advanced**, which is the large settings. Two of
-  the menu's four are not drawn yet: **web search** and **compact context**,
-  neither of them answered by anything here, and neither of them drawn as a
-  row that would do nothing.
+  at the least of them; **web search**, switched on and off for this one
+  conversation and nothing else, which asks nothing of this program itself --
+  whether one may search is said to the wire with the asking, and the looking
+  up is the wire's own --; **compact context**, which from now on gives the
+  wire a shorter telling of this conversation than it gave a moment ago
+  (pchat.logic.compacted); and **Advanced**, which is the large settings. All
+  four are drawn, and every one of them asks something that answers it.
 * **Advanced** opens the **large settings**: the **context window size**, the
   **temperature**, the **maximum output tokens**, the **top p**, the
   **frequency penalty** and the **presence penalty** — the same five the
