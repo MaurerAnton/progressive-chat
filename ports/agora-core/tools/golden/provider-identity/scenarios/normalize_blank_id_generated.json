@@ -1,0 +1,14 @@
+{
+  "name": "normalize_blank_id_generated",
+  "mode": "normalize",
+  "providers": [
+    {
+      "name": "A",
+      "type": "conch"
+    }
+  ],
+  "occupiedIds": [],
+  "newIds": [
+    "custom-provider-00000001-0001-4001-8001-000000000001"
+  ]
+}

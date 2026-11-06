@@ -370,9 +370,21 @@ if(PCHAT_UI)
   target_link_libraries(progressive-chat PRIVATE pchat_app pchat_ui pchat_core)
 endif()
 
+# The C++ half of Agora, standing in this tree whole: its logic layer as a
+# classic library, and its own parity tests whenever the tests are asked for.
+# Nothing of the program's modules reads it yet -- it is built and read by
+# ctest while the pieces of it are taken over one by one.
+set(AGORA_CORE_BUILD_TESTS ${PCHAT_TESTS})
+add_subdirectory(ports/agora-core)
+
 if(PCHAT_TESTS)
   enable_testing()
   add_subdirectory(test)
+  # The port's own test binary joins the same ask: one `pchat-tests` build
+  # gives ctest everything this program says by test.
+  if(TARGET agora_core_tests)
+    add_dependencies(pchat-tests agora_core_tests)
+  endif()
 endif()
 
 # One std module in the whole build. Where two copies of it -- or of any

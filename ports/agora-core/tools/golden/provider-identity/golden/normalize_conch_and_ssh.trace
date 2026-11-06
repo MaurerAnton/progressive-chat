@@ -1,0 +1,8 @@
+name|normalize_conch_and_ssh
+mode|normalize
+providers|2
+provider|0|Conch|custom-provider-00000001-0001-4001-8001-000000000001|Conch
+provider|1|SSH|custom-provider-00000002-0002-4002-8002-000000000002|SSH
+migrations|2
+migration|0|Conch|custom-provider-00000001-0001-4001-8001-000000000001
+migration|1|SSH|custom-provider-00000002-0002-4002-8002-000000000002

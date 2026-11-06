@@ -1,0 +1,5 @@
+name|arabic_stays_quiet
+op|containsCjk
+constants|Important: do not use any Chinese (CJK) characters anywhere in your answer.
+args|مَرْحَبًا
+out|bool|false

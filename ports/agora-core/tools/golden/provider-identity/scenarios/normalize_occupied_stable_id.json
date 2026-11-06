@@ -1,0 +1,17 @@
+{
+  "name": "normalize_occupied_stable_id",
+  "mode": "normalize",
+  "providers": [
+    {
+      "name": "A",
+      "type": "conch",
+      "id": "stable-id"
+    }
+  ],
+  "occupiedIds": [
+    "stable-id"
+  ],
+  "newIds": [
+    "custom-provider-00000001-0001-4001-8001-000000000001"
+  ]
+}

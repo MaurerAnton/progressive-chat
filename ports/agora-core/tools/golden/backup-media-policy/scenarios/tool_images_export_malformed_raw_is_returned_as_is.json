@@ -1,0 +1,5 @@
+{
+  "fn": "rewriteToolImagePathsForExport",
+  "name": "tool_images_export_malformed_raw_fails_the_decode",
+  "raw": "[{\"type\":"
+}

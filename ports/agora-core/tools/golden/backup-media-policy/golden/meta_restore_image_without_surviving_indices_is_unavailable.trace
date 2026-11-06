@@ -1,0 +1,5 @@
+name|meta_restore_image_without_surviving_indices_is_unavailable
+fn|restoreAttachmentMeta
+call|restoredUriForArchiveEntry|media/photo.jpg|-
+result|string|{"items":[{"type":"image","file_name":"photo.jpg","page_count":2,"unavailable":true,"imageArtifacts":[{"path":"","mimeType":"application/octet-stream","sizeBytes":0,"unavailable":true},{"path":"","mimeType":"application/octet-stream","sizeBytes":0,"unavailable":true}]}]}
+missing|0

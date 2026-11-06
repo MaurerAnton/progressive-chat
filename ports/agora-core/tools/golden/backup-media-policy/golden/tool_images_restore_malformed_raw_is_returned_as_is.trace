@@ -1,0 +1,4 @@
+name|tool_images_restore_malformed_raw_fails_the_decode
+fn|restoreToolImagePaths
+error|JsonDecodingException
+missing|0

@@ -1,0 +1,10 @@
+name|normalize_three_providers
+mode|normalize
+providers|3
+provider|0|A|custom-provider-00000001-0001-4001-8001-000000000001|A
+provider|1|B|custom-provider-00000002-0002-4002-8002-000000000002|B
+provider|2|C|custom-provider-00000003-0003-4003-8003-000000000003|C
+migrations|3
+migration|0|A|custom-provider-00000001-0001-4001-8001-000000000001
+migration|1|B|custom-provider-00000002-0002-4002-8002-000000000002
+migration|2|C|custom-provider-00000003-0003-4003-8003-000000000003

@@ -1,0 +1,264 @@
+find_package(Threads REQUIRED)
+find_package(SQLite3 REQUIRED)
+
+add_executable(agora_core_tests
+    test_main.cpp
+    token_count_test.cpp
+    openai_stream_parity_test.cpp
+    openai_stream_codec_test.cpp
+    openai_request_parity_test.cpp
+    openai_responses_request_parity_test.cpp
+    openai_request_test.cpp
+    message_preparation_parity_test.cpp
+    message_preparation_test.cpp
+    stream_normalization_parity_test.cpp
+    stream_normalization_test.cpp
+    backup_media_policy_parity_test.cpp
+    attachment_clone_session_parity_test.cpp
+    semantic_index_ledger_parity_test.cpp
+    maintenance_debt_parity_test.cpp
+    runtime_recovery_parity_test.cpp
+    context_compact_parity_test.cpp
+    chat_search_dao_parity_test.cpp
+    chat_media_references_dao_parity_test.cpp
+    chat_provider_context_dao_parity_test.cpp
+    new_chat_persist_dao_parity_test.cpp
+    chat_automation_dao_parity_test.cpp
+    chat_dao_parity_test.cpp
+    message_persistence_guard_parity_test.cpp
+    zip_reader_parity_test.cpp
+    native_backup_v5_parity_test.cpp
+    native_backup_archive_parity_test.cpp
+    gpt_chat_importer_parity_test.cpp
+    generation_policies_parity_test.cpp
+    generation_streaming_segments_parity_test.cpp
+    export_spool_parity_test.cpp
+    native_backup_secrets_parity_test.cpp
+    native_backup_format_parity_test.cpp
+    native_run_archive_parity_test.cpp
+    export_extra_settings_parity_test.cpp
+    citations_parity_test.cpp
+    claude_chat_importer_parity_test.cpp
+    cjk_text_parity_test.cpp
+    task_schedule_parity_test.cpp
+    cron_expression_parity_test.cpp
+    conch_sse_parity_test.cpp
+    anthropic_stream_parity_test.cpp
+    anthropic_request_parity_test.cpp
+    gemini_request_parity_test.cpp
+    gemini_stream_parity_test.cpp
+    ollama_parity_test.cpp
+    portable_glob_parity_test.cpp
+    portable_settings_reset_parity_test.cpp
+    portable_settings_archive_parity_test.cpp
+    model_aliases_parity_test.cpp
+    custom_model_references_parity_test.cpp
+    run_branch_selection_parity_test.cpp
+    run_ui_projection_parity_test.cpp
+    run_recovery_parity_test.cpp
+    imported_citation_projection_parity_test.cpp
+    conversation_runtime_parity_test.cpp
+    thinking_capability_parity_test.cpp
+    model_thinking_resolver_parity_test.cpp
+    provider_protocol_support_parity_test.cpp
+    token_pricing_parity_test.cpp
+    streaming_json_parity_test.cpp
+    openai_service_tiers_parity_test.cpp
+    context_budget_parity_test.cpp
+    message_source_parity_test.cpp
+    developer_mode_unlock_parity_test.cpp
+    database_compatibility_parity_test.cpp
+    v18_regeneration_repair_parity_test.cpp
+    regeneration_tree_repair_parity_test.cpp
+    legacy_run_backfill_parity_test.cpp
+    migration_16_17_parity_test.cpp
+    sqlite_executor_test.cpp
+    font_utils_test.cpp
+    diagnostic_redactor_test.cpp
+    scenario_builder_test.cpp
+    migration_17_18_parity_test.cpp
+    migration_18_19_parity_test.cpp
+    migration_19_20_parity_test.cpp
+    migration_20_35_parity_test.cpp
+    provider_identity_parity_test.cpp
+    provider_names_parity_test.cpp
+    provider_support_parity_test.cpp
+    duckduckgo_parity_test.cpp
+    embedding_parity_test.cpp
+    embedding_selector_parity_test.cpp
+    loop_policy_parity_test.cpp
+    mcp_protocol_parity_test.cpp
+    mcp_tool_provider_test.cpp
+    automation_tool_provider_test.cpp
+    memory_tool_provider_test.cpp
+    malformed_tool_call_parity_test.cpp
+    memory_manager_parity_test.cpp
+    skill_manager_parity_test.cpp
+    shell_definitions_parity_test.cpp
+    shell_tools_parity_test.cpp
+    shell_validation_parity_test.cpp
+    shell_crypto_parity_test.cpp
+    conch_handshake_parity_test.cpp
+    conch_network_parity_test.cpp
+    http_policy_parity_test.cpp
+    shell_file_edit_parity_test.cpp
+    sandbox_virtual_paths_parity_test.cpp
+    sandbox_path_resolver_parity_test.cpp
+    shell_durable_jobs_parity_test.cpp
+    shell_client_parity_test.cpp
+    shell_tool_backends_parity_test.cpp
+    shell_tool_provider_parity_test.cpp
+    web_search_tool_provider_test.cpp
+    ask_user_tool_provider_test.cpp
+    rag_tool_provider_test.cpp
+    skill_tool_provider_test.cpp
+    image_gen_tool_provider_test.cpp
+    sandbox_executor_test.cpp
+    sandbox_manager_test.cpp
+    alpine_package_test.cpp
+    crypto_primitives_test.cpp
+    data_exporter_parity_test.cpp
+    native_conversation_graph_source_parity_test.cpp
+    native_conversation_graph_importer_parity_test.cpp
+    parity_test.cpp
+    fuzz_parity_test.cpp
+)
+target_link_libraries(agora_core_tests PRIVATE agora_core_lib Threads::Threads SQLite::SQLite3)
+target_include_directories(agora_core_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../src)
+
+# Fixtures: the shipped vocabulary and the tiktoken reference set live in the app tree, two
+# levels up, so the port is always checked against exactly the files the app ships. The frozen
+# corpus and its golden counts live with the golden tools.
+target_compile_definitions(agora_core_tests PRIVATE
+    AGORA_FIXTURE_VOCABULARY="${CMAKE_CURRENT_SOURCE_DIR}/../fixtures/tokenizers/o200k_base.tiktoken"
+    AGORA_FIXTURE_REFERENCE="${CMAKE_CURRENT_SOURCE_DIR}/../fixtures/tokenizers/o200k_ref.json"
+    AGORA_FIXTURE_CORPUS="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/corpus.b64"
+    AGORA_FIXTURE_CORPUS_COUNTS="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/golden_counts.txt"
+    AGORA_FIXTURE_OPENAI_GOLDEN_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/openai"
+    AGORA_FIXTURE_ZIP_READER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/zip-reader"
+    AGORA_FIXTURE_NATIVE_BACKUP_V5_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/native-backup-v5"
+    AGORA_FIXTURE_GPT_CHAT_IMPORTER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/gpt-chat-importer"
+    AGORA_FIXTURE_GENERATION_POLICIES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/generation-policies"
+    AGORA_FIXTURE_GENERATION_STREAMING_SEGMENTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/generation-streaming-segments"
+    AGORA_FIXTURE_EXPORT_SPOOL_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/export-spool"
+    AGORA_FIXTURE_OPENAI_CODEC_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../fixtures/openai_stream_codec"
+    AGORA_FIXTURE_OPENAI_REQUEST_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/openai-request"
+    AGORA_FIXTURE_OPENAI_RESPONSES_REQUEST_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/openai-responses-request"
+    AGORA_FIXTURE_MESSAGE_PREP_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/message-preparation"
+    AGORA_FIXTURE_STREAM_NORMALIZATION_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/stream-normalization"
+    AGORA_FIXTURE_CITATIONS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/citations"
+    AGORA_FIXTURE_CHAT_DAO_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/chat-dao"
+    AGORA_FIXTURE_CONVERSATION_EXPORT_SNAPSHOT_READER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/conversation-export-snapshot-reader"
+    AGORA_FIXTURE_CLAUDE_CHAT_IMPORTER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/claude-chat-importer"
+    AGORA_FIXTURE_CJK_TEXT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/cjk-text"
+    AGORA_FIXTURE_ANTHROPIC_STREAM_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/anthropic-stream"
+    AGORA_FIXTURE_ANTHROPIC_REQUEST_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/anthropic-request"
+    AGORA_FIXTURE_GEMINI_REQUEST_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/gemini-request"
+    AGORA_FIXTURE_GEMINI_STREAM_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/gemini-stream"
+    AGORA_FIXTURE_OLLAMA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/ollama"
+    AGORA_FIXTURE_GLOB_MATCHER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/glob-matcher"
+    AGORA_FIXTURE_CUSTOM_MODEL_REFERENCES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/custom-model-references"
+    AGORA_FIXTURE_RUN_BRANCH_SELECTION_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/run-branch-selection"
+    AGORA_FIXTURE_RUN_UI_PROJECTION_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/run-ui-projection"
+    AGORA_FIXTURE_CONVERSATION_RUNTIME_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/conversation-runtime"
+    AGORA_FIXTURE_THINKING_CAPABILITY_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/thinking-capability"
+    AGORA_FIXTURE_MODEL_THINKING_RESOLVER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/model-thinking-resolver"
+    AGORA_FIXTURE_PROVIDER_PROTOCOL_SUPPORT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/provider-protocol-support"
+    AGORA_FIXTURE_TOKEN_PRICING_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/token-pricing"
+    AGORA_FIXTURE_STREAMING_JSON_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/streaming-json-document"
+    AGORA_FIXTURE_OPENAI_SERVICE_TIERS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/openai-service-tiers"
+    AGORA_FIXTURE_CONTEXT_BUDGET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/context-budget"
+    AGORA_FIXTURE_MESSAGE_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/message-source"
+    AGORA_FIXTURE_DEVELOPER_MODE_UNLOCK_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/developer-mode-unlock"
+    AGORA_FIXTURE_DATABASE_COMPATIBILITY_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/database-compatibility"
+    AGORA_FIXTURE_V18_REGENERATION_REPAIR_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/v18-regeneration-repair"
+    AGORA_FIXTURE_REGENERATION_TREE_REPAIR_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/regeneration-tree-repair"
+    AGORA_FIXTURE_LEGACY_RUN_BACKFILL_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/legacy-run-backfill"
+    AGORA_FIXTURE_MIGRATION_16_17_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/migration-16-17"
+    AGORA_FIXTURE_SEMANTIC_INDEX_LEDGER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/semantic-index-ledger"
+    AGORA_FIXTURE_MAINTENANCE_DEBT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/maintenance-debt"
+    AGORA_FIXTURE_RUNTIME_RECOVERY_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/runtime-recovery"
+    AGORA_FIXTURE_CONTEXT_COMPACT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/context-compact"
+    AGORA_FIXTURE_CHAT_SEARCH_DAO_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/chat-search-dao"
+    AGORA_FIXTURE_CHAT_MEDIA_REFERENCES_DAO_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/chat-media-references-dao"
+    AGORA_FIXTURE_CHAT_PROVIDER_CONTEXT_DAO_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/chat-provider-context-dao"
+    AGORA_FIXTURE_NEW_CHAT_PERSIST_DAO_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/new-chat-persist-dao"
+    AGORA_FIXTURE_CHAT_AUTOMATION_DAO_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/chat-automation-dao"
+    AGORA_FIXTURE_MIGRATION_17_18_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/migration-17-18"
+    AGORA_FIXTURE_MIGRATION_18_19_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/migration-18-19"
+    AGORA_FIXTURE_MIGRATION_19_20_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/migration-19-20"
+    AGORA_FIXTURE_MIGRATION_20_35_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/migration-20-35"
+    AGORA_FIXTURE_NATIVE_BACKUP_SECRETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/native-backup-secrets"
+    AGORA_FIXTURE_NATIVE_BACKUP_FORMAT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/native-backup-format"
+    AGORA_FIXTURE_NATIVE_RUN_ARCHIVE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/native-run-archive"
+    AGORA_FIXTURE_EXPORT_EXTRA_SETTINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/export-extra-settings"
+    AGORA_FIXTURE_LOOP_POLICY_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/loop-policy"
+    AGORA_FIXTURE_MODEL_ALIASES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/model-aliases"
+    AGORA_FIXTURE_PROVIDER_NAMES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/provider-names"
+    AGORA_FIXTURE_PROVIDER_IDENTITY_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/provider-identity"
+    AGORA_FIXTURE_PROVIDER_SUPPORT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/provider-support"
+    AGORA_FIXTURE_DUCKDUCKGO_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/duckduckgo"
+    AGORA_FIXTURE_MCP_PROTOCOL_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/mcp-protocol"
+    AGORA_FIXTURE_MALFORMED_TOOL_CALL_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/malformed-tool-call"
+    AGORA_FIXTURE_EMBEDDING_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/embedding"
+    AGORA_FIXTURE_SHELL_DEFINITIONS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/shell-definitions"
+    AGORA_FIXTURE_SHELL_TOOLS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/shell-tools"
+    AGORA_FIXTURE_SHELL_VALIDATION_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/shell-command-validation"
+    AGORA_FIXTURE_SHELL_CRYPTO_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/shell-crypto"
+    AGORA_FIXTURE_CONCH_HANDSHAKE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/conch-handshake"
+    AGORA_FIXTURE_CONCH_NETWORK_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/conch-network"
+    AGORA_FIXTURE_HTTP_POLICY_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/http-policy"
+    AGORA_FIXTURE_SHELL_FILE_EDIT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/shell-file-edit"
+    AGORA_FIXTURE_SANDBOX_VIRTUAL_PATHS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/sandbox-virtual-paths"
+    AGORA_FIXTURE_SHELL_DURABLE_JOBS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/shell-durable-jobs"
+    AGORA_FIXTURE_SHELL_CLIENT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/shell-client"
+    AGORA_FIXTURE_SHELL_TOOL_BACKENDS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/shell-tool-backends"
+    AGORA_FIXTURE_SHELL_TOOL_PROVIDER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/shell-tool-provider"
+    AGORA_FIXTURE_MEMORY_MANAGER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/memory-manager"
+    AGORA_FIXTURE_SKILL_MANAGER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/skill-manager"
+    AGORA_FIXTURE_DATA_EXPORTER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/data-exporter"
+    AGORA_FIXTURE_NATIVE_CONVERSATION_GRAPH_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/native-conversation-graph-source"
+    AGORA_FIXTURE_NATIVE_CONVERSATION_GRAPH_IMPORTER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/native-conversation-graph-importer"
+    AGORA_FIXTURE_NATIVE_BACKUP_ARCHIVE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/native-backup-archive"
+    AGORA_FIXTURE_EMBEDDING_SELECTOR_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/embedding-selector"
+    AGORA_FIXTURE_CONCH_SSE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/conch-sse"
+    AGORA_FIXTURE_CRON_EXPRESSION_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/cron-expression"
+    AGORA_FIXTURE_TASK_SCHEDULE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/task-schedule"
+    AGORA_FIXTURE_BACKUP_MEDIA_POLICY_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/backup-media-policy"
+    AGORA_FIXTURE_ATTACHMENT_CLONE_SESSION_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/attachment-clone-session"
+    AGORA_FIXTURE_PORTABLE_SETTINGS_ARCHIVE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/portable-settings-archive"
+    AGORA_FIXTURE_PORTABLE_SETTINGS_RESET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/portable-settings-reset"
+    AGORA_FIXTURE_MESSAGE_PERSISTENCE_GUARD_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/message-persistence-guard"
+    AGORA_FIXTURE_IMPORTED_CITATION_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/imported-citation-projection"
+    AGORA_FIXTURE_RUN_RECOVERY_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../tools/golden/run-recovery"
+    AGORA_FIXTURE_PREP_VOCAB="${CMAKE_CURRENT_SOURCE_DIR}/../fixtures/tokenizers/o200k_base.tiktoken"
+)
+
+if(UNIX)
+    # POSIX sockets + setenv; the receivers never build on Windows.
+    target_sources(agora_core_tests PRIVATE server_submission_test.cpp)
+endif()
+
+add_test(NAME agora_core_tests COMMAND agora_core_tests)
+
+# Real-SSH integration suite for the libssh2 transport. Needs libssh2 (parent scope) plus
+# sshd/ssh-keygen to stand up a throwaway localhost server with pubkey auth.
+if(AGORA_CORE_HAVE_LIBSSH2)
+    find_program(AGORA_TEST_SSHD NAMES sshd)
+    find_program(AGORA_TEST_SSH_KEYGEN NAMES ssh-keygen)
+    if(AGORA_TEST_SSHD AND AGORA_TEST_SSH_KEYGEN)
+        add_executable(agora_ssh_transport_tests
+            test_main.cpp
+            ssh_libssh2_transport_test.cpp
+        )
+        target_link_libraries(agora_ssh_transport_tests PRIVATE agora_core_lib Threads::Threads)
+        target_include_directories(agora_ssh_transport_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+        target_compile_definitions(agora_ssh_transport_tests PRIVATE
+            AGORA_TEST_SSHD="${AGORA_TEST_SSHD}"
+            AGORA_TEST_SSH_KEYGEN="${AGORA_TEST_SSH_KEYGEN}"
+        )
+        add_test(NAME agora_ssh_transport_tests COMMAND agora_ssh_transport_tests)
+    else()
+        message(STATUS "agora core: sshd/ssh-keygen not found - SSH transport integration tests skipped")
+    endif()
+endif()

@@ -1,0 +1,4 @@
+name|constants
+op|constants
+args|
+result|(No answer)|MessageSource(kind=TASK, askUser=[], subagentResults={}, subagentResult=null)|MessageSource(kind=LOOP, askUser=[], subagentResults={}, subagentResult=null)
