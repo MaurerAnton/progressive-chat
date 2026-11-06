@@ -118,7 +118,8 @@ SAID(provider_loop, what_a_tool_answered_goes_back_into_the_asking) {
   EXPECT_EQ(said.state, delivery::sent);
   // What both rounds cost, together.
   EXPECT_EQ(said.tokens, 33u);
-  EXPECT_EQ(said.before->tool_calls, 1u);
+  // One tool asked for over both rounds, said by name before the answer.
+  EXPECT_EQ(said.before->called.size(), 1u);
 }
 
 SAID(provider_loop, a_call_the_wire_gave_no_name_to_is_named_here) {
