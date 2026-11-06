@@ -83,7 +83,7 @@ public:
                 drawer_ = false;
             },
             // Taken whole, so that it can be put down somewhere else.
-            [&](const copy_answer &asking) { copied_ = text_of(asking.said); },
+            [&](const copy_answer &asking) { this->give(text_of(asking.said)); },
             // Asked again: this answer taken away, and every one after it, so
             // that the question above it is open to be answered again.
             [&](const regenerate_answer &asking) { cut_away(asking.said); },
@@ -114,7 +114,7 @@ public:
             },
             // Given away as it reads, until the program has somewhere to give
             // it to.
-            [&](const share_answer &asking) { copied_ = text_of(asking.said); },
+            [&](const share_answer &asking) { this->give(text_of(asking.said)); },
             [&](const delete_answer &asking) { cut_away(asking.said); },
             [&](const edit_draft &) {},
             [&](const set_query &asking) { query_ = asking.text; },
@@ -191,7 +191,7 @@ public:
                 if (one.chat == asking.chat)
                   whole += (one.outgoing ? "You: " : "") + one.text + "\n";
               if (!whole.empty())
-                copied_ = std::move(whole);
+                this->give(whole);
             },
             [&](const toggle_more &) { more_ = !more_; },
             // What every model is told before anything is said to it: read
@@ -261,6 +261,16 @@ public:
   [[nodiscard]] bool dark() const noexcept { return dark_; }
 
 private:
+  // Given to the machine's own clipboard: what copy, share and giving a
+  // conversation away all do with what they took, each of them asking for
+  // no more than that. The host carries it from the scene to wherever the
+  // window's own clipboard is asked for (skiff::scene::setClipboardText).
+  void give(const std::string &text) {
+    if (text.empty())
+      return;
+    scene::setClipboardText(text);
+  }
+
   // What asked it is the model asked: which is to say nothing of what any of
   // this is, only the wire it is spoken through.
   [[nodiscard]] static moment now_ms() {
@@ -516,9 +526,7 @@ private:
   bool more_ = false;
   moment said_count_ = 1;
   std::size_t chat_count_ = 0;
-  // What copy last took whole: said nowhere yet, because what a host's
-  // clipboard is asked through is not written here.
-  std::string copied_;
+
   float width_ = 1100.0f;
   float height_ = 720.0f;
 };
