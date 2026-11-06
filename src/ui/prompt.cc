@@ -40,13 +40,14 @@ struct prompt_sink {
 // told before an answer is not sent anywhere.
 struct prompt_told {
   std::shared_ptr<prompt_sink> sink;
-  using Answer = bool;
+  // Nothing to give back to the scene: what is typed is asked of the program
+  // as it is typed, and there is nothing left to say about the press.
+  using Answer = void;
   static constexpr bool kEveryEdit = true;
   Answer operator()(std::string_view text) const {
     if (sink && sink->asked)
       sink->asked->ask(
           app::set_system_prompt{sink->chat, std::string(text)});
-    return true;
   }
 };
 

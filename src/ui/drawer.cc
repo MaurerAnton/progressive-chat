@@ -38,12 +38,13 @@ struct search_sink {
 // said of it.
 struct search_given {
   std::shared_ptr<search_sink> sink;
-  using Answer = bool;
+  // Nothing to give back to the scene: what is being typed is asked of the
+  // program, and the press itself asks for nothing more.
+  using Answer = void;
   static constexpr bool kEveryEdit = true;
   Answer operator()(std::string_view text) const {
     if (sink && sink->asked)
       sink->asked->ask(app::set_query{std::string(text)});
-    return true;
   }
 };
 

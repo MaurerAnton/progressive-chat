@@ -14,14 +14,29 @@ export module pchat.app.program;
 
 import std;
 import skiff.scene;
+import skiff.bind;
 import skiff.platform.events;
 import pchat.app.screens;
 import pchat.app.faces;
 
 export namespace pchat::app {
 
+// This tree is not bound to a model: every node in it is filled in again from
+// the program's own copy of what is shown, once a frame. What a press is
+// delivered along is the tree all the same, and a node answers for itself
+// where it is found -- so the walk goes with a model holding nothing, whose
+// root is a type that has no parts and whose batch begins and ends doing
+// nothing because nothing of either is ever made.
+struct nothing_bound {
+  struct no_root {};
+  using RootType = no_root;
+  void beginBatch() {}
+  void endBatch() {}
+};
+
 struct program {
   screens view;
+  nothing_bound bound_;
   unsigned frames_ = 0u;
   std::chrono::steady_clock::time_point began_ =
       std::chrono::steady_clock::now();
@@ -69,6 +84,14 @@ struct program {
     const auto &bounds = view.window().root().fState.fBounds;
     if (bounds.width() > 1.0f && bounds.height() > 1.0f)
       view.sized(bounds.width(), bounds.height());
+    // What a control asked for by saying it was pressed -- a field told every
+    // edit of it, Enter in a field, a box that answers a press rather than
+    // taking it where it was made: the scene kept each by the path to the node
+    // that said so, and the program delivers them, which is here. Nothing of
+    // it runs by itself, and nothing else was asking for any of them.
+    for (const skiff::scene::Path &way :
+         std::exchange(skiff::scene::hostWork().pressed, {}))
+      skiff::bind::press(view.window().root(), bound_, way);
     view.before_frame(0.0);
   }
 };
