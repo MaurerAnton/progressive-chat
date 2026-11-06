@@ -16,6 +16,7 @@ import std;
 import skiff.scene;
 import skiff.nodes;
 import pchat.core;
+import pchat.config;
 import pchat.app.requests;
 import :theme;
 import :base;
@@ -77,13 +78,13 @@ inline constexpr std::size_t max_bar_more = 3u;
 inline constexpr float more_row_height = 44.0f;
 inline constexpr float more_card_width = 208.0f;
 
-// One model that answers in this conversation: its name, and beside it what
-// this conversation has taken of its window -- the whole of why the bubble is
-// there, said as one thing and not two.
+// One model that answers in this conversation: its name alone. What this
+// conversation has taken of the window is said once, by the editor it is
+// writing in: said in every bubble too, it was said three times over for a
+// chat three models answer in, and it is one number and not three.
 struct answerer_bubble : scene::Node {
   nodes::Box<> fPlate{0u};
   nodes::Text fName{"", 12.5f, 0u, true};
-  nodes::Text fUsed{"", 11.0f, 0u};
 
   answerer_bubble() {
     fPlate.apply({.fill = true});
@@ -91,25 +92,14 @@ struct answerer_bubble : scene::Node {
                  .origin = scene::anchor::kCentreLeft,
                  .x = 12.0f,
                  .autoSize = scene::axes::kBoth});
-    fUsed.apply({.anchor = scene::anchor::kCentreRight,
-                 .origin = scene::anchor::kCentreRight,
-                 .x = -12.0f,
-                 .autoSize = scene::axes::kBoth});
   }
 
   void again(const paints &look, const scene::Spec &where,
-             std::string_view name, std::uint32_t tokens,
-             std::uint32_t window) {
+             std::string_view name) {
     this->apply(where);
     fPlate.setColour(look.search_bar);
     fName.setText(std::string(name));
     fName.setColour(look.text);
-    // What it has used of its window, said as a share of the whole: not a
-    // share of one hundred, which would be a number the reader has to work
-    // out, but the tokens themselves beside the room they were taken from.
-    fUsed.setText("~" + tokens_short(tokens) + " / " + tokens_short(window) +
-                  " tokens");
-    fUsed.setColour(look.faint);
     this->setVisible(true);
   }
 
@@ -118,7 +108,6 @@ struct answerer_bubble : scene::Node {
   void forEachChild(auto &&f) {
     f(fPlate);
     f(fName);
-    f(fUsed);
   }
 };
 
@@ -269,9 +258,6 @@ struct top_bar : scene::Node {
   ask_box fNewPlate{};
   nodes::Icon fNewMark{shape::plus(), 0u};
   std::array<answerer_bubble, max_answerers> fAnswerers;
-  // Another answerer in this conversation: a plus of its own, and not the
-  // plus that begins a chat, which stands beside it.
-  bar_press fAddAnswerer{};
   bar_press fSystem{};
   bar_press fFork{};
   bar_press fShare{};
@@ -342,27 +328,25 @@ struct top_bar : scene::Node {
     fNewMark.setColour(look.text);
     fNewPlate.again(sink, app::new_chat{}, look.search_bar);
     // Every press stands where the last one left room, walking in from the
-    // right: another answerer, what they are told, this conversation taken
-    // into one of its own, given away, and behind three dots where the room
-    // is too narrow for the four of them to stand.
+    // right: what the answerers are told, this conversation taken into one of
+    // its own, given away, and behind three dots where the room is too narrow
+    // for the three of them to stand. No plus is among them: the only plus in
+    // this part of the screen is the one that begins a chat, and which models
+    // answer this conversation is said in the settings.
     float inset = edge + bar_press_width + bar_gap;
     if (narrow) {
       fMore.again(sink, look, shape::more(), inset, app::toggle_more{});
-      fAddAnswerer.hide();
       fSystem.hide();
       fFork.hide();
       fShare.hide();
     } else {
-      fAddAnswerer.again(sink, look, shape::plus(), inset,
-                         app::add_answerer{.chat = chat ? chat->id
-                                                         : conversation_id{}});
-      fSystem.again(sink, look, shape::system_prompt(), inset + bar_press_step,
+      fSystem.again(sink, look, shape::system_prompt(), inset,
                     app::open_system_prompt{
                         .chat = chat ? chat->id : conversation_id{}});
-      fFork.again(sink, look, shape::fork(), inset + 2.0f * bar_press_step,
+      fFork.again(sink, look, shape::fork(), inset + bar_press_step,
                   app::fork_conversation{.chat = chat ? chat->id
                                                        : conversation_id{}});
-      fShare.again(sink, look, shape::share(), inset + 3.0f * bar_press_step,
+      fShare.again(sink, look, shape::share(), inset + 2.0f * bar_press_step,
                    app::share_conversation{.chat = chat ? chat->id
                                                          : conversation_id{}});
       fMore.hide();
@@ -372,9 +356,9 @@ struct top_bar : scene::Node {
                       chat ? chat->id : conversation_id{});
     else
       fMoreMenu.hide();
-    // What answers in this chat, one bubble to each: the name, and what this
-    // chat has taken of the window it answers out of. Nothing said where
-    // there is no conversation open to be answered in.
+    // What answers in this chat, one bubble to each, named and nothing more.
+    // Nothing said of any of them where there is no conversation open to be
+    // answered in.
     const std::size_t answerers =
         chat ? std::min(chat->models.size(), max_answerers) : 0u;
     const float left_of_bubbles =
@@ -398,7 +382,7 @@ struct top_bar : scene::Node {
            .height = answerer_bubble_height,
            .cornerRadius = answerer_bubble_height / 2.0f,
            .visible = true},
-          chat->models[at], chat->tokens, chat->window);
+          said_as_a_model(chat->models[at]));
     }
     // What this whole conversation has been worth, said once beside them and
     // not again in each bubble: what the bar named before there was a bubble
@@ -424,7 +408,6 @@ struct top_bar : scene::Node {
     f(fTitle);
     for (answerer_bubble &one : fAnswerers)
       f(one);
-    f(fAddAnswerer);
     f(fSystem);
     f(fFork);
     f(fShare);

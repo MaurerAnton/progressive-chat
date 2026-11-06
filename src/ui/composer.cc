@@ -11,6 +11,7 @@ import skiff.scene;
 import skiff.nodes;
 import skiff.widgets.textarea;
 import pchat.core;
+import pchat.config;
 import pchat.app.requests;
 import :theme;
 import :base;
@@ -58,7 +59,6 @@ struct composer : scene::Node {
   // over the field every time, not only when it is asked about.
   nodes::Text fModel{"", 12.0f, 0u, true};
   nodes::Icon fGauge{shape::info(), 0u};
-  nodes::Text fFull{"", 11.0f, 0u};
   std::shared_ptr<message_sink> fSink = std::make_shared<message_sink>();
   widgets::TextArea<message_given> fField{widgets::Theme{}, "Message",
                                           message_given{fSink}};
@@ -89,11 +89,6 @@ struct composer : scene::Node {
                   .origin = scene::anchor::kCentre,
                   .x = -(edge + 18.0f),
                   .y = 22.0f});
-    fFull.apply({.anchor = scene::anchor::kTopRight,
-                 .origin = scene::anchor::kCentreRight,
-                 .x = -(edge + 42.0f),
-                 .y = 22.0f,
-                 .autoSize = scene::axes::kBoth});
     fField.apply(
         {.anchor = scene::anchor::kTopLeft,
          .x = 16.0f,
@@ -144,13 +139,10 @@ struct composer : scene::Node {
     // taken said in the primary one, from the top and clockwise.
     const float used = std::clamp(chat.context_used, 0.0f, 1.0f);
     const std::string model = chat.leading_model();
-    fModel.setText(model);
+    fModel.setText(said_as_a_model(model));
     fModel.setColour(look.primary);
     fGauge.setShape(context_ring(used, look.outline, look.primary));
     fGauge.setColour(look.primary);
-    fFull.setText(tokens_said(static_cast<std::uint32_t>(used * 100.0f)) +
-                  "% of its window");
-    fFull.setColour(look.faint);
   }
 
   void clear() { fField.setText(""); }
@@ -159,7 +151,6 @@ struct composer : scene::Node {
     f(fCard);
     f(fModel);
     f(fGauge);
-    f(fFull);
     f(fField);
     f(fClip);
     f(fFace);

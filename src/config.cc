@@ -180,17 +180,35 @@ inline constexpr looks default_looks{};
 // because which ones there are to answer with is not a screen's to decide,
 // and because adding one to a conversation has to add one that answers.
 struct answerer_choice {
+  // What a wire is given, which is not what it is called: `deepseek-v4-1-flash`
+  // is what a body says, and `DeepSeek V4.1 Flash` is what a reader reads.
   std::string_view name;
+  // What it is called where it is named on the screen.
+  std::string_view said;
+  // Who it is asked through: said after its name, in brackets, because two of
+  // them may be called alike and the provider is how they are told apart.
+  std::string_view alias;
   std::uint32_t window = 0;
 };
 inline constexpr std::array<answerer_choice, 6> answerers_offered{{
-    {"haiku-4", 1'000'000},
-    {"sonnet-4", 1'000'000},
-    {"opus-4", 1'000'000},
-    {"o4-mini", 200'000},
-    {"local-8b", 32'000},
-    {"local-70b", 128'000},
+    {"haiku-4", "Claude Haiku 4", "anthropic", 1'000'000},
+    {"sonnet-4", "Claude Sonnet 4", "anthropic", 1'000'000},
+    {"opus-4", "Claude Opus 4", "anthropic", 1'000'000},
+    {"o4-mini", "o4 Mini", "openai", 200'000},
+    {"local-8b", "Local 8B", "local", 32'000},
+    {"local-70b", "Local 70B", "local", 128'000},
 }};
+
+// What one of them is called on the screen: the model as it is named, and the
+// provider it is asked through after it in brackets -- `Claude Haiku 4
+// (anthropic)`. One that is offered but nameless says the id it is asked
+// through, whole, so that nothing is said of it that is not known.
+[[nodiscard]] inline std::string said_as_a_model(std::string_view name) {
+  for (const answerer_choice &one : answerers_offered)
+    if (one.name == name)
+      return std::string(one.said) + " (" + std::string(one.alias) + ")";
+  return std::string(name);
+}
 
 // Whether one of them answers in a chat, by its name: a chat keeps the ones
 // that answer in it, and nothing else says of it that it does.

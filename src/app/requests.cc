@@ -67,9 +67,6 @@ struct close_settings {};
 // What the top edge asks for: another answerer in this same conversation,
 // this conversation taken whole into one of its own, this conversation given
 // out, and what every answerer in it is told before anything is said to it.
-struct add_answerer {
-  conversation_id chat;
-};
 struct fork_conversation {
   conversation_id chat;
 };
@@ -137,7 +134,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              copy_answer, regenerate_answer, fork_answer,
                              share_answer, delete_answer, edit_draft, set_query,
                              toggle_drawer, open_settings, close_settings,
-                             add_answerer, fork_conversation,
+                             fork_conversation,
                              share_conversation, open_system_prompt,
                              close_system_prompt, set_system_prompt,
                              toggle_more, open_design, close_design,

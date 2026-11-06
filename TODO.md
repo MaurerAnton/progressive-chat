@@ -41,6 +41,13 @@ build and the next.
       to the log before it goes, and read with `adb logcat -d -s
       progressive-chat`.
 
+- [x] **The settings page was read at its end** -- done 2026-11-06: what
+      scrolls kept the end it had followed while the column was still being
+      made, so Settings was said at -2163 and every group before the middle
+      of a column twice the room's height was pressed by nothing. Opened, it
+      is read from its first line now (`src/ui/settings.cc`, `scrollToStart`).
+      How that was seen is worth keeping: the mirror says where every line
+      stands as well as what it says, and one probe read those places out.
 - [ ] The back end: `src/app/sample.cc` answers for now, so nothing that
       is counted -- tokens, tool calls, how long an answer took -- is
       counted for real.
@@ -50,9 +57,18 @@ build and the next.
       clipboard now (`scene::setClipboardText`), which no probe has read
       back yet -- a page kept in a browser is asked for its clipboard by
       permission and nobody has asked.
-- [ ] Seven of the eight settings groups still stand named and empty: what
-      Generation says under Responses is drawn and moved, and what Appearance
-      says, and nothing behind any other row yet.
+- [ ] Three of the eight settings groups still stand named and empty:
+      Multimodal, Network, and Memory & Data. What is drawn today under the
+      others is Appearance (the theme, its type and its dark), what answers
+      in the conversation that is open (Services, Models), Generation
+      (Responses), the three tools this program owns (Tools), and what this
+      build is (About). The three left want things this program has no part
+      of yet -- a picture asked about, a proxy asked through, a memory kept
+      between conversations -- and drawing a row for something nothing does
+      is how a stub is made.
+- [ ] What a model wrote to itself, folded above its answer, has never been
+      pressed open and read: `history_fold` keeps it (`src/ui/message_list.cc`)
+      and no probe has said whether a press opens it.
 - [x] **Search does nothing yet** -- done 2026-11-06: what is typed in the
       drawer's field is asked for at every edit of it and not only when Enter
       is pressed, and what it keeps is every conversation named after it or

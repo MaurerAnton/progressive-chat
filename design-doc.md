@@ -28,15 +28,12 @@ Everything below this line is said because it is wanted, and none of it stands
 in the program today.
 
 * **The models that answer this conversation** stand on the top edge of the
-  main panel, one bubble each, and the name in a bubble is **pressed**: pressing
-  it is how you say which model this is, and read which it has been. Inside the
-  same bubble, with the name, is **what it has used of its window**, said as a
-  share of the whole — `~23.6K / 1M tokens` — so that the model you are writing
-  to and how near the edge this chat has brought it are one thing and not two.
-* **A plus beside them adds another model.** One conversation may be answered by
-  more than one: each takes a bubble of its own on that edge, with its own share
-  of its own window said in it. This plus is not the plus that begins a chat; it
-  begins *another answerer in this one*.
+  main panel, one bubble each: the name in a bubble is **what the model is
+  called**, and pressing the bubble is how you say which model this is and read
+  which it has been. What it has used of its window is **not** said again in
+  every bubble — one conversation's share of one window is said once, beside
+  the editor below (**The editor's row**), where every model that answers in it
+  would otherwise say the same count three times over.
 * **A button for the system prompt**: what is told to every model before
   anything else is said to it — `You are answering in Progressive Chat, briefly
   and plainly.` — read and written from here. Not only a plus is in the top;
@@ -84,6 +81,46 @@ says it once, for everything that follows. Nothing of an answer is put on the
 right.
 
 ### Folded above it
+
+Folded above an answer: **how long it was thinking, and how often it reached
+for a tool** — `Thought for 4.2 s · 3 tool calls`. The whole line is **one
+press**, and a press **opens it**: what the model wrote to itself while it was
+thinking is said under it, greentext, and beneath that **every tool call it
+made on the way**, one line each — what it asked for, and what it was given
+back — for those three are what the count was counting. Pressed again it folds.
+
+### The editor's row
+
+The bottom of the main panel is one row, read left to right, and nothing else
+in the panel is a plus:
+
+* **A plus at the panel's top right begins a new chat.** That is the only plus
+  in that part of the screen. Nothing beside it adds an answerer: which models
+  answer this conversation is said under **Services → Models** in the settings,
+  and nowhere else.
+* **A plus at the editor's left, before the model's name**, attaches something
+  to what you are writing. Pressed, it says four things: **photo or media from
+  the camera**, **photos from the gallery**, **videos**, **files**.
+* **The model's name** stands next, as **the model itself is called** and,
+  after it in brackets, **which provider it is asked through**:
+  `DeepSeek V4.1 Flash (ds)`. The id a wire is given — `deepseek-v4-1-flash` —
+  is not what is written here.
+* **A circle beside the name** says **how much of this model's window this
+  conversation has taken**, filled from twelve o'clock clockwise, and nothing
+  beside it says the same count in words again: what one conversation has used
+  of one window is said once on the screen and not once for every model that
+  answers in it.
+* **Three dots after the circle** open one menu, and in it: **thinking**,
+  switched on and off, with **how hard it is asked to think** said beside it
+  (`max`); **web search**, switched on and off; **compact context**, which is a
+  grey press and nothing else while the chat is empty; and **Advanced**.
+* **Advanced** opens the **large settings**: the **context window size**, the
+  **temperature**, the **maximum output tokens**, the **top p**, the
+  **frequency penalty** and the **presence penalty** — the same five the
+  settings keep under **Responses → Generation**, reached from where they are
+  asked about.
+
+### What the fold keeps today
 
 Above the answer, and only where there is something to fold, stands what the
 model did before it answered: **how long it took**, **how many tool calls it

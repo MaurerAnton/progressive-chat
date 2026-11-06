@@ -128,31 +128,6 @@ public:
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
             [&](const open_settings &) { settings_ = true; },
             [&](const close_settings &) { settings_ = false; },
-            // Another answerer in the same conversation: the first of those
-            // offered that is not answering in it already, which is what
-            // "another" means and all it can mean until what is offered is
-            // what the reader has said it is.
-            [&](const add_answerer &asking) {
-              for (conversation &one : root_.conversations) {
-                if (one.id != asking.chat)
-                  continue;
-                if (one.models.size() >= ui::max_answerers)
-                  break;
-                for (const answerer_choice &offered : answerers_offered) {
-                  const bool taken =
-                      std::ranges::any_of(one.models, [&](const auto &said) {
-                        return said == offered.name;
-                      });
-                  if (taken)
-                    continue;
-                  one.models.push_back(std::string(offered.name));
-                  break;
-                }
-                break;
-              }
-            },
-            // This conversation taken whole into one of its own: everything
-            // said in it so far, and nothing said in either of them after.
             [&](const fork_conversation &asking) {
               conversation *said = nullptr;
               for (conversation &one : root_.conversations)
