@@ -60,6 +60,10 @@ public:
                 drawer_ = false;
             },
             [&](const send_message &asking) {
+              // What the next answer is asked with is asked before the
+              // message is sent, and so the three dots are put away with
+              // it rather than left open over what is coming.
+              thinking_menu_ = false;
               const logic::sent_message said = logic::send(
                   logic::sending_request{
                       asking.chat, asking.text, {}, std::nullopt},
