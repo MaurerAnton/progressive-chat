@@ -11,6 +11,7 @@ import pchat.logic.search;
 import pchat.logic.composer;
 import pchat.logic.formatting;
 import pchat.logic.doc;
+import pchat.logic.forgotten;
 
 
 
@@ -130,4 +131,41 @@ SAID(doc, the_design_this_build_was_made_with_is_read_whole) {
   }
   EXPECT_TRUE(titled);
   EXPECT_TRUE(listed);
+}
+
+SAID(logic, what_is_said_in_one_conversation_is_taken_away_and_only_that) {
+  chats_root root;
+  root.conversations.push_back(conversation{.id = conversation_id{"1"}, .title = "Kept"});
+  root.conversations.push_back(conversation{.id = conversation_id{"2"}, .title = "Gone"});
+  root.messages.push_back(message{.id = message_id{"a"}, .chat = conversation_id{"1"}, .text = "here"});
+  root.messages.push_back(message{.id = message_id{"b"}, .chat = conversation_id{"2"}, .text = "taken"});
+  root.messages.push_back(message{.id = message_id{"c"}, .chat = conversation_id{"2"}, .text = "away"});
+  EXPECT_EQ(logic::said_in(root, conversation_id{"2"}), 2u);
+  logic::take_said_away(root, conversation_id{"2"});
+  EXPECT_EQ(root.messages.size(), 1u);
+  EXPECT_EQ(root.messages.front().text, std::string("here"));
+  // The conversation itself is still there, named in the drawer and open in
+  // the room, with nothing said under it.
+  EXPECT_EQ(root.conversations.size(), 2u);
+  EXPECT_EQ(logic::said_in(root, conversation_id{"2"}), 0u);
+  // Asked about a conversation nothing was ever said in: nothing changes.
+  logic::take_said_away(root, conversation_id{"3"});
+  EXPECT_EQ(root.messages.size(), 1u);
+}
+
+SAID(logic, every_conversation_taken_away_leaves_nothing_open) {
+  chats_root root;
+  root.conversations.push_back(conversation{.id = conversation_id{"1"}, .title = "One"});
+  root.conversations.push_back(conversation{.id = conversation_id{"2"}, .title = "Two"});
+  root.messages.push_back(message{.id = message_id{"a"}, .chat = conversation_id{"1"}, .text = "said"});
+  root.opened = conversation_id{"1"};
+  logic::take_everything_away(root);
+  EXPECT_TRUE(root.conversations.empty());
+  EXPECT_TRUE(root.messages.empty());
+  EXPECT_FALSE(root.opened.has_value());
+  // Taken away twice over: there is nothing left to take, and nothing said
+  // of it afterwards.
+  logic::take_everything_away(root);
+  EXPECT_TRUE(root.conversations.empty());
+  EXPECT_TRUE(root.messages.empty());
 }

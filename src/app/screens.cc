@@ -25,6 +25,7 @@ import pchat.app.requests;
 import pchat.app.sample;
 import pchat.logic.composer;
 import pchat.logic.lists;
+import pchat.logic.forgotten;
 
 namespace scene = skiff::scene;
 
@@ -125,6 +126,24 @@ public:
             // it to.
             [&](const share_answer &asking) { this->give(text_of(asking.said)); },
             [&](const delete_answer &asking) { cut_away(asking.said); },
+            // Everything said in one conversation, taken away: the
+            // conversation stands where it stood, named in the drawer and
+            // open in the room, with nothing said under it. What is being
+            // written to it is kept: taking away what was said is not taking
+            // away what is being said next.
+            [&](const forget_conversation &asking) {
+              logic::take_said_away(root_, asking.chat);
+              recount(asking.chat);
+            },
+            // Every conversation taken away, and everything said in them:
+            // nothing is left open, nothing is left in the drawer, and what
+            // the drawer was searched for is forgotten with them.
+            [&](const forget_everything &) {
+              logic::take_everything_away(root_);
+              query_.clear();
+              drawer_ = false;
+              settings_ = false;
+            },
             [&](const set_query &asking) { query_ = asking.text; },
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
             [&](const open_settings &) { settings_ = true; },

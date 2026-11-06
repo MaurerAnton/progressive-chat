@@ -11,6 +11,7 @@ import skiff.nodes;
 import pchat.config;
 import pchat.theme;
 import pchat.app.requests;
+import pchat.logic.forgotten;
 import :theme;
 import :base;
 import :appearance;
@@ -60,7 +61,8 @@ inline constexpr std::array<seed_choice, max_seeds> seeds_offered{{
 // What one of them draws under the item it stands under, where it draws
 // anything: one of these five, and never two of them, because no two of
 // them are what one place in the page is made of.
-enum class group_rows { none, appearance, generation, tools, answerers, about };
+enum class group_rows { none, appearance, generation, tools, answerers, about,
+                       memory };
 
 struct settings_group {
   std::string_view name;
@@ -92,8 +94,8 @@ inline constexpr std::array<settings_group, max_settings_groups> settings_groups
      group_rows::tools},
     {"Network", {{"Proxy", "WebUI"}}, 2u, max_settings_items,
      group_rows::none},
-    {"Memory & Data", {{"Memory", "Skills", "Data control"}}, 3u,
-     max_settings_items, group_rows::none},
+    {"Memory & Data", {{"Memory", "Skills", "Data control"}}, 3u, 0u,
+     group_rows::memory},
     {"Appearance & Language", {{"Appearance", "Language"}}, 2u, 0u,
      group_rows::appearance},
     {"About", {{"About"}}, 1u, 0u, group_rows::about},
@@ -113,6 +115,11 @@ inline constexpr float settings_group_gap = 20.0f;
 // What About says, and how much of it: every line of it is told, and given
 // away whole by a press.
 inline constexpr std::size_t max_about_rows = 3u;
+
+// What Memory says: one row for everything said in the conversation open, and
+// one for every conversation there is. Two, and no more than two, for both of
+// them take something away that is not asked back.
+inline constexpr std::size_t max_memory_rows = 2u;
 
 // A switch, as a row: what it is called, and the pill that says which way it
 // is put -- lit when it is on.
@@ -347,6 +354,64 @@ struct about_row : scene::Node {
   std::string given;
 };
 
+// A row under Memory: what a press takes away, said with how much of it there
+// is to take away, so that what is being given up is counted before it goes
+// and not only remembered afterwards.
+struct take_row : scene::Node {
+  ask_box fPlate{};
+  nodes::Text fName{"", 15.0f, 0u};
+  nodes::Text fSaid{"", 12.0f, 0u};
+
+  take_row() {
+    this->apply({.anchor = scene::anchor::kTopLeft,
+                 .height = settings_row_height,
+                 .cornerRadius = 14.0f});
+    fName.apply({.anchor = scene::anchor::kCentreLeft,
+                 .origin = scene::anchor::kCentreLeft,
+                 .x = 16.0f,
+                 .autoSize = scene::axes::kBoth});
+    // What there is of it, said at the row's other end: a number is read
+    // where it always stands, and not pushed about by the length of a name.
+    fSaid.apply({.anchor = scene::anchor::kCentreRight,
+                 .origin = scene::anchor::kCentreRight,
+                 .x = -16.0f,
+                 .autoSize = scene::axes::kBoth});
+  }
+
+  [[nodiscard]] bool acceptsInput() const { return true; }
+  [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+  [[nodiscard]] bool onClick(float, float) {
+    if (asked)
+      asked->ask(one);
+    return true;
+  }
+
+  void blank() { this->setVisible(false); }
+
+  void again(app::requests *sink, const scene::Spec &spec, const paints &look,
+             std::string_view name, std::string_view said,
+             app::request asking) {
+    asked = sink;
+    one = std::move(asking);
+    fPlate.again(sink, one, 0u);
+    this->apply(spec);
+    this->setVisible(true);
+    fName.setText(std::string(name));
+    fName.setColour(look.text);
+    fSaid.setText(std::string(said));
+    fSaid.setColour(look.dim);
+  }
+
+  void forEachChild(auto &&f) {
+    f(fPlate);
+    f(fName);
+    f(fSaid);
+  }
+
+  app::requests *asked = nullptr;
+  app::request one{app::forget_everything{}};
+};
+
 struct settings_rows : scene::Node {
   nodes::Text fHeading{"Settings", 26.0f, 0u, true};
   // One line to a text, kept on the heap and not as a member: sixty of them,
@@ -380,6 +445,11 @@ struct settings_rows : scene::Node {
   // About, drawn: what this build is, what it is under, and where its
   // source is kept.
   std::array<about_row, max_about_rows> fAbout;
+  // What Memory says: everything said in the conversation open, and every
+  // conversation, each of them taken away by a press on it. Nothing of them
+  // is asked back afterwards -- they are gone, and the row says how much had
+  // been said before it went.
+  std::array<take_row, max_memory_rows> fTaken;
   // What the design is called when it is offered: pressed, the whole of it
   // is said in the room, where it can be read against what is drawn.
   ask_box fReadPlate{};
@@ -418,6 +488,8 @@ struct settings_rows : scene::Node {
       one.setVisible(false);
     for (about_row &one : fAbout)
       one.blank();
+    for (take_row &one : fTaken)
+      one.blank();
     fBlack.fName.setText("Pure black");
     fLarge.fName.setText("Larger type");
     fLight.fName.setText("Light colours");
@@ -447,6 +519,42 @@ struct settings_rows : scene::Node {
                                               .wanted = !in});
       at += settings_row_stride;
     }
+    return at;
+  }
+
+  // Memory, drawn: what the window has open and everything said in it, then
+  // every conversation there is, and a press on either taking it away. Only
+  // the second is said where nothing is open, for there is nothing said in
+  // nothing.
+  [[nodiscard]] float say_memory(app::requests *asked, const paints &look,
+                                 const chats_root &root, float row_width,
+                                 float base) {
+    float at = base;
+    const auto spec_at = [row_width](float y) {
+      return scene::Spec{.anchor = scene::anchor::kTopLeft,
+                         .x = 16.0f,
+                         .y = y,
+                         .relativeSize = scene::axes::kNone,
+                         .width = row_width,
+                         .height = settings_row_height,
+                         .cornerRadius = 14.0f,
+                         .visible = true};
+    };
+    if (root.opened) {
+      const std::size_t said = logic::said_in(root, *root.opened);
+      fTaken[0].again(asked, spec_at(at), look,
+                      "Everything said here, taken away",
+                      said == 1u ? std::string("1 message said in it")
+                                 : std::to_string(said) + " messages said in it",
+                      app::forget_conversation{.chat = *root.opened});
+      at += settings_row_stride;
+    }
+    const std::size_t kept = root.conversations.size();
+    fTaken[1].again(asked, spec_at(at), look, "Every conversation, taken away",
+                    kept == 1u ? std::string("1 conversation kept")
+                               : std::to_string(kept) + " conversations kept",
+                    app::forget_everything{});
+    at += settings_row_stride;
     return at;
   }
 
@@ -485,8 +593,8 @@ struct settings_rows : scene::Node {
                                const paints &look, const looks &shown,
                                const asking &how,
                                std::span<const std::string> answerers,
-                               bool dark, float breadth, float row_width,
-                               float base) {
+                               const chats_root &root, bool dark, float breadth,
+                               float row_width, float base) {
     switch (rows) {
     case group_rows::none:
       return base;
@@ -500,6 +608,8 @@ struct settings_rows : scene::Node {
       return say_answerers(asked, look, answerers, row_width, base);
     case group_rows::about:
       return say_about(asked, look, row_width, base);
+    case group_rows::memory:
+      return say_memory(asked, look, root, row_width, base);
     }
     return base;
   }
@@ -650,7 +760,7 @@ struct settings_rows : scene::Node {
   }
   void again(app::requests *asked, const paints &look, const looks &shown,
              const asking &how, std::span<const std::string> answerers,
-             bool dark, float breadth) {
+             const chats_root &root, bool dark, float breadth) {
     // Where the next thing said stands: every row in here says where it
     // stands, so the page is laid out as it is read -- one group after the
     // last, and nothing left to count by hand.
@@ -689,8 +799,8 @@ struct settings_rows : scene::Node {
         // Under one of its items a group says more than its name: what it
         // is made of, in the room the items after it would have taken.
         if (named.drawn_at == one)
-          at = say_rows(named.drawn, asked, look, shown, how, answerers, dark,
-                        breadth, row_width, at);
+          at = say_rows(named.drawn, asked, look, shown, how, answerers, root,
+                        dark, breadth, row_width, at);
       }
       at += settings_group_gap;
     }
@@ -734,6 +844,8 @@ struct settings_rows : scene::Node {
     f(fRead);
     for (about_row &one : fAbout)
       f(one);
+    for (take_row &one : fTaken)
+      f(one);
   }
 };
 
@@ -770,7 +882,7 @@ struct settings_screen : scene::Node {
 
   void again(app::requests *asked, const paints &look, const looks &shown,
              const asking &how, std::span<const std::string> answerers,
-             bool dark, float width, float height) {
+             const chats_root &root, bool dark, float width, float height) {
     this->setVisible(true);
     // Opened anew, it is read from its beginning. Left alone it stood at
     // its end: the column is taller than the room, and while it was still
@@ -813,7 +925,7 @@ struct settings_screen : scene::Node {
                       .width = 18.0f,
                       .height = 18.0f});
     std::get<0>(fRows.fChildren)
-        .again(asked, look, shown, how, answerers, dark,
+        .again(asked, look, shown, how, answerers, root, dark,
                breadth - 2.0f * edge);
     fRows.apply({.anchor = scene::anchor::kTopCentre,
                  .origin = scene::anchor::kTopCentre,

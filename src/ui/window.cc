@@ -187,7 +187,7 @@ struct app_window : scene::Node {
       fComposer.again(look, *open_chat, asked);
     // The settings page, over everything, when it is opened.
     if (settings_open)
-      fSettings.again(asked, look, shown, how, answering, dark, width,
+      fSettings.again(asked, look, shown, how, answering, root, dark, width,
                       height);
     else
       fSettings.hide();

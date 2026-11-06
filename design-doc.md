@@ -207,6 +207,10 @@ this program has to be able to say yes or no to, and to what degree.
 **Memory & Data**
 
 * **Memory** — what is remembered while it runs, and what is kept in files.
+  *(Drawn: everything said in the chat that is open, taken away by a press;
+  every conversation taken away by another, said each with how much there is
+  of it. What the window keeps is all there is to take away: nothing of it is
+  written into a file yet, and nothing of it is remembered after this run.)*
 * **Skills** — instruction files the model can be given.
 * **Data control** — everything of yours given out as a file, or taken back in.
 
@@ -227,9 +231,10 @@ this program has to be able to say yes or no to, and to what degree.
 Of all this, what is drawn today is **Appearance** — the theme, its scheme,
 its type and its dark; the five things an answer is asked with, under
 **Generation**; which answerers answer in the chat that is open, under
-**Models**; the three tools this program owns, under **Tools**; and what this
-build is, under **About**. The other three groups stand empty, each with its
-name, waiting for the thing behind it.
+**Models**; the three tools this program owns, under **Tools**; what of yours
+it is holding, under **Memory & Data**; and what this build is, under
+**About**. The other two groups stand empty, each with its name, waiting for
+the thing behind it.
 
 ## What this design does not do
 

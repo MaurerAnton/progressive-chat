@@ -60,6 +60,14 @@ struct copy_text {
 struct toggle_drawer {};
 struct open_settings {};
 struct close_settings {};
+// What Settings asks for under Memory: everything said in the conversation
+// this window has open taken away, and every conversation taken away with
+// everything said in them. Nothing of either is kept anywhere else to be
+// asked back.
+struct forget_conversation {
+  conversation_id chat;
+};
+struct forget_everything {};
 // What the top edge asks for: another answerer in this same conversation,
 // this conversation taken whole into one of its own, this conversation given
 // out, and what every answerer in it is told before anything is said to it.
@@ -136,7 +144,8 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              toggle_more, open_design, close_design,
                              pick_seed, set_amoled, set_font_scale, pick_theme,
                               set_generation, set_tool,
-                              set_answerer, copy_text>;
+                              set_answerer, copy_text, forget_conversation,
+                             forget_everything>;
 
 class requests {
 public:
