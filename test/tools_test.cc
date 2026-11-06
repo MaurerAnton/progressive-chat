@@ -97,23 +97,23 @@ SAID(tools, nothing_is_answered_for_a_tool_that_is_not_ours) {
 
 SAID(tools, what_the_reader_switched_off_is_not_offered) {
   asking how;
-  EXPECT_EQ(tools_of(how).size(), tools_owned);
+  EXPECT_EQ(tools::tools_of(how).size(), tools_owned);
   how = set_of(how, tool_choice::how_much, false);
-  const std::vector<provider::offered> left = tools_of(how);
+  const std::vector<provider::offered> left = tools::tools_of(how);
   EXPECT_EQ(left.size(), tools_owned - 1u);
   for (const provider::offered &one : left)
-    EXPECT_NE(one.name, name_of(tool_choice::how_much));
+    EXPECT_NE(one.name, tools::name_of(tool_choice::how_much));
   // Every one of them off, and no body written says anything about tools.
   for (std::size_t at = 0u; at < tools_owned; ++at)
     how = set_of(how, static_cast<tool_choice>(at), false);
-  EXPECT_TRUE(tools_of(how).empty());
-  EXPECT_TRUE(wanted_of(how).tools.empty());
+  EXPECT_TRUE(tools::tools_of(how).empty());
+  EXPECT_TRUE(tools::wanted_of(how).tools.empty());
   // And one switched back on, what one answer is asked with says tools
   // again, and says this one.
   how = set_of(how, tool_choice::when_it_is, true);
-  const provider::wanted wants = wanted_of(how);
+  const provider::wanted wants = tools::wanted_of(how);
   EXPECT_EQ(wants.tools.size(), 1u);
-  EXPECT_EQ(wants.tools.front().name, name_of(tool_choice::when_it_is));
+  EXPECT_EQ(wants.tools.front().name, tools::name_of(tool_choice::when_it_is));
   EXPECT_EQ(wants.temperature, default_asking.temperature);
 }
 
