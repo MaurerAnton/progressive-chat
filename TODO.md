@@ -69,6 +69,18 @@ build and the next.
 - [ ] What a model wrote to itself, folded above its answer, has never been
       pressed open and read: `history_fold` keeps it (`src/ui/message_list.cc`)
       and no probe has said whether a press opens it.
+- [ ] **The editor's row is drawn as far as its name and its circle, and no
+      further**: the design asks for a plus on its left that attaches (camera,
+      gallery, videos, files) and three dots on its right that open thinking
+      with its effort, web search, compact context, and Advanced into the
+      large settings. Neither is drawn: a press that asks nothing is a stub,
+      and what is to answer them -- where a file is read and where a context
+      is compacted -- is not written yet (`src/ui/composer.cc`; the design
+      says which under *The editor's row*).
+- [ ] The thinking a fold opens does not say the tool calls the line above it
+      counted: `history_fold` says only what the model wrote to itself, and
+      nothing yet keeps each call it made -- what it asked for and what came
+      back -- for the fold to say one line at a time.
 - [x] **Search does nothing yet** -- done 2026-11-06: what is typed in the
       drawer's field is asked for at every edit of it and not only when Enter
       is pressed, and what it keeps is every conversation named after it or
