@@ -105,6 +105,14 @@ struct set_font_scale {
 struct pick_theme {
   theme_mode mode = theme_mode::dark;
 };
+// How an answer is to be asked for (design-doc.md, "Generation"): one of the
+// five things a wire is told about choosing words, and what it is set to.
+// A row says the one it was pressed for and nothing of the others, the same
+// way a row of the Appearance page says its own switch alone.
+struct set_generation {
+  asking_what field = asking_what::temperature;
+  double value = 0.0;
+};
 
 // What is asked, as one value: spl::variant, so that every kind of it is
 // handled where it is read and a new one cannot be forgotten.
@@ -116,7 +124,8 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              share_conversation, open_system_prompt,
                              close_system_prompt, set_system_prompt,
                              toggle_more, open_design, close_design,
-                             pick_seed, set_amoled, set_font_scale, pick_theme>;
+                             pick_seed, set_amoled, set_font_scale, pick_theme,
+                              set_generation>;
 
 class requests {
 public:

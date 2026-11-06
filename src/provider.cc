@@ -11,6 +11,7 @@ export module pchat.provider;
 
 import std;
 import pchat.core;
+import pchat.config;
 import pchat.json;
 
 export namespace pchat::provider {
@@ -145,14 +146,36 @@ struct offered {
   std::vector<std::pair<std::string, std::string>> taken;
 };
 
-// What a body is written with besides the turns: that it streams, and what
-// tools it may ask for on its way.
+// What a body is written with besides the turns: that it streams, what tools
+// it may ask for on its way, and how it is to choose every word it writes.
+//
+// Every one of the five is kept as it was asked for and said only where it was
+// asked for: a wire keeps its own for each, and a program that has not been
+// told one has nothing to say about it.
 struct wanted {
   bool stream = true;
   std::vector<offered> tools;
+  std::optional<double> temperature;
+  std::optional<double> top_p;
+  std::optional<std::uint32_t> max_tokens;
+  std::optional<double> presence_penalty;
+  std::optional<double> frequency_penalty;
 };
 
 // ---- the body ------------------------------------------------------------
+
+// How the program asks, in the words a wire takes it in: the five things an
+// answer is chosen by (pchat.config, `asking`), read out of where the reader
+// keeps them and into what a body is written with. Nothing of the two is
+// lost going either way, and nothing is said for one that was never set.
+[[nodiscard]] inline wanted wants_of(const asking &how) {
+  return wanted{.stream = true,
+                .temperature = how.temperature,
+                .top_p = how.top_p,
+                .max_tokens = how.max_tokens,
+                .presence_penalty = how.presence,
+                .frequency_penalty = how.often};
+}
 
 // What a chat wire wants said to it: the model, that it is asked to stream,
 // the turns, and that it says what it cost at the end of the stream and not
@@ -197,6 +220,19 @@ template <std::ranges::forward_range Turns>
     }
     out.shut();
   }
+  // How it is to write, where anything was said about that: five numbers a
+  // wire reads whether it streams or not, and none of them written for a wire
+  // that was told nothing about how to choose.
+  if (wants.temperature)
+    out.name("temperature").number(*wants.temperature);
+  if (wants.top_p)
+    out.name("top_p").number(*wants.top_p);
+  if (wants.max_tokens)
+    out.name("max_tokens").number(static_cast<std::int64_t>(*wants.max_tokens));
+  if (wants.presence_penalty)
+    out.name("presence_penalty").number(*wants.presence_penalty);
+  if (wants.frequency_penalty)
+    out.name("frequency_penalty").number(*wants.frequency_penalty);
   // What it cost comes at the end of the stream too: the last frame of one has
   // no choice in it, and without this there would be nothing in it to read.
   if (wants.stream)

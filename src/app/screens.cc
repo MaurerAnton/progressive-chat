@@ -43,6 +43,11 @@ public:
 
   [[nodiscard]] window_scene &window() noexcept { return scene_; }
 
+  // How answers are asked for, as it stands now, and as one row of the
+  // settings may move it: one of the five, kept inside its own lines.
+  [[nodiscard]] const asking &how() const noexcept { return how_; }
+  void how(asking_what field, double value) { how_ = set_of(how_, field, value); }
+
   // Answered between frames: what the controls asked for, oldest first.
   void take(const request &one) {
     spl::visit(
@@ -236,7 +241,11 @@ public:
               shown_.mode = asking.mode;
               dark_ = dark_of(shown_.mode, true);
               recolour();
-            }},
+            },
+            // How an answer is asked for: the one of the five a row was
+            // pressed for, kept inside the lines it is said to have
+            // (pchat.config, `asking`).
+            [&](const set_generation &asking) { how(asking.field, asking.value); }},
         one);
   }
 
@@ -252,8 +261,9 @@ public:
     for (const request &one : asked_.drain())
       take(one);
     read_what_arrived();
-    scene_.root().again(look_, root_, shown_, query_, dark_, settings_, design_,
-                        system_, more_, drawer_, width_, height_, &asked_);
+    scene_.root().again(look_, root_, shown_, how_, query_, dark_, settings_,
+                        design_, system_, more_, drawer_, width_, height_,
+                        &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -504,6 +514,7 @@ private:
   window_scene scene_{std::in_place};
   chats_root root_;
   looks shown_;
+  asking how_;
   ui::paints look_;
   requests asked_;
   std::string query_;

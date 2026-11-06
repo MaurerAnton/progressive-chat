@@ -46,9 +46,10 @@ inline constexpr std::array<seed_choice, max_seeds> seeds_offered{{
 }};
 
 // The eight groups the page is made of, and what each holds, said once in
-// the order they are said in (design-doc.md, "The settings"). Of these, one
-// is drawn: Appearance, under Appearance & Language. The rest stand named
-// and empty, waiting for the thing each of them is named for.
+// the order they are said in (design-doc.md, "The settings"). Of these, two
+// are drawn: Appearance, under Appearance & Language, and Generation, under
+// Responses. The rest stand named and empty, waiting for the thing each of
+// them is named for.
 //
 // Not one row here says what a group would do when it is pressed: none of
 // them is pressed, because there is nothing behind any of them yet to be
@@ -57,15 +58,19 @@ struct settings_group {
   std::string_view name;
   std::array<std::string_view, max_settings_items> items{};
   std::size_t said = 0u;
-  // Which of its items is drawn today: the one at this place in the list.
+  // Which of its items is drawn today: the one at this place in the list,
+  // and where a second of them is too, that one in `drawn_too`. Every other
+  // group says `max_settings_items`, which no item is ever at.
   std::size_t drawn = max_settings_items;
+  std::size_t drawn_too = max_settings_items;
 };
 inline constexpr std::array<settings_group, max_settings_groups> settings_groups{{
     {"Services", {{"Providers", "Models"}}, 2u, max_settings_items},
     {"Responses",
      {{"System prompts", "Generation", "Context", "Title generation"}},
      4u,
-     max_settings_items},
+     max_settings_items,
+     1u},
     {"Multimodal", {{"Image transcription", "Image generation"}}, 2u,
      max_settings_items},
     {"Tools",
@@ -151,6 +156,107 @@ struct switch_row : scene::Node {
   }
 };
 
+// What one of them is said as in the page: whole tokens where it counts
+// tokens, and elsewhere two places of decimals, which is as near as any of
+// them is ever set.
+[[nodiscard]] inline std::string said_value(asking_what field, double value) {
+  return field == asking_what::max_tokens ? std::format("{:.0f}", value)
+                                          : std::format("{:.2f}", value);
+}
+
+// The five, in the order the page says them in, and what each is called.
+struct asking_choice {
+  asking_what field;
+  std::string_view name;
+};
+inline constexpr std::array<asking_choice, 5> asking_offered{{
+    {asking_what::temperature, "Temperature"},
+    {asking_what::top_p, "Top P"},
+    {asking_what::max_tokens, "Maximum tokens"},
+    {asking_what::presence, "Presence penalty"},
+    {asking_what::often, "Frequency penalty"},
+}};
+
+// One of the five things an answer is asked with, as a row: what it is
+// called, what it stands at now, and a press either side of that to move it
+// one step along -- the step each of them keeps to itself in pchat.config.
+// Neither press says more than the one it was pressed for.
+struct knob_row : scene::Node {
+  nodes::Box<> fPlate{0u};
+  nodes::Text fName{"", 15.0f, 0u};
+  nodes::Text fValue{"", 15.0f, 0u};
+  ask_box fLess{};
+  nodes::Text fLessMark{"–", 16.0f, 0u, true};
+  ask_box fMore{};
+  nodes::Text fMoreMark{"+", 16.0f, 0u, true};
+
+  knob_row() {
+    this->apply({.height = settings_row_height, .cornerRadius = 14.0f});
+    fPlate.apply({.fill = true});
+    fName.apply({.anchor = scene::anchor::kCentreLeft,
+                 .origin = scene::anchor::kCentreLeft,
+                 .x = 16.0f,
+                 .autoSize = scene::axes::kBoth});
+    // What it stands at, right of its name and left of the two presses: not
+    // centred, because a number that grows is read where it began.
+    fValue.apply({.anchor = scene::anchor::kCentreRight,
+                  .origin = scene::anchor::kCentreRight,
+                  .x = -118.0f,
+                  .autoSize = scene::axes::kBoth});
+    fLess.apply({.anchor = scene::anchor::kCentreRight,
+                 .origin = scene::anchor::kCentreRight,
+                 .x = -60.0f,
+                 .width = 40.0f,
+                 .height = 30.0f,
+                 .cornerRadius = 10.0f});
+    fLessMark.apply({.anchor = scene::anchor::kCentreRight,
+                     .origin = scene::anchor::kCentre,
+                     .x = -80.0f,
+                     .autoSize = scene::axes::kBoth});
+    fMore.apply({.anchor = scene::anchor::kCentreRight,
+                 .origin = scene::anchor::kCentreRight,
+                 .x = -14.0f,
+                 .width = 40.0f,
+                 .height = 30.0f,
+                 .cornerRadius = 10.0f});
+    fMoreMark.apply({.anchor = scene::anchor::kCentreRight,
+                     .origin = scene::anchor::kCentre,
+                     .x = -34.0f,
+                     .autoSize = scene::axes::kBoth});
+  }
+
+  void again(app::requests *sink, const scene::Spec &spec, const paints &look,
+             std::string_view name, asking_what field, double value) {
+    this->apply(spec);
+    const asking_range there = range_of(field);
+    fPlate.setColour(look.field);
+    fName.setText(std::string(name));
+    fName.setColour(look.text);
+    fValue.setText(said_value(field, value));
+    fValue.setColour(look.dim);
+    fLess.again(sink,
+                app::set_generation{field,
+                                    kept_asking(field, value - there.step)},
+                look.raised);
+    fMore.again(sink,
+                app::set_generation{field,
+                                    kept_asking(field, value + there.step)},
+                look.raised);
+    fLessMark.setColour(look.text);
+    fMoreMark.setColour(look.text);
+  }
+
+  void forEachChild(auto &&f) {
+    f(fPlate);
+    f(fName);
+    f(fValue);
+    f(fLess);
+    f(fLessMark);
+    f(fMore);
+    f(fMoreMark);
+  }
+};
+
 // What the card holds: the seeds, the switches, and what else is said in
 // the page. Of its own node, and not drawn straight into the page, so that
 // what scrolls is these and not the card they are said in -- a page that
@@ -178,6 +284,8 @@ struct settings_rows : scene::Node {
   switch_row fBlack;
   switch_row fLarge;
   switch_row fLight;
+  // Generation, drawn: one row for each of the five an answer is asked with.
+  std::array<knob_row, asking_offered.size()> fKnobs;
   // What the design is called when it is offered: pressed, the whole of it
   // is said in the room, where it can be read against what is drawn.
   ask_box fReadPlate{};
@@ -209,6 +317,8 @@ struct settings_rows : scene::Node {
       }
     for (std::size_t at = 0; at < max_seeds; ++at)
       fSeeds[at].blank();
+    for (knob_row &one : fKnobs)
+      one.setVisible(false);
     fBlack.fName.setText("Pure black");
     fLarge.fName.setText("Larger type");
     fLight.fName.setText("Light colours");
@@ -216,6 +326,30 @@ struct settings_rows : scene::Node {
     fVersion.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
                     .autoSize = scene::axes::kBoth});
+  }
+
+  // Generation, drawn: one row to each of the five, under the name the page
+  // had left standing for it alone, and told to say where the page goes on
+  // from the last of them.
+  [[nodiscard]] float say_generation(app::requests *asked, const paints &look,
+                                     const asking &how, float row_width,
+                                     float base) {
+    float at = base;
+    for (std::size_t one = 0u; one < asking_offered.size(); ++one) {
+      const asking_choice &said = asking_offered[one];
+      fKnobs[one].again(asked,
+                        {.anchor = scene::anchor::kTopLeft,
+                         .x = 16.0f,
+                         .y = at,
+                         .relativeSize = scene::axes::kNone,
+                         .width = row_width,
+                         .height = settings_row_height,
+                         .cornerRadius = 14.0f},
+                        look, said.name, said.field,
+                        value_of(how, said.field));
+      at += settings_row_stride;
+    }
+    return at;
   }
 
   // Appearance, drawn: the seeds to choose between, and the three switches.
@@ -314,7 +448,7 @@ struct settings_rows : scene::Node {
     return top + 156.0f + settings_row_height + settings_group_gap;
   }
   void again(app::requests *asked, const paints &look, const looks &shown,
-             bool dark, float breadth) {
+             const asking &how, bool dark, float breadth) {
     // Where the next thing said stands: every row in here says where it
     // stands, so the page is laid out as it is read -- one group after the
     // last, and nothing left to count by hand.
@@ -354,6 +488,10 @@ struct settings_rows : scene::Node {
         // it is made of stands under it, in the room it would have left.
         if (named.drawn == one)
           at = say_appearance(asked, look, shown, dark, breadth, row_width, at);
+        // Generation is drawn too: the five things an answer is asked with,
+        // each of them moved by a press either side of it.
+        if (named.drawn_too == one)
+          at = say_generation(asked, look, how, row_width, at);
       }
       at += settings_group_gap;
     }
@@ -385,6 +523,8 @@ struct settings_rows : scene::Node {
     f(fBlack);
     f(fLarge);
     f(fLight);
+    for (knob_row &one : fKnobs)
+      f(one);
     f(fReadPlate);
     f(fRead);
   }
@@ -416,7 +556,7 @@ struct settings_screen : scene::Node {
   void hide() { this->setVisible(false); }
 
   void again(app::requests *asked, const paints &look, const looks &shown,
-             bool dark, float width, float height) {
+             const asking &how, bool dark, float width, float height) {
     this->setVisible(true);
     const float breadth = std::min(width, settings_card_widest);
     fClosePlate.again(asked, app::close_settings{}, look.raised);
@@ -451,7 +591,7 @@ struct settings_screen : scene::Node {
                       .width = 18.0f,
                       .height = 18.0f});
     std::get<0>(fRows.fChildren)
-        .again(asked, look, shown, dark, breadth - 2.0f * edge);
+        .again(asked, look, shown, how, dark, breadth - 2.0f * edge);
     fRows.apply({.anchor = scene::anchor::kTopCentre,
                  .origin = scene::anchor::kTopCentre,
                  .x = 0.0f,

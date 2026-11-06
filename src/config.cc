@@ -44,9 +44,110 @@ constexpr color_scheme colors_of(const looks& shown, bool system_dark = true) {
   return with_amoled(scheme_for(shown.preset, shown.style, dark), dark, shown.amoled);
 }
 
+// How an answer is asked for: what a model is told to do with its own choices
+// while it writes one, whichever wire it is asked through. Five of them, and
+// none of them anything this program answers itself -- every one is said as
+// part of every body written for a provider (pchat.provider, `wanted`).
+struct asking {
+  // How far it may wander from the words most likely to come next.
+  double temperature = 0.7;
+  // How much of what is likely it is allowed to choose between: a share of
+  // the whole of it, from all of it down to the likeliest word alone.
+  double top_p = 1.0;
+  // How long an answer may ever be, in tokens: a ceiling said to the wire,
+  // and nothing here counts tokens to keep it.
+  std::uint32_t max_tokens = 2048;
+  // What is taken off a word for having been said already at all, and for
+  // having been said often: the two ways a wire is asked not to repeat.
+  double presence = 0.0;
+  double often = 0.0;
+  friend bool operator==(const asking&, const asking&) = default;
+};
+
+inline constexpr asking default_asking{};
+
+// Which of the five one thing is, wherever one of them is named: in what a
+// row asks for, and in what the program keeps inside its lines.
+enum class asking_what { temperature, top_p, max_tokens, presence, often };
+
+// How far each of them goes, and by how much one press moves it: said once
+// here because the row that moves one of them and the program that keeps it
+// ask for the same numbers, and a row told its own would soon say another's.
+struct asking_range {
+  double least = 0.0;
+  double most = 1.0;
+  double step = 0.1;
+};
+[[nodiscard]] constexpr asking_range range_of(asking_what one) {
+  switch (one) {
+  case asking_what::temperature:
+    return {.least = 0.0, .most = 2.0, .step = 0.05};
+  case asking_what::top_p:
+    return {.least = 0.0, .most = 1.0, .step = 0.05};
+  case asking_what::max_tokens:
+    return {.least = 256.0, .most = 32768.0, .step = 256.0};
+  case asking_what::presence:
+    return {.least = -2.0, .most = 2.0, .step = 0.1};
+  case asking_what::often:
+    break;
+  }
+  return {.least = -2.0, .most = 2.0, .step = 0.1};
+}
+
+// What one of them is set to, whichever it is: said as a number everywhere
+// but where it is kept as a count of tokens.
+[[nodiscard]] constexpr double value_of(const asking &one, asking_what field) {
+  switch (field) {
+  case asking_what::temperature:
+    return one.temperature;
+  case asking_what::top_p:
+    return one.top_p;
+  case asking_what::max_tokens:
+    return static_cast<double>(one.max_tokens);
+  case asking_what::presence:
+    return one.presence;
+  case asking_what::often:
+    break;
+  }
+  return one.often;
+}
+
+// The same, with one of them moved: what a row's press either side of one
+// asks for, kept inside the lines that one has.
+[[nodiscard]] constexpr asking set_of(const asking &one, asking_what field,
+                                      double value) {
+  asking out = one;
+  switch (field) {
+  case asking_what::temperature:
+    out.temperature = kept_asking(field, value);
+    break;
+  case asking_what::top_p:
+    out.top_p = kept_asking(field, value);
+    break;
+  case asking_what::max_tokens:
+    out.max_tokens = static_cast<std::uint32_t>(kept_asking(field, value));
+    break;
+  case asking_what::presence:
+    out.presence = kept_asking(field, value);
+    break;
+  case asking_what::often:
+    out.often = kept_asking(field, value);
+    break;
+  }
+  return out;
+}
+
+// One of them kept inside its lines: what a row asked for, whether it asked
+// by one press or by being set.
+[[nodiscard]] constexpr double kept_asking(asking_what one, double value) {
+  const asking_range there = range_of(one);
+  return std::clamp(value, there.least, there.most);
+}
+
 // What is kept: the looks, and the small things a reader would miss.
 struct settings_root {
   looks shown;
+  asking asked;
   std::vector<std::string> recent_emoji;
   friend bool operator==(const settings_root&, const settings_root&) = default;
 };

@@ -7,6 +7,7 @@ export module pchat.test.provider;
 // two the way a transport hands it over.
 import std;
 import pchat.core;
+import pchat.config;
 import pchat.json;
 import pchat.provider;
 import pchat.provider.stream;
@@ -70,6 +71,43 @@ SAID(provider, a_body_is_written_for_a_wire_and_read_back_whole) {
   EXPECT_TRUE(json::truth_of(*json::said(json::said(*read_back, "stream_options"),
                                          "include_usage"))
                   .value_or(false));
+}
+
+SAID(provider, how_the_program_asks_is_said_in_the_body) {
+  const provider::endpoint at{.base = "https://api.openai.com/v1",
+                              .model = "o4-mini"};
+  const std::vector<provider::turn> turns{
+      provider::turn{.who = provider::role::user, .text = "Say go"}};
+  asking how{.temperature = 0.35,
+             .top_p = 0.8,
+             .max_tokens = 1024,
+             .presence = -0.5,
+             .often = 0.25};
+  const std::string body =
+      provider::body_of(at, turns, provider::wants_of(how));
+  const auto read_back = json::read(body);
+  EXPECT_TRUE(read_back.has_value());
+  EXPECT_EQ(json::number_of(*json::said(*read_back, "temperature")).value_or(0.0),
+            0.35);
+  EXPECT_EQ(json::number_of(*json::said(*read_back, "top_p")).value_or(0.0), 0.8);
+  EXPECT_EQ(json::number_of(*json::said(*read_back, "max_tokens")).value_or(0.0),
+            1024.0);
+  EXPECT_EQ(json::number_of(*json::said(*read_back, "presence_penalty")).value_or(0.0),
+            -0.5);
+  EXPECT_EQ(json::number_of(*json::said(*read_back, "frequency_penalty")).value_or(0.0),
+            0.25);
+}
+
+SAID(provider, a_body_asked_for_nothing_about_choosing_says_nothing_of_it) {
+  const provider::endpoint at{.base = "https://api.openai.com/v1",
+                              .model = "o4-mini"};
+  const std::vector<provider::turn> turns{
+      provider::turn{.who = provider::role::user, .text = "Say go"}};
+  const std::string body = provider::body_of(at, turns);
+  const auto read_back = json::read(body);
+  EXPECT_TRUE(read_back.has_value());
+  EXPECT_FALSE(json::said(*read_back, "temperature"));
+  EXPECT_FALSE(json::said(*read_back, "max_tokens"));
 }
 
 SAID(provider, a_second_wire_is_known_by_how_its_base_ends) {

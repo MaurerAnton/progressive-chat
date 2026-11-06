@@ -38,4 +38,23 @@ SAID(theme, looks_give_colours_for_the_mode) {
   EXPECT_TRUE(dark_of(theme_mode::system, true));
 }
 
+SAID(theme, what_an_answer_is_asked_with_keeps_inside_its_lines) {
+  EXPECT_EQ(value_of(default_asking, asking_what::temperature), 0.7);
+  EXPECT_EQ(value_of(default_asking, asking_what::max_tokens), 2048.0);
+  // Too hot to stand, and below nothing at all: both kept by `kept_asking`.
+  EXPECT_EQ(kept_asking(asking_what::temperature, 9.0), 2.0);
+  EXPECT_EQ(kept_asking(asking_what::top_p, -1.0), 0.0);
+  // One press either side of one moves it by that one's own step, and stops
+  // where it stops.
+  asking one = default_asking;
+  one = set_of(one, asking_what::temperature, 0.7 + range_of(asking_what::temperature).step);
+  EXPECT_EQ(one.temperature, 0.7 + range_of(asking_what::temperature).step);
+  one = set_of(set_of(one, asking_what::max_tokens, 0.0), asking_what::max_tokens,
+               -4096.0);
+  EXPECT_EQ(one.max_tokens, 256u);
+  // A press that says one of them says nothing of the others.
+  EXPECT_EQ(one.top_p, default_asking.top_p);
+  EXPECT_EQ(one.often, default_asking.often);
+}
+
 int main() { return pchat::tests::run(); }
