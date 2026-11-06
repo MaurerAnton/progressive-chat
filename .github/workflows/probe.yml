@@ -9,7 +9,9 @@ name: probe
 # builds the page the ref itself makes and asks it everything the deployed
 # one is asked, so that what has not been deployed yet -- every pull
 # request, in other words -- is answered about what it paints rather than
-# about what its code seems to say.
+# about what its code seems to say. Which pull request that is, is said by
+# the request itself: [probe] in its title asks for it, and a title without
+# it leaves every push paying nothing for a browser nobody asked to see it.
 on:
   workflow_dispatch:
     inputs:
@@ -21,12 +23,16 @@ on:
         description: 'A probe script, in place of the one in the tree'
         required: false
         default: ''
+  # What asks for the page of the push itself to be probed is the request's
+  # own title, said below: nothing is paid for here until a pull request asks.
+  pull_request:
 
 permissions:
   contents: read
 
 jobs:
   pushed:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.title, '[probe]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -107,6 +113,9 @@ jobs:
           if-no-files-found: error
 
   painted:
+    # What everybody already sees, and nothing to do with a push: a change is
+    # not what this page is made of until it has landed.
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
