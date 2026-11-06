@@ -167,7 +167,7 @@ SAID(provider_run, the_answer_as_the_model_keeps_it) {
   // one, and a call given nothing says nothing of what it was given.
   EXPECT_EQ(said.before->tool_calls(), 1u);
   EXPECT_EQ(said.before->calls,
-            std::vector<tool_call>{{.name = "weather", .asked = "{}"}});
+            (std::vector<tool_call>{{.name = "weather", .asked = "{}"}}));
   EXPECT_EQ(said.before->said,
             std::string("first the weather\n> weather({})\n"));
 }

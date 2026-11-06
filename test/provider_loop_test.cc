@@ -122,7 +122,7 @@ SAID(provider_loop, what_a_tool_answered_goes_back_into_the_asking) {
   // said once, for it is one call and not two of them counted twice.
   EXPECT_EQ(said.before->tool_calls(), 1u);
   EXPECT_EQ(said.before->calls,
-            std::vector<tool_call>{{.name = "weather", .asked = "{}"}});
+            (std::vector<tool_call>{{.name = "weather", .asked = "{}"}}));
 }
 
 SAID(provider_loop, a_call_the_wire_gave_no_name_to_is_named_here) {
