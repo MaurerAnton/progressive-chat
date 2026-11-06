@@ -130,9 +130,10 @@ Above the answer, and only where there is something to fold, stands what the
 model did before it answered: **how long it took**, **how many tool calls it
 made**, and — folded inside that line — **its thinking, as greentext**: what it
 wrote while it was not yet answering, in one green of its own, which is the
-colour it keeps when the fold is opened. Folded, it is one line under which
-nothing is read; unfolded, the greentext stands under it, and the answer below
-it moves down by what it came to.
+colour it keeps when the fold is opened, and **every call it made on the way**,
+one line each with what it asked for and what came back. Folded, it is one
+line under which nothing is read; unfolded, the greentext and the calls stand
+under it, and the answer below it moves down by what they came to.
 
 ### Under it
 
@@ -244,9 +245,10 @@ name, waiting for the thing behind it.
   held in a shape.
 * It does not put the time of an answer beside every line of it: only yours
   keep a time, and it is kept inside them.
-* It does not open what it folds. The line above an answer -- how long it
-  took, how many calls it made -- is written as one line and stays one: the
-  thinking under it and the calls it counts are not read anywhere yet.
+* It does not open what it folds, but a press on it. The line above an answer
+  -- how long it took, how many calls it made -- is one line until it is
+  pressed, and nothing else opens it: the thinking under it and every call it
+  made on the way are read only where the reader went looking for them.
 * It does not yet count anything for real. Until the program's own back end is
   here, what fills the room is sample: the numbers said above are written in it
   like any other words, and nothing measures them.
