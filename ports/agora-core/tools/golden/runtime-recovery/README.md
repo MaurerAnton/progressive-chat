@@ -10,10 +10,7 @@ touching the export watermark exactly once.
 
 | Source | Why |
 | --- | --- |
-| `data/local/ChatDaoRuntimeRecovery.kt` | the module under test (the driver shares its module, so `internal` needs no widening) |
-| `data/local/RunBranchSelectionIntegrity.kt`, `data/local/RunEntity.kt`, `model/RuntimeIdentity.kt` | the projection validator and the run entity it reads |
 | `model/ConversationRuntimeReducer.kt` + the Kotlin cluster (`ConversationCommand`, `RunState`, `RunEffect`, `RuntimeTransition`) | the reducer the body drives |
-| `model/RunRecoveryPolicy.kt` | `recoverMessageStatus` / `stopIncompleteToolsJson` |
 | `model/ChatMessage.kt` and its model dependencies | `MessageStatus`, `Participant`, `MessageSegment`, `ToolExecutionStates` |
 | ``agora_extract recovery-sources`` output | `MessageEntity`, `MessageStreamCheckpoint`, `encodeSelectionMap` lifted byte for byte from `ChatEntities.kt` / `ChatDao.kt` |
 
@@ -21,11 +18,7 @@ touching the export watermark exactly once.
 
 | Path | Purpose |
 | --- | --- |
-| `platform/ChatDao.kt` | the nine ChatDao queries the body calls, transcribed with the app's own query text (ChatDao.kt itself is a 795-line interface belonging to another module) |
-| `platform/MiniRoom.kt` | reflective executor: `@Query` SQL against real SQLite, `@Update(entity = ...)` projection updates by primary key, enum columns by `Enum.valueOf`, and `MessageConverters`' `List<String>` JSON encoding incl. the legacy `\|\|\|` fallback |
 | `platform/schema.sql` | the Room-generated DDL: all 26 `MessageEntity` columns with both foreign keys and three indices, the Migration16To17 `runs` table, and the documented `conversations` subset |
-| `platform/DebugLog.kt` | the Android logging sink dropped — `recoveryStage` is timing instrumentation with no decision in it (documented) |
-| `platform/StandChat.kt`, `platform/StandChatDatabase.kt` | the conversation surface the body reads and the database holder for the `@Transaction` wrapper |
 
 `at` (the `dataChangedAt` bump) is a scenario parameter and `System.currentTimeMillis()` feeds
 only the logging stub, so **every trace here is deterministic without clock masking**.
@@ -36,10 +29,8 @@ only the logging stub, so **every trace here is deterministic without clock mask
 | --- | --- |
 | `scenarios/*.json` | 9 scenarios, 15 steps |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `RuntimeRecoveryTraceDump.kt` | Driver: seeds SQLite, runs `recoverConversationRuntime`, dumps the tables |
 | ``agora_extract recovery-sources`` | Lifts `MessageEntity`, `MessageStreamCheckpoint`, `encodeSelectionMap` and the recovery body |
 | `agora_scenarios runtime-recovery` | Deterministic scenario generator |
-| `run_golden.sh` | Extracts, compiles, freezes (`--freeze`) or verifies the traces |
 
 ## What is pinned
 
@@ -86,11 +77,6 @@ and `messages` in declared column order, serialized exactly like `Json.encodeToS
 ## Regenerating
 
 ```bash
-export JAVA_HOME=/path/to/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar:coroutines.jar:sqlite-jdbc.jar \
-  ./run_golden.sh          # verify
-KOTLINC=... KOTLINX_JARS=... ./run_golden.sh --freeze   # regenerate
 core/build/agora_scenarios runtime-recovery core/tools/golden/runtime-recovery # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's git-ignored `build/` before each run, so runs are idempotent.

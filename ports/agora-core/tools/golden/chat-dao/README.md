@@ -7,24 +7,12 @@ run, message, task, loop, search, media-reference, provider-context and New Chat
 
 | Source | Why |
 | --- | --- |
-| `data/local/ChatDao.kt` | the module under test — a plain interface, so **no extraction is needed** |
-| `data/local/ChatDaoRuntimeRecovery.kt` | the recovery extension invoked by `recoverConversationRuntime` |
-| `data/local/ChatContextCompactDao.kt` | the compact/run/message primitives called from `@Transaction` bodies |
-| `data/local/ChatAutomationDao.kt` | inherited task and loop persistence |
-| `data/local/ChatProviderContextDao.kt`, `ChatSearchDao.kt`, `ChatMediaReferencesDao.kt` | the other inherited DAO surfaces |
-| `data/local/NewChatPersistDao.kt` | the singleton New Chat draft row used by conversation creation |
-| `data/local/ChatEntities.kt`, `RunEntity.kt` | every Room entity, converter, and validation block |
-| `data/local/MessageContextTopology.kt`, `RunBranchSelectionIntegrity.kt`, `ForkEmbeddingClonePolicy.kt`, `EmbeddingSearchRow.kt` | the topology, selection, fork-clone and embedding projections |
-| `model/*.kt`, `util/Constants.kt` | enums, runtime values and policies referenced by the entities |
 
 ## The platform boundary
 
 | Path | Purpose |
 | --- | --- |
-| `platform/MiniRoom.kt` | reflective executor: declared `@Query` SQL against real SQLite, named-parameter binding in SQL-text appearance order, `@Insert`/`@Upsert`/`@Update` generation, collection inserts returning `LongArray`, and cold single-emission Flows |
-| `platform/Room.kt`, `platform/RoomDatabase.kt` | annotation shapes and the database surface |
 | `platform/schema.sql` | the Room-generated schema 36 DDL, copied from `app/schemas/.../36.json` |
-| `ChatDaoTraceDump.kt`, `ChatDaoTraceSeeding.kt`, `ChatDaoTraceEntities.kt`, `ChatDaoTraceOperations.kt`, `ChatDaoTraceRendering.kt`, `ChatDaoTraceTableDump.kt` | the driver: seeds through the DAO's own upserts, executes every member, and dumps the tables |
 
 `RoomDatabase` executes real `BEGIN`/`COMMIT`/`ROLLBACK`, so failed `@Transaction` bodies are
 observable as rollbacks rather than simulated exceptions. The C++ port keeps the same rule through
@@ -98,16 +86,6 @@ a row count, a boolean, `null`, or `{error, message}`) followed by `tables` (the
 settings-transfer tables).
 
 ## Regenerating
-
-```bash
-export JAVA_HOME=/path/to/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/path/to/kotlinc \
-KOTLINX_JARS=kotlinx-serialization-core.jar:kotlinx-serialization-json.jar:kotlinx-coroutines-core.jar:sqlite-jdbc.jar \
-  ./run_golden.sh          # regenerate scenarios and verify
-KOTLINC=... KOTLINX_JARS=... ./run_golden.sh --freeze   # regenerate the frozen traces
-```
-
-`run_golden.sh` wipes the stand's git-ignored `build/` before each run, so runs are idempotent.
 
 ## C++ port
 

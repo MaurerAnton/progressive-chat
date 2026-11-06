@@ -15,10 +15,7 @@ stand:
 
 | Path | Purpose |
 | --- | --- |
-| `platform/MiniRoom.kt` | Reflective executor: reads `@Query` SQL from the RUNTIME-retained stand annotations, binds Kotlin parameter names, implements `@Insert` with Room's ignore-and-renew handshake, maps cursor rows onto entities (including enum columns by `Enum.valueOf` semantics), runs `@Transaction` methods in Room's per-level transaction stack |
 | `platform/schema.sql` | The generated DDL: `maintenance_debt` (Migration27To28), `runs` (Migration16To17 — both foreign keys, the unique `(conversationId, activeSlot)` index where SQLite permits multiple nulls), the `embeddings`/`messages` orphan surface, and the documented `conversations` subset |
-| `platform/Room.kt`, `platform/RoomDatabase.kt` | Annotation shapes and the `withTransaction` nesting contract |
-| `platform/StandChat.kt`, `platform/StandDebtDatabase.kt` | The conversation surface `repairRunBranches` reads, and the database holder for the DAO's own transactions (this file has no ChatDatabase collaborator) |
 
 ## Two documented boundaries in the traces
 
@@ -36,9 +33,7 @@ stand:
 | --- | --- |
 | `scenarios/*.json` | 13 scenarios, 97 steps |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `MaintenanceDebtTraceDump.kt` | Driver: seeds SQLite, runs the steps, dumps the tables |
 | `agora_scenarios maintenance-debt <stand>` | Deterministic scenario generator |
-| `run_golden.sh` | Compiles, freezes (`--freeze`) or verifies the traces |
 
 ## What is pinned
 
@@ -83,11 +78,6 @@ order, serialized exactly like `Json.encodeToString`.
 ## Regenerating
 
 ```bash
-export JAVA_HOME=/path/to/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar:coroutines.jar:sqlite-jdbc.jar \
-  ./run_golden.sh          # verify
-KOTLINC=... KOTLINX_JARS=... ./run_golden.sh --freeze   # regenerate
 ../../../build/agora_scenarios maintenance-debt .   # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's git-ignored `build/` before each run, so runs are idempotent.

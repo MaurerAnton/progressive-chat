@@ -11,9 +11,7 @@ canonical trace is frozen under `golden/`; the C++ port (`agora::core::shell_too
 | --- | --- |
 | `scenarios/*.json` | One case per file, 37 frozen edge cases across three modes |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `ShellToolsTraceDump.kt` | The stand driver (calls the real functions) |
 | ``agora_extract shell-models`` | Verbatim extraction of `ShellFileReadResult` + `shellFileLineCount` |
-| `run_golden.sh` | Extracts, compiles and regenerates or verifies the traces |
 | `agora_scenarios shell-tools` | Generates the scenarios (deterministic; rerun after editing) |
 
 ## How the stand works
@@ -53,8 +51,6 @@ verbatim into the generated `build/ShellModels.kt` (visibility unchanged).
 ## Regenerating
 
 ```
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios shell-tools core/tools/golden/shell-tools                                                          # rewrite scenarios
 ```
 

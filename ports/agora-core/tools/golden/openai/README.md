@@ -11,8 +11,6 @@ sources) and the canonical trace is frozen under `golden/`. The C++ port
 | --- | --- |
 | `transcripts/*.txt` | One scenario per file, 91 frozen edge cases |
 | `golden/*.trace` | Frozen canonical output of the Kotlin reference, one per transcript |
-| `OpenAiStreamTraceDump.kt` | The reference driver: wires the Kotlin consumer to the trace format |
-| `run_golden.sh` | Compiles the reference and regenerates or verifies the traces |
 | `stubs/` | Leaf stubs for Android-only types the reference sources touch |
 | `pow10/` | `Math.pow(10, e)` bit table and its generator (see below) |
 | `codec/` | Generator for the JNI wire-format fixtures (see below) |
@@ -40,10 +38,6 @@ form first, then 32 hex chars).
 ## Regenerate or verify
 
 ```sh
-export KOTLINC=/path/to/kotlinc
-export KOTLINX_JARS=/path/to/kotlinx-serialization-json-jvm.jar:/path/to/kotlinx-serialization-core-jvm.jar
-./run_golden.sh            # verify the frozen traces still match the Kotlin reference
-./run_golden.sh --freeze   # regenerate golden/*.trace
 ```
 
 The C++ side consumes the same directory: `core/tests/openai_stream_parity_test.cpp` replays every
@@ -62,13 +56,9 @@ desktop JDK; the dump is frozen as `pow10/pow10_jvm.txt` and turned into
 integral exponents in range and falls back to `std::pow` outside it (where every implementation
 saturates to `0` or `Inf`).
 
-Regenerate the table:
-
-```sh
-cd pow10
-kotlinc ProbePow10.kt -include-runtime -d probe.jar && java -jar probe.jar > pow10_jvm.txt
-../../build/agora_scenarios gen-pow10-table pow10
-```
+Regenerate the table: `pow10_jvm.txt` came from a JVM probe that stood beside it
+(`ProbePow10.kt`, gone with the Kotlin side), and `agora_scenarios gen-pow10-table pow10`
+turns the pair into the table.
 
 ## codec (the JNI wire format)
 

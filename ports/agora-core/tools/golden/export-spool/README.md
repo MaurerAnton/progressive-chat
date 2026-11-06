@@ -13,9 +13,7 @@ sequence and/or reader probes against a real spool file (`platform_spool.tmp`).
 | --- | --- |
 | `scenarios/*.json` | 31 cases: writer sequences, raw spool content, reader probes, deterministic fuzz |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `ExportSpoolTraceDump.kt` | Driver: writes the spool, renders the index and runs the reads |
 | `agora_scenarios export-spool <stand>` | Deterministic scenario generator |
-| `run_golden.sh` | Compiles, freezes (`--freeze`) or verifies the traces |
 
 ## What is pinned
 
@@ -56,9 +54,5 @@ sequence and/or reader probes against a real spool file (`platform_spool.tmp`).
 ## Running
 
 ```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=/home/user/agora-toolchain/jars/kotlinx-serialization-core-jvm-1.11.0.jar:/home/user/agora-toolchain/jars/kotlinx-serialization-json-jvm-1.11.0.jar \
-./run_golden.sh            # verify
 # add --freeze to regenerate golden/
 ```

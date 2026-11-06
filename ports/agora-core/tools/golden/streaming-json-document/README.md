@@ -13,15 +13,8 @@ every trace byte for byte (`core/tests/streaming_json_parity_test.cpp`).
 
 | File | Role |
 | --- | --- |
-| `ui/chat/message/StreamingJsonDocument.kt` | `StreamingJson*` data classes and `StreamingJsonParser` (zero imports) |
-| `ui/chat/message/StreamingToolArgumentHints.kt` | `StreamingToolArgumentHintResolver`, `normalizeToolSummarySubject` (zero imports) |
-| `ui/chat/message/ToolPresentation.kt` | `ToolKind` only, lifted by script |
 
-`ToolPresentation.kt` drags kotlinx.serialization and `ChatMessage` along, so the enum is not
-compiled whole. `agora_extract tool-kind` copies the `ToolKind` declaration verbatim into
-`extracted/ToolKind.kt` and `run_golden.sh` regenerates it before every compile — the enum is
-never retyped. The UI that consumes a `StreamingJsonDocument` (`MessageItemJson.kt`, Compose
-rendering) is out of scope; this stand pins the pure parser/hint logic beneath it.
+`ToolPresentation.kt` drags kotlinx.serialization and `ChatMessage` along, so the enum is not compiled whole. The UI that consumes a `StreamingJsonDocument` (`MessageItemJson.kt`, Compose rendering) is out of scope; this stand pins the pure parser/hint logic beneath it.
 
 ## What the port is
 
@@ -78,15 +71,7 @@ accented input.
 
 ## Running
 
-```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=...core.jar:...json.jar ./run_golden.sh           # verify
-KOTLINX_JARS=... ./run_golden.sh --freeze                      # refreeze traces
-```
-
 `core/build/agora_scenarios streaming-json-document core/tools/golden/streaming-json-document` rewrites `scenarios/` deterministically; rerun
-`./run_golden.sh --freeze` afterwards.
 
 ## Trace format
 

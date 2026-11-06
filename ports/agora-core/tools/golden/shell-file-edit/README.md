@@ -16,10 +16,8 @@ separate `shell-tools` stand, so this stand does not duplicate the C++ model or 
 | --- | --- |
 | `scenarios/*.json` | One case per file, 171 frozen scenarios |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `ShellFileEditTraceDump.kt` | The stand driver |
 | ``agora_extract shell-file-edit`` | Lifts the declarations out of `ShellClient.kt` |
 | `agora_scenarios shell-file-edit` | Generates the scenarios (deterministic; rerun after editing) |
-| `run_golden.sh` | Extracts, compiles and regenerates or verifies the traces |
 
 ## What is pinned
 
@@ -106,12 +104,6 @@ the test compares the bytes, including the trailing newline. Kotlin `IntRange` i
 ## Regenerating
 
 ```bash
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc \
-KOTLINX_JARS=core.jar:json.jar ./run_golden.sh            # verify
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc \
-KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze   # regenerate
 core/build/agora_scenarios shell-file-edit core/tools/golden/shell-file-edit # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's `build/` (git-ignored scratch, including the extracted
-`ShellFileEdit.kt`) before each run.

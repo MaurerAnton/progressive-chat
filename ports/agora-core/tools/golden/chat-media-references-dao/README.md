@@ -8,17 +8,12 @@ that dispatches to them, and the keyed conversation draft reference.
 
 | Source | Why |
 | --- | --- |
-| `data/local/ChatMediaReferencesDao.kt` | the module under test — a plain interface with public members, so **no extraction is needed** |
-| `data/local/ChatEntities.kt` | every entity, the reference projections, `MessageConverters` and `NewChatPersistEntity`; compiles whole, no lifting |
-| `data/local/RunEntity.kt`, `model/RuntimeIdentity.kt` | the run row the `messages.runId` foreign key references |
 | `model/ChatMessage.kt` and its model dependencies | the enum types behind the converters |
 
 ## The platform boundary
 
 | Path | Purpose |
 | --- | --- |
-| `platform/MiniRoom.kt` | reflective executor: `@Query` SQL against real SQLite, named-parameter binding, `MessageConverters`' JSON list encoding with the legacy `\|\|\|` fallback |
-| `platform/Room.kt`, `platform/RoomDatabase.kt` | annotation shapes and the database surface |
 | `platform/schema.sql` | the Room-generated DDL: all 15 `ChatEntity` columns, all 26 `MessageEntity` columns with both foreign keys and three indices, the `runs` reference table, and the 6-column `new_chat_persist` singleton. `embeddings` is not reachable from this DAO and is omitted. |
 
 ## What is pinned
@@ -62,12 +57,3 @@ like `Json.encodeToString`.
 
 ## Regenerating
 
-```bash
-export JAVA_HOME=/path/to/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/path/to/kotlinc \
-KOTLINX_JARS=kotlinx-serialization-core.jar:kotlinx-serialization-json.jar:kotlinx-coroutines-core.jar:sqlite-jdbc.jar \
-  ./run_golden.sh          # regenerate scenarios and verify
-KOTLINC=... KOTLINX_JARS=... ./run_golden.sh --freeze   # regenerate the frozen traces
-```
-
-`run_golden.sh` wipes the stand's git-ignored `build/` before each run, so runs are idempotent.
