@@ -12,12 +12,8 @@ preference store), which is the documented leaf stub of the `native-backup-secre
 | --- | --- |
 | `scenarios/*.json` | 1 case: the full settings schema, seeded and reset |
 | `golden/*.trace` | Frozen Kotlin output |
-| `PortableSettingsResetTraceDump.kt` | Driver: seeds the store, runs the reset, renders the outcome |
-| `platform/Preferences.kt` | The in-memory preference store (the DataStore preferences contract) |
-| `SchemaKeys.kt` | **Generated** list of every settings key (see `agora_scenarios schema-keys`) |
 | `agora_scenarios schema-keys <stand>` | Regenerates `SchemaKeys.kt` from `SettingsPreferenceSchema.kt` |
 | `agora_scenarios gen-reset-keys <stand>` | Regenerates the C++ reset key list from `PortableSettingsReset.kt` |
-| `run_golden.sh` | Compiles, freezes (`--freeze`) or verifies the trace |
 
 ## What is pinned
 
@@ -43,9 +39,5 @@ preference store), which is the documented leaf stub of the `native-backup-secre
 ## Running
 
 ```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=/home/user/agora-toolchain/jars/kotlinx-serialization-core-jvm-1.11.0.jar:/home/user/agora-toolchain/jars/kotlinx-serialization-json-jvm-1.11.0.jar \
-./run_golden.sh            # verify
 # add --freeze to regenerate golden/
 ```

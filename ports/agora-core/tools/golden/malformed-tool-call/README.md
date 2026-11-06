@@ -13,10 +13,8 @@ from the app tree.
 | --- | --- |
 | `scenarios/*.json` | 5 cases: the stand-in request and the error text the model receives |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `MalformedToolCallTraceDump.kt` | Driver: builds the stand-in and renders it |
 | `agora_extract widen` | Lifts the policy file with a widened visibility |
 | `agora_scenarios malformed-tool-call` | Deterministic scenario generator |
-| `run_golden.sh` | Extracts, compiles, freezes (`--freeze`) or verifies the traces |
 
 ## What is pinned
 
@@ -41,9 +39,5 @@ from the app tree.
 ## Running
 
 ```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=/home/user/agora-toolchain/jars/kotlinx-serialization-core-jvm-1.11.0.jar:/home/user/agora-toolchain/jars/kotlinx-serialization-json-jvm-1.11.0.jar \
-./run_golden.sh            # verify
 # add --freeze to regenerate golden/
 ```

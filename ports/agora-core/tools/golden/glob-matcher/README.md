@@ -14,8 +14,6 @@ driver calls `matches` directly — **no transcription anywhere in this stand**.
 | --- | --- |
 | `scenarios/*.json` | One case per file, 73 frozen edge cases |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `GlobMatcherTraceDump.kt` | The stand driver (one `match\|0/1` line) |
-| `run_golden.sh` | Compiles the Kotlin source and regenerates or verifies the traces |
 | `agora_scenarios glob-matcher` | Generates the scenarios (deterministic; rerun after editing) |
 
 ## Scenario format
@@ -56,8 +54,6 @@ repository scans) stay in Kotlin for now — see `core/README.md`.
 ## Regenerating
 
 ```
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios glob-matcher core/tools/golden/glob-matcher                                                          # rewrite scenarios
 ```
 

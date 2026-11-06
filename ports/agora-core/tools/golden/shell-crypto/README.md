@@ -13,11 +13,9 @@ every trace byte for byte **after the same non-determinism mask** is applied to 
 | --- | --- |
 | `scenarios/*.json` | One case per file, 27 frozen scenarios |
 | `golden/*.trace` | Frozen canonical output, one per scenario (already masked) |
-| `ShellCryptoTraceDump.kt` | The stand driver (exercises every public function) |
 | `agora_scenarios shell-crypto` | Generates the scenarios (deterministic; rerun after editing) |
 | `platform/Base64.java` | The substituted `android.util.Base64` surface (vendored) |
 | `agora_scenarios mask-trace <file>` | Masks non-deterministic trace fields **with their length** on both sides |
-| `run_golden.sh` | Extracts nothing, compiles and regenerates or verifies the traces |
 
 ## What is pinned
 
@@ -65,8 +63,8 @@ One compact JSON object per line, keys in driver order, e.g.
 `{"derived_key":"…"}` or `{"error":"Tag mismatch!"}`; escaping is the driver's
 (`\` `"` `\n` `\r` `\t` only). Every trace ends with `\n`.
 
-**Masking**: `run_golden.sh` runs `agora_scenarios mask-trace` over the fresh traces *and* the frozen golden
-traces before diffing (and over the golden on `--freeze`). `nonce`, `ciphertext`, `public_key_raw`
+**Masking**: `agora_scenarios mask-trace` runs over the fresh traces *and* the frozen golden
+traces alike. `nonce`, `ciphertext`, `public_key_raw`
 and `private_key_raw` are replaced with **length-carrying** placeholders — `<nonce:16>`,
 `<ciphertext:55>`, `<public_key_raw:43>`, `<private_key_raw:64>` — while everything else stays
 byte-exact. The length is what keeps the *sizes* pinned through the mask: `generateNonce` drawing
@@ -100,11 +98,7 @@ is why the mask distinguishes them).
 ## Regenerating
 
 ```bash
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios shell-crypto core/tools/golden/shell-crypto                # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's `build/` (git-ignored scratch) before each run, so runs are
-idempotent. The scenario generator needs `cryptography` (only for the fixed AES-GCM ciphertext in
-`21-decrypt_auth_failure`).
+The scenario generator needs `cryptography` (only for the fixed AES-GCM ciphertext in `21-decrypt_auth_failure`). 

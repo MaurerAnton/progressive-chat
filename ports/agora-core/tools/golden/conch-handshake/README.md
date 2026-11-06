@@ -12,10 +12,7 @@ test `core/tests/conch_handshake_parity_test.cpp`) must reproduce every trace by
 | --- | --- |
 | `scenarios/*.json` | One case per file, 11 frozen scenarios |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `ConchHandshakeTraceDump.kt` | The stand driver (decodes the handshake JSON, calls `verify`) |
 | `agora_scenarios conch-handshake` | Generates the scenarios (HMACs computed with OpenSSL) |
-| `platform/Charsets.kt` | The substituted `java.nio.charset.Charsets` surface (stand-local) |
-| `run_golden.sh` | Compiles the stand-local platform type and regenerates or verifies |
 
 ## What is pinned
 
@@ -59,10 +56,6 @@ output, one line per scenario, `\n` terminated.
 
 ## Scope and boundaries
 
-* `ConchHandshake.kt` compiles verbatim; the only substituted platform type is
-  `java.nio.charset.Charsets` (`platform/Charsets.kt`, compiled with **kotlinc**, not javac,
-  because the stand-local object extends `StandardCharsets`). It exposes exactly the `UTF_8` and
-  `US_ASCII` constants the file touches.
 * The driver re-serializes the parsed `handshake` object **compactly** (kotlinx
   `JsonObject.toString()`, member order preserved) before handing it to `ConchHandshake.decode`;
   the C++ test mirrors that serialization, so `decode` is exercised on the same bytes Kotlin
@@ -77,10 +70,7 @@ output, one line per scenario, `\n` terminated.
 ## Regenerating
 
 ```bash
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios conch-handshake core/tools/golden/conch-handshake                                                                                  # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's `build/` (git-ignored scratch) before each run, so runs are
-idempotent. As with the other stands, kotlinc needs an explicit `JAVA_HOME`.
+

@@ -45,13 +45,6 @@ from the app tree, so run the commands from the repository root.
 2. `core/tools/golden/corpus.b64` holds 2551 texts (real repository text plus structured fuzz
    over letters, marks, digits, whitespace, contractions, punctuation and astral code points).
    `golden_counts.txt` holds what the Kotlin implementation counted for each.
-3. `core/tools/golden/check_parity.sh` reruns the whole local differentiation — the Kotlin
-   dumper and the C++ dumper must produce byte-identical piece segmentation and counts:
-
-   ```sh
-   KOTLINC=/path/to/kotlinc/bin ./core/tools/golden/check_parity.sh
-   ```
-
 To extend the corpus, rerun `agora_scenarios gen-corpus <repo-root> <out>` (seeded, deterministic),
 regenerate `corpus.b64`, re-freeze `golden_counts.txt` with the Kotlin dumper, and rerun the
 tests — that is the reviewable definition of "the port still agrees".

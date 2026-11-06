@@ -9,8 +9,6 @@ tool results.
 
 | Source | Notes |
 | --- | --- |
-| `app/src/main/java/com/newoether/agora/tool/ShellDurableJobExecutor.kt` | **verbatim** — no edits at all |
-| `app/src/main/java/com/newoether/agora/tool/ShellToolJson.kt` | **verbatim** — `parseToolArgs`/`arg`/`jsonError` |
 
 ## Platform doubles (`platform/`)
 
@@ -49,23 +47,9 @@ or a `CancellationException`.
 
 ## Layout
 
-```
-shell-durable-jobs/
-├── ShellDurableJobTraceDump.kt   trace driver (Kotlin reference execution)
-├── platform/                     documented leaf doubles (see above)
-├── scenarios/                    generated JSON inputs
-├── golden/                       frozen traces (byte-exact reference output)
-├── run_golden.sh                 compile + run + verify (or --freeze)
-└── README.md
-```
-
 ## Running
 
 ```sh
-KOTLINC=/path/to/kotlinc/bin/kotlinc \
-KOTLINX_JARS=/path/kotlinx-serialization-core-jvm.jar:/path/kotlinx-serialization-json-jvm.jar \
-./run_golden.sh            # verify against golden/
-./run_golden.sh --freeze   # regenerate golden/ from the Kotlin reference
 ```
 
 The kotlinx-coroutines jar is located next to the serialization jars (override with

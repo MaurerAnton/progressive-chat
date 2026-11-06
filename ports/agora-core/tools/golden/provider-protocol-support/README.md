@@ -30,12 +30,7 @@ from the real file on every run. The full identity policy is pinned separately b
 ## Run
 
 ```bash
-export JAVA_HOME=...
 export PATH="$JAVA_HOME/bin:$PATH"
-export KOTLINC=/path/to/kotlinc
-export KOTLINX_JARS=/path/to/kotlinx-serialization-core-jvm.jar:/path/to/kotlinx-serialization-json-jvm.jar
-./run_golden.sh            # verify against golden/
-./run_golden.sh --freeze   # regenerate after changing scenarios or the Kotlin source
 ```
 
 C++ parity: `core/tests/provider_protocol_support_parity_test.cpp`

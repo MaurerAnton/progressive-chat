@@ -11,10 +11,6 @@ implementation `core/src/thinking_capability.cpp`, test
 
 | File | Role |
 | --- | --- |
-| `model/ModelThinkingCapability.kt` | `ModelThinkingCapability`, `ResolvedThinking`, `ThinkingResolution` |
-| `model/ThinkingControl.kt` | `ThinkingLevels` (vocabulary, normalization, legacy budget) |
-| `model/ModelThinkingCapabilityDefaults.kt` | `ThinkingProviderFamily` and the documented per-model table |
-| `model/ModelThinkingCapabilities.kt` | `familyFor` / `forModel` / `forProvider` |
 
 All four files have **no imports at all**, so the stand needs no stubs and no source extraction.
 `ModelThinkingCapability.kt` calls `kotlin.math.abs` fully qualified, which is stdlib only.
@@ -106,11 +102,7 @@ result prints `-`/`null`, while an empty string is escaped as itself.
 ## Regenerating
 
 ```bash
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios thinking-capability core/tools/golden/thinking-capability                                                                                  # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's git-ignored `build/` before each run, so runs are idempotent. The
-C++ test reads `scenarios/` and `golden/` straight from this directory through
-`AGORA_FIXTURE_THINKING_CAPABILITY_DIR`.
+The C++ test reads `scenarios/` and `golden/` straight from this directory through `AGORA_FIXTURE_THINKING_CAPABILITY_DIR`. 

@@ -20,21 +20,7 @@ The importer plus everything it touches, assembled from the existing stands' rec
 
 ## Platform substitutes
 
-1. **android.util.Json\*** — reused from the `native-conversation-graph-source` stand: this
-   stand's `run_golden.sh` stages that stand's vendored AOSP sources (one documented edit:
-   ravenwood annotation lines dropped) and compiles them with `javac`.
-2. **Android/Room surface** — one merged `Context`/`ContentResolver` (the archive's descriptor
-   path plus the URI stream surface), a `FileProvider` stub (only reachable from
-   `restoreConversationMedia`, which the scenarios never run), a `MaintenanceDebtWorker.schedule`
-   stub for the constructor default, and the stand `ChatDatabase` over the Room-generated schema
-   36 database: `chatDao()`/`semanticIndexDao()`/`maintenanceDebtDao()` MiniRoom proxies (the
-   schema already carries the `embeddings`, `semantic_index_*` and `maintenance_debt` tables)
-   plus Room's `BEGIN`/`COMMIT`/`ROLLBACK` stack, which the import's
-   `withSemanticGraphMutation` transaction runs on.
-3. **The injected call-site values** — the driver constructs `Json { ignoreUnknownKeys = true;
-   coerceInputValues = true }` (DataImporter's config), a `resolveSystemPromptId` lambda over the
-   scenario's map (`containsKey` semantics, null-preserving), a recording `scheduleMaintenance`
-   and a scenario-seeded `RestoredMedia` (so the FileProvider/archive paths never run).
+1. 2. **Android/Room surface** — one merged `Context`/`ContentResolver` (the archive's descriptor path plus the URI stream surface), a `FileProvider` stub (only reachable from `restoreConversationMedia`, which the scenarios never run), a `MaintenanceDebtWorker.schedule` stub for the constructor default, and the stand `ChatDatabase` over the Room-generated schema 36 database: `chatDao()`/`semanticIndexDao()`/`maintenanceDebtDao()` MiniRoom proxies (the schema already carries the `embeddings`, `semantic_index_*` and `maintenance_debt` tables) plus Room's `BEGIN`/`COMMIT`/`ROLLBACK` stack, which the import's `withSemanticGraphMutation` transaction runs on. 3. **The injected call-site values** — the driver constructs `Json { ignoreUnknownKeys = true; coerceInputValues = true }` (DataImporter's config), a `resolveSystemPromptId` lambda over the scenario's map (`containsKey` semantics, null-preserving), a recording `scheduleMaintenance` and a scenario-seeded `RestoredMedia` (so the FileProvider/archive paths never run).
 
 ## Trace surface
 
@@ -65,10 +51,6 @@ source).
 ## Running
 
 ```sh
-JAVA_HOME=<jdk17> KOTLINC=<kotlinc-with-serialization-plugin> \
-KOTLINX_JARS=<commons-compress|commons-io|kotlinx-serialization|coroutines|sqlite-jdbc jars> \
-./run_golden.sh --freeze   # regenerate traces (first run)
-./run_golden.sh            # verify against the frozen traces
 ```
 
 `javac` must be on `PATH` (it compiles the vendored Android JSON sources).

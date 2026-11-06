@@ -57,10 +57,6 @@ strings (accepted, re-escaped on write).
 ## Running
 
 ```sh
-JAVA_HOME=<jdk17> KOTLINC=<kotlinc-with-serialization-plugin> \
-KOTLINX_JARS=<kotlinx-serialization-core+json+jvm|coroutines jars> \
-./run_golden.sh --freeze   # regenerate traces (first run)
-./run_golden.sh            # verify against the frozen traces
 ```
 
 `javac` (any modern JDK) must be on `PATH`; it compiles the vendored Android sources only.

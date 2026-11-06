@@ -11,9 +11,7 @@ trace is frozen under `golden/`; the C++ port (`agora::core::embedding`, test
 | --- | --- |
 | `scenarios/*.json` | One case per file, 29 frozen edge cases across four modes |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `EmbeddingTraceDump.kt` | The stand driver (parsing transcription over the real models) |
 | ``agora_extract embedding-models`` | Verbatim extraction of the request models |
-| `run_golden.sh` | Extracts, compiles and regenerates or verifies the traces |
 | `agora_scenarios embedding` | Generates the scenarios (deterministic; rerun after editing) |
 
 ## How the stand works
@@ -63,8 +61,6 @@ the `DebugLog` calls. Only the pure encode/parse halves are pinned.
 ## Regenerating
 
 ```
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios embedding core/tools/golden/embedding                                                          # rewrite scenarios
 ```
 

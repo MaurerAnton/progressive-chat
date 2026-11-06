@@ -9,9 +9,6 @@ message table.
 
 | Source | Notes |
 | --- | --- |
-| `app/src/main/java/com/newoether/agora/util/ShellClient.kt` | **verbatim** — no edits |
-| `app/src/main/java/com/newoether/agora/util/ShellCrypto.kt` | **verbatim** (real crypto: X25519, HKDF, AES-256-GCM, HMAC) |
-| `app/src/main/java/com/newoether/agora/util/ConchHandshake.kt` | **verbatim** (`@Serializable`, compiled with the kotlinx plugin) |
 
 ## Platform doubles (`platform/`)
 
@@ -60,11 +57,6 @@ payloads for the plain-text endpoints — stays fully pinned.
 ## Running
 
 ```sh
-JAVA_HOME=/path/to/jdk17 \
-KOTLINC=/path/to/kotlinc/bin/kotlinc \
-KOTLINX_JARS=/path/kotlinx-serialization-core-jvm.jar:/path/kotlinx-serialization-json-jvm.jar \
-./run_golden.sh            # verify against golden/
-./run_golden.sh --freeze   # regenerate golden/ from the Kotlin reference
 ```
 
 The kotlinx-coroutines jar is located next to the serialization jars (override with

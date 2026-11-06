@@ -11,10 +11,8 @@ surface is stubbed, because the shared settings contract imports it.
 | --- | --- |
 | `scenarios/*.json` | 5 cases: constants, entry ids, remote/local model projections |
 | `golden/*.trace` | Frozen Kotlin output |
-| `NativeBackupFormatTraceDump.kt` | Driver |
 | `platform/` | DataStore key factory, crypto/debug shims |
 | `agora_scenarios native-backup-format` | Deterministic scenario generator |
-| `run_golden.sh` | Compile, freeze (`--freeze`) or verify |
 
 ## What is pinned
 

@@ -3,7 +3,7 @@
 // Replays every scenario under core/tools/golden/shell-crypto/scenarios through
 // agora::core::shell_crypto and requires the produced trace to equal the frozen Kotlin trace
 // byte for byte after the stand's non-determinism mask
-// (core/tools/golden/shell-crypto/mask_trace.py) is applied -- exactly as run_golden.sh masks
+// (core/tools/golden/shell-crypto/mask_trace.py) is applied -- exactly as the frozen goldens show it masked
 // both the fresh and the frozen side before diffing. The trace format mirrors the reference
 // driver (core/tools/golden/shell-crypto/ShellCryptoTraceDump.kt), including the driver-level
 // base64url decoding of the scenario inputs (java.util.Base64 URL decoder semantics).

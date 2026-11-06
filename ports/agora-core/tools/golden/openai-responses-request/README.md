@@ -16,10 +16,8 @@ pulls in the message-preparation and cost-model clusters, none of which these mo
 | --- | --- |
 | `scenarios/*.json` | 54 cases: the input builder, the tool conversion and the wire-format gate |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `OpenAiResponsesRequestTraceDump.kt` | Driver: builds the chat messages / tools / request and renders the result |
 | `agora_extract responses-models` | Lifts the four request models out of `api/LlmProvider.kt` |
 | `agora_scenarios openai-responses-request <stand>` | Deterministic scenario generator |
-| `run_golden.sh` | Extracts, compiles, freezes (`--freeze`) or verifies the traces |
 
 ## What is pinned
 
@@ -58,9 +56,5 @@ pulls in the message-preparation and cost-model clusters, none of which these mo
 ## Running
 
 ```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=/home/user/agora-toolchain/jars/kotlinx-serialization-core-jvm-1.11.0.jar:/home/user/agora-toolchain/jars/kotlinx-serialization-json-jvm-1.11.0.jar \
-./run_golden.sh            # verify
 # add --freeze to regenerate golden/
 ```

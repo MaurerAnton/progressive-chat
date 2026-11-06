@@ -26,6 +26,12 @@ What was changed for this tree, and nothing else:
     portable pair written in this file where there is not, with
     `AGORA_CORE_FORCE_PORTABLE_U128` and `agora_portable_crypto_test`
     making a host read that branch too.
+  - nothing Kotlin is left in this tree: the stand dumpers, their platform
+    substitutes and the kotlinc runners that once stood behind the traces are
+    gone with the snapshot's first pass here. The traces are data now -- C++
+    tests read them, and what speaks where the Kotlin harness stood is the C++
+    side already in this directory: `agora_core_dump`, `agora_extract` and
+    `agora_scenarios`.
 
 It is taken forward as a whole snapshot (`git archive <sha> core` out of the
 agora repository). Until this program's modules import it, what changes in
