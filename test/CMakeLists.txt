@@ -32,6 +32,7 @@ pchat_test(json pchat_json)
 pchat_test(provider pchat_provider)
 pchat_test(provider_run pchat_provider)
 pchat_test(provider_loop pchat_provider)
+pchat_test(provider_anthropic pchat_provider)
 pchat_test(tools pchat_tools)
 pchat_test(tokens pchat_core pchat_json)
 # The reference every entry of the carried vocabulary is measured against: read
