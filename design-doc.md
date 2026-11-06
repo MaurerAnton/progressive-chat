@@ -240,9 +240,11 @@ name, waiting for the thing behind it.
   held in a shape.
 * It does not put the time of an answer beside every line of it: only yours
   keep a time, and it is kept inside them.
-* It does not open what it folds. The line above an answer -- how long it
-  took, how many calls it made -- is written as one line and stays one: the
-  thinking under it and the calls it counts are not read anywhere yet.
+* It keeps the calls it counts to itself no longer: opened, the fold says
+  what it thought as greentext and, under that, one line to every tool it
+  stopped to ask for, in the order it asked. What it still does not do is
+  open anything past the sixth of them: a seventh line says how many are
+  left rather than grow past the room.
 * It does not yet count anything for real. Until the program's own back end is
   here, what fills the room is sample: the numbers said above are written in it
   like any other words, and nothing measures them.
