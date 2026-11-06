@@ -160,7 +160,7 @@ public:
   // and nothing here is put into a conversation: where it goes is asked
   // elsewhere.
   [[nodiscard]] message answer_of(const put_in &into) const {
-    return provider::answer_of(into, said(), thought(), tool_calls(), cost(),
+    return provider::answer_of(into, said(), thought(), coming_.calls(), cost(),
                                ended_ == over::failed);
   }
 
