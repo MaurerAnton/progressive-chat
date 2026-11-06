@@ -9,6 +9,7 @@ import pchat.core;
 import pchat.logic.lists;
 import pchat.logic.search;
 import pchat.logic.composer;
+import pchat.logic.drafts;
 import pchat.logic.formatting;
 import pchat.logic.doc;
 
@@ -130,4 +131,59 @@ SAID(doc, the_design_this_build_was_made_with_is_read_whole) {
   }
   EXPECT_TRUE(titled);
   EXPECT_TRUE(listed);
+}
+
+SAID(logic, a_draft_is_kept_for_the_conversation_it_was_written_to) {
+  logic::drafts kept;
+  const conversation_id one{"general"};
+  const conversation_id two{"random"};
+  EXPECT_TRUE(kept.text_of(one).empty());
+  kept.write(one, "half a thought");
+  EXPECT_EQ(std::string(kept.text_of(one)), std::string("half a thought"));
+  // Nothing was written to the other, and so it reads as nothing.
+  EXPECT_TRUE(kept.text_of(two).empty());
+  EXPECT_EQ(kept.all().size(), 1u);
+}
+
+SAID(logic, a_draft_is_written_over_and_taken_away_again) {
+  logic::drafts kept;
+  const conversation_id one{"general"};
+  kept.write(one, "one");
+  kept.write(one, "two");
+  EXPECT_EQ(std::string(kept.text_of(one)), std::string("two"));
+  EXPECT_EQ(kept.all().size(), 1u);
+  // Empty, and nothing else said about it: there is nothing to keep, and so
+  // it is not kept -- one entry fewer, and read as nothing.
+  kept.write(one, "");
+  EXPECT_TRUE(kept.text_of(one).empty());
+  EXPECT_TRUE(kept.all().empty());
+  // Sent or thrown away: the same, and of a conversation with nothing in it
+  // too, which is nothing at all rather than a wrong answer.
+  kept.write(one, "three");
+  kept.clear(one);
+  EXPECT_TRUE(kept.text_of(one).empty());
+  kept.clear(conversation_id{"never-had-one"});
+  EXPECT_TRUE(kept.all().empty());
+}
+
+SAID(logic, what_a_draft_is_a_reply_to_is_kept_with_it) {
+  logic::drafts kept;
+  const conversation_id one{"general"};
+  kept.answering(one, message_id{"m-1"});
+  // Nothing written in it yet, and still kept: what it answers is said to be
+  // an answer to m-1 even before there are words in it.
+  EXPECT_TRUE(kept.text_of(one).empty());
+  EXPECT_EQ(kept.reply_of(one).value_or(message_id{"nothing"}).value,
+            std::string("m-1"));
+  kept.write(one, "yes");
+  EXPECT_EQ(kept.reply_of(one).value_or(message_id{"nothing"}).value,
+            std::string("m-1"));
+  // The reply put away again, and the words still standing: it is written to
+  // the conversation and to no message in it now.
+  kept.answering(one, std::nullopt);
+  EXPECT_EQ(std::string(kept.text_of(one)), std::string("yes"));
+  EXPECT_FALSE(kept.reply_of(one).has_value());
+  // Nothing written and nothing answered: not kept at all.
+  kept.write(one, "");
+  EXPECT_TRUE(kept.all().empty());
 }
