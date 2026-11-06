@@ -94,12 +94,13 @@ struct conversation {
 };
 
 // What came before an answer, where one thought before it spoke: how long
-// it was thinking, how many tool calls it made on the way, and what it
-// wrote to itself while it was (its greentext).
+// it was thinking, what it stopped to ask a tool for on the way -- every one
+// of them, in the order it asked -- and what it wrote to itself while it was
+// (its greentext).
 struct thought {
   std::int64_t took_ms = 0;
-  std::uint32_t tool_calls = 0;
   std::string said;
+  std::vector<std::string> called;
   friend bool operator==(const thought &, const thought &) = default;
 };
 

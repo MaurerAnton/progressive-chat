@@ -60,9 +60,11 @@ export namespace pchat::app {
        "minutes, one pan, and nothing "
        "of it was bought today.",
        1'763'000'200'000, delivery::seen, std::nullopt,
-       thought{4'200, 3,
+       thought{4'200,
                "no recipe of its own known; three reads of the pantry, then "
-               "written"},
+               "written",
+               {"read the pantry", "read the shelf it stands on",
+                "read the pantry once more"}},
        1'240},
       {message_id{"3"}, conversation_id{"kitchen"}, "Reader", true,
        "And if I would rather have it sweet?", 1'763'000'300'000,
@@ -73,8 +75,9 @@ export namespace pchat::app {
        "stirred over a low heat until it thickens and let to cool. Spread on "
        "the same toast.",
        1'763'000'400'000, delivery::sent, std::nullopt,
-       thought{1'900, 1,
-               "the same four things asked again, the sweet way round"},
+       thought{1'900,
+               "the same four things asked again, the sweet way round",
+               {"read the pantry"}},
        680},
       {message_id{"5"}, conversation_id{"sieve"}, "Reader", true,
        "Write me a sieve of Eratosthenes in C++ that takes its bound at run "
@@ -92,10 +95,13 @@ export namespace pchat::app {
        "either keep `bound` below "
        "that or write `p <= bound / p`.",
        1'763'000'200'000, delivery::seen, std::nullopt,
-       thought{8'700, 6,
+       thought{8'700,
                "the bound written down before the loop; the overflow thought "
                "about twice, once past "
-               "four billion; one small test compiled and run"},
+               "four billion; one small test compiled and run",
+               {"write the bound down", "read the bound back",
+                "compile the sieve", "run the sieve to a hundred",
+                "run the sieve past four billion", "read what it printed"}},
        2'310},
       {message_id{"7"}, conversation_id{"notices"}, "", false,
        "Nothing of this is answered yet: what fills this is the sample, until "

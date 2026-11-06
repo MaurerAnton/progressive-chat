@@ -238,6 +238,11 @@ struct foot_row : nodes::Stack {
 struct history_fold : nodes::Stack {
   nodes::Text fSummary{"", 12.0f, 0u};
   nodes::Text fThought{"", 12.0f, 0u};
+  // Every call it stopped to ask for, a line to each, shown while it is
+  // pressed open under what it wrote to itself. Six, because that is how
+  // many a fold has ever had to carry at once; a seventh says how many more
+  // there were rather than grow past the room.
+  std::array<nodes::Text, 6> fCalls;
   bool fOpen = false;
 
   history_fold() {
@@ -248,6 +253,10 @@ struct history_fold : nodes::Stack {
     fSummary.apply({.autoSize = scene::axes::kBoth});
     fThought.apply({.autoSize = scene::axes::kBoth});
     fThought.setVisible(false);
+    for (nodes::Text &one : fCalls) {
+      one.apply({.autoSize = scene::axes::kBoth});
+      one.setVisible(false);
+    }
   }
 
   [[nodiscard]] bool acceptsInput() const { return true; }
@@ -263,6 +272,8 @@ struct history_fold : nodes::Stack {
     fThought.setText("");
     fOpen = false;
     fThought.setVisible(false);
+    for (nodes::Text &one : fCalls)
+      one.setVisible(false);
   }
 
   void again(const paints &look, const thought &before, float widest) {
@@ -271,8 +282,8 @@ struct history_fold : nodes::Stack {
                  .maxWidth = widest,
                  .background = fOpen ? look.field : look.field & 0x80ffffffu});
     fSummary.setText("Thought for " + took_of(before.took_ms) + " · " +
-                     std::to_string(before.tool_calls) +
-                     (before.tool_calls == 1 ? " tool call" : " tool calls"));
+                     std::to_string(before.called.size()) +
+                     (before.called.size() == 1 ? " tool call" : " tool calls"));
     fSummary.setColour(look.dim);
     fSummary.apply(
         {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
@@ -283,11 +294,31 @@ struct history_fold : nodes::Stack {
     fThought.setVisible(fOpen && !before.said.empty());
     fThought.apply(
         {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
+    // A line to each call it asked for, and past the sixth of them the ones
+    // that are left said by how many they are and not by what they were.
+    for (std::size_t one = 0u; one < fCalls.size(); ++one) {
+      const bool past = one + 1u == fCalls.size() && before.called.size() > one + 1u;
+      if (past) {
+        fCalls[one].setText("and " + std::to_string(before.called.size() - one) + " more");
+        fCalls[one].setVisible(fOpen);
+      } else {
+        fCalls[one].setText(before.called.size() > one
+                                ? "called " + before.called[one]
+                                : std::string{});
+        fCalls[one].setVisible(fOpen && before.called.size() > one);
+      }
+      fCalls[one].setColour(look.dim);
+      fCalls[one].setFontSize(12.0f);
+      fCalls[one].apply(
+          {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
+    }
   }
 
   void forEachChild(auto &&f) {
     f(fSummary);
     f(fThought);
+    for (nodes::Text &one : fCalls)
+      f(one);
   }
 };
 
@@ -377,7 +408,7 @@ struct answer_row : nodes::Stack {
       info += std::string(model) + " · ";
     info +=
         std::string(said.before ? took_of(said.before->took_ms) + " · " : "") +
-        std::to_string(said.before ? said.before->tool_calls : 0u) +
+        std::to_string(said.before ? said.before->called.size() : 0u) +
         " tool calls · " + tokens_said(said.tokens) + " tokens · " +
         clock_of(said.sent);
     fInfo.setText(info);

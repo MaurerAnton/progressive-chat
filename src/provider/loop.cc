@@ -107,7 +107,7 @@ public:
   // said in all of them, what it thought, how many tools it asked for, what
   // all of it cost -- and failed where it could not be had at all.
   [[nodiscard]] message answer_of(const put_in &into) const {
-    return provider::answer_of(into, said_, thinking_, calls_, cost_,
+    return provider::answer_of(into, said_, thinking_, asked_, cost_,
                                ended_ == provider::over::failed);
   }
 

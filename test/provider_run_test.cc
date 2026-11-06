@@ -162,9 +162,37 @@ SAID(provider_run, the_answer_as_the_model_keeps_it) {
   EXPECT_EQ(said.tokens, 19u);
   EXPECT_TRUE(said.before.has_value());
   EXPECT_EQ(said.before->took_ms, 900);
-  EXPECT_EQ(said.before->tool_calls, 1u);
+  // One tool, asked for in the answer and said again before it: the call
+  // itself is carried whole, and not only how many there were.
+  EXPECT_EQ(said.before->called.size(), 1u);
+  EXPECT_EQ(said.before->called.front(), std::string("weather"));
   EXPECT_EQ(said.before->said,
             std::string("first the weather\n> weather({})\n"));
+}
+
+// Two tools asked for in one answer, in the order they were asked for in:
+// what the fold above an answer says one line each (src/ui/message_list.cc).
+constexpr std::string_view two_calls =
+    "data: {\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":0,\"id\":\"call_1\",\"function\":{\"name\":\"weather\",\"arguments\":\"{}\"}}]},\"index\":0}]}\n\n"
+    "data: {\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":1,\"id\":\"call_2\",\"function\":{\"name\":\"clock\",\"arguments\":\"{}\"}}]},\"index\":0}]}\n\n"
+    "data: {\"choices\":[{\"delta\":{},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":3,\"completion_tokens\":4}}\n\n"
+    "data: [DONE]\n\n";
+
+// Two tools asked for in one answer, in the order they were asked for in:
+// what the fold above an answer says one line to each (src/ui/message_list.cc).
+SAID(provider_run, every_call_asked_for_is_said_before_the_answer) {
+  provider::run one{an_endpoint(), std::vector<provider::turn>{}};
+  one.carried();
+  one.arrive(two_calls);
+  one.carried_over(std::nullopt);
+  const message said = one.answer_of(provider::put_in{
+      .id = message_id{"m-3"},
+      .chat = conversation_id{"chat-1"},
+      .author = "o4-mini"});
+  EXPECT_TRUE(said.before.has_value());
+  EXPECT_EQ(said.before->called.size(), 2u);
+  EXPECT_EQ(said.before->called.front(), std::string("weather"));
+  EXPECT_EQ(said.before->called.back(), std::string("clock"));
 }
 
 SAID(provider_run, an_answer_that_never_came_is_a_failed_message) {

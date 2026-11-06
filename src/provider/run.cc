@@ -51,10 +51,9 @@ struct put_in {
 // or one question that had to be asked again before it was answered. Whose it
 // is written as, where it was said, how long it took, and failed where nothing
 // of it came -- said once here so that it is said the same way twice.
-[[nodiscard]] inline message answer_of(const put_in &into, std::string_view said,
-                                       std::string_view thinking,
-                                       std::size_t asking, usage cost,
-                                       bool failed) {
+[[nodiscard]] inline message answer_of(
+    const put_in &into, std::string_view said, std::string_view thinking,
+    std::span<const tool_call> asking, usage cost, bool failed) {
   message out{.id = into.id,
               .chat = into.chat,
               .author = into.author,
@@ -65,10 +64,12 @@ struct put_in {
   out.tokens = static_cast<std::uint32_t>(cost.in + cost.out);
   // Said in full: `thought` is what an answer thought, and not the same word
   // as the type what it thought is kept in.
-  if (!thinking.empty() || into.took_ms != 0 || asking != 0)
-    out.before = ::pchat::thought{.took_ms = into.took_ms,
-                                  .tool_calls = static_cast<std::uint32_t>(asking),
-                                  .said = std::string(thinking)};
+  if (!thinking.empty() || into.took_ms != 0 || !asking.empty()) {
+    ::pchat::thought before{.took_ms = into.took_ms, .said = std::string(thinking)};
+    for (const tool_call &one : asking)
+      before.called.push_back(one.name);
+    out.before = std::move(before);
+  }
   return out;
 }
 
