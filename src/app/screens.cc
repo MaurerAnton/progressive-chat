@@ -65,6 +65,7 @@ public:
                       asking.chat, asking.text, {}, std::nullopt},
                   "Reader", static_cast<moment>(said_count_++));
               root_.messages.push_back(said.said);
+              recount(asking.chat);
               ask_a_model(asking.chat);
             },
 
@@ -117,6 +118,7 @@ public:
                 copy.id = message_id{made.value + "-" + copy.id.value};
                 root_.messages.push_back(std::move(copy));
               }
+              recount(made);
               root_.opened = made;
             },
             // Given away as it reads, until the program has somewhere to give
@@ -158,6 +160,7 @@ public:
               for (message &copy : taken)
                 root_.messages.push_back(std::move(copy));
               root_.opened = made;
+              recount(made);
               (void)kept;
             },
             // Given away as it reads, until the program has somewhere to give
@@ -237,6 +240,7 @@ public:
               open->models = models_with(open->models, asking.name,
                                          asking.wanted);
               open->window = window_of(open->leading_model());
+              recount(open->id);
             }},
         one);
   }
@@ -401,6 +405,7 @@ private:
                                                     .author = ending_of(one.chat),
                                                     .sent = ended,
                                                     .took_ms = ended - one.began});
+    recount(one.chat);
     answering_.reset();
   }
 
@@ -476,6 +481,27 @@ private:
         return one.told_for();
     return std::string(default_told);
   }
+  // What this chat has spent of the room its answerer has: said again whole
+  // after any message enters or leaves it, and after the window changes, so
+  // that what the foot's circle reads is the messages added up.
+  void recount(const conversation_id &chat) {
+    conversation *one = nullptr;
+    for (conversation &each : root_.conversations)
+      if (each.id == chat)
+        one = &each;
+    if (!one)
+      return;
+    std::uint32_t spent = 0;
+    for (const message &each : root_.messages)
+      if (each.chat == chat)
+        spent += each.tokens;
+    one->tokens = spent;
+    one->context_used =
+        one->window == 0
+            ? 0.0f
+            : static_cast<float>(spent) / static_cast<float>(one->window);
+  }
+
   // What one said and everything before it in its chat was worth.
   [[nodiscard]] std::uint32_t tokens_up_to(const conversation_id &chat,
                                            const message_id &said) const {
@@ -504,6 +530,7 @@ private:
       if (one < at || root_.messages[one].chat != chat)
         kept.push_back(root_.messages[one]);
     root_.messages = std::move(kept);
+    recount(chat);
   }
 
   // The door a model is spoken through, while this is only a client: the

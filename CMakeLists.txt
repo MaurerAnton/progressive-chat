@@ -223,9 +223,17 @@ add_library(pchat_core)
 target_sources(pchat_core PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
   FILES src/core.cc src/config.cc src/theme.cc src/theme_palette.cc
         src/logic/lists.cc src/logic/search.cc src/logic/drafts.cc
-        src/logic/composer.cc src/logic/formatting.cc src/logic/doc.cc)
+        src/logic/composer.cc src/logic/formatting.cc src/logic/doc.cc
+          src/tokens.cc)
 target_compile_features(pchat_core PUBLIC cxx_std_26)
 target_compile_options(pchat_core PUBLIC ${pchat_std_flags})
+# The counters themselves are a classic translation unit: reached through one
+# header that imports nothing, so agora's headers stay out of module units.
+target_sources(pchat_core PRIVATE src/tokens_worth.cpp)
+# Agora's text counters, and everything they read behind them, linked into the
+# model the screens carry: the first thing this program takes from the ported
+# tree instead of leaving it to ctest alone.
+target_link_libraries(pchat_core PRIVATE agora_core_lib)
 # The design, as a string the build wrote: said to whoever reads this model,
 # which is every screen and every test of one.
 target_include_directories(pchat_core PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/generated")
