@@ -128,14 +128,8 @@ port owns its own copy of the write loop.
 
 ## Requirements
 
-- kotlinc (KOTLINC env or PATH) with the serialization compiler plugin,
-- kotlinx-serialization jars matching the app version, colon-separated in `KOTLINX_JARS`.
 
 ## Usage
 
-```bash
-KOTLINX_JARS=... ./run_golden.sh            # verify scenarios against the frozen traces
-KOTLINX_JARS=... ./run_golden.sh --freeze   # regenerate the frozen traces
-```
 
 For the C++ side set `AGORA_FIXTURE_OPENAI_REQUEST_DIR` to this directory when running ctest.

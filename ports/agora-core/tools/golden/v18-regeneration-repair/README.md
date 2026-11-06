@@ -45,12 +45,5 @@ siblings pointing at the deleted cloned user. The planner repairs exactly that p
 
 ## Running
 
-```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=...core.jar:...json.jar ./run_golden.sh           # verify
-KOTLINX_JARS=... ./run_golden.sh --freeze                      # refreeze traces
-```
 
 `core/build/agora_scenarios v18-regeneration-repair core/tools/golden/v18-regeneration-repair` rewrites `scenarios/` deterministically (26 cases); rerun
-`./run_golden.sh --freeze` afterwards.

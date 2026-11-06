@@ -15,9 +15,7 @@ involved: this is the platform archive layer the vendor importers sit on.
 | `scenarios/*.json` | 39 cases: built archives, raw byte archives, corruption paths, deterministic fuzz |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
 | `fixtures/*.zip` | The archives the driver built (committed so the C++ port reads the same bytes) |
-| `ZipReaderTraceDump.kt` | Driver: builds/reads the archive and renders the entries |
 | `agora_scenarios zip-reader` | Deterministic scenario generator (raw archives are assembled byte by byte) |
-| `run_golden.sh` | Compiles, freezes (`--freeze`) or verifies the traces |
 
 ## What is pinned
 
@@ -60,9 +58,5 @@ involved: this is the platform archive layer the vendor importers sit on.
 ## Running
 
 ```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=/home/user/agora-toolchain/jars/kotlinx-serialization-core-jvm-1.11.0.jar:/home/user/agora-toolchain/jars/kotlinx-serialization-json-jvm-1.11.0.jar \
-./run_golden.sh            # verify
 # add --freeze to regenerate golden/ and fixtures/
 ```

@@ -17,9 +17,7 @@ attachment encoder are the already-pinned modules — the stand pins the importe
 | `scenarios/*.json` | 34 cases: raw exports, ZIP archives, graph shapes, merges, selection, fuzz |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
 | `fixtures/*.zip` | The archives the driver built (committed so the C++ port reads the same bytes) |
-| `GptChatImporterTraceDump.kt` | Driver: feeds the importer and renders preview + import format |
 | `agora_scenarios gpt-chat-importer` | Deterministic scenario generator |
-| `run_golden.sh` | Compiles, freezes (`--freeze`) or verifies the traces and fixtures |
 
 ## What is pinned
 
@@ -59,10 +57,5 @@ attachment encoder are the already-pinned modules — the stand pins the importe
 ## Running
 
 ```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=/home/user/agora-toolchain/jars/kotlinx-serialization-core-jvm-1.11.0.jar:/home/user/agora-toolchain/jars/kotlinx-serialization-json-jvm-1.11.0.jar \
-COROUTINES_JAR=/home/user/agora-toolchain/kotlinc-2.3.21/lib/kotlinx-coroutines-core-jvm.jar \
-./run_golden.sh            # verify
 # add --freeze to regenerate golden/ and fixtures/
 ```

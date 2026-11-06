@@ -11,10 +11,7 @@ is frozen under `golden/`; the C++ port (`agora::core::schedule`, test
 | --- | --- |
 | `scenarios/*.json` | One case per file, 87 frozen edge cases |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `TaskScheduleTraceDump.kt` | The stand driver (builds a schedule, calls one operation) |
 | `agora_extract task-entity` | Lifts `TaskEntity` out of `data/local/ChatEntities.kt` |
-| `PlatformStubs.kt` | The `@Entity` / `@PrimaryKey` Room markers |
-| `run_golden.sh` | Extracts, compiles and regenerates or verifies the traces |
 | `agora_scenarios task-schedule` | Generates the scenarios (deterministic; rerun after editing) |
 
 `TaskSchedule.kt` itself needs **no stubs** — it only imports `java.util.Calendar`. Its
@@ -112,10 +109,6 @@ Escaping: `\` `|` `;` `\n` `\r` `\t` → `\\\\` `\\p` `\\s` `\\n` `\\r` `\\t`.
 ## Regenerating
 
 ```bash
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios task-schedule core/tools/golden/task-schedule              # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's `build/` (its git-ignored scratch, including the extracted
-`TaskEntity.kt`) before each run, so runs are idempotent.

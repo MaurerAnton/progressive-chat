@@ -29,4 +29,12 @@ inline void vocabulary(std::string_view tiktoken_text) {
   ::pchat::tokens_vocabulary(tiktoken_text.data(), tiktoken_text.size());
 }
 
+// The o200k vocabulary this build carries, ready for vocabulary(): the
+// .tiktoken text itself, in the binary rather than in a file, so every platform
+// counts the same way.
+[[nodiscard]] inline std::string_view o200k() {
+  return std::string_view(::pchat::o200k_bytes(),
+                          static_cast<std::size_t>(::pchat::o200k_size()));
+}
+
 }  // namespace pchat::tokens

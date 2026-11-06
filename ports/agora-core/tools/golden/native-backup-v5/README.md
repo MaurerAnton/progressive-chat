@@ -16,10 +16,8 @@ already-pinned core `zip_reader` and the importers consume.
 | --- | --- |
 | `scenarios/*.json` | 8 cases: entry assembly, baseline validation, reuse decisions, raw copies |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `NativeBackupV5TraceDump.kt` | Driver: builds archives, replays baseline queries, dumps entries |
 | `agora_scenarios native-backup-v5` | Deterministic scenario generator |
 | `platform/` | Identical stubs used by the `native-backup-format` stand for the shared models |
-| `run_golden.sh` | Compiles, freezes (`--freeze`) or verifies the traces |
 
 ## What is pinned
 
@@ -74,9 +72,5 @@ already-pinned core `zip_reader` and the importers consume.
 ## Running
 
 ```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=/home/user/agora-toolchain/jars/kotlinx-serialization-core-jvm-1.11.0.jar:/home/user/agora-toolchain/jars/kotlinx-serialization-json-jvm-1.11.0.jar:/home/user/agora-toolchain/jars/commons-compress-1.27.1.jar:/home/user/agora-toolchain/jars/commons-io-2.16.1.jar \
-./run_golden.sh            # verify
 # add --freeze to regenerate golden/
 ```

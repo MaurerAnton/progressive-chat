@@ -8,6 +8,9 @@
 // whatever sizes it came in, so a transport is a thing that hands bytes over
 // and nothing more; take() hands back what they said. A test feeds a file and
 // reads an answer.
+module;
+#include "anthropic/wire.h"
+
 export module pchat.provider.stream;
 
 import std;
@@ -30,6 +33,14 @@ struct event {
 
 class stream {
 public:
+  // One answer's wire: the chat shape reads its frames here itself, and the
+  // anthropic shape hands them to the reader its folder keeps. Chat where none
+  // is said, so every stream made before this stood makes the same one still.
+  explicit stream(wire of = wire::chat) : wire_(of) {
+    if (of == wire::anthropic)
+      wire_state_.reset(anthropic_open());
+  }
+
   // A piece of the wire, in whatever sizes the transport hands it over in: a
   // line may be cut in two here and is put back together before it is read.
   void feed(std::string_view bytes) {
@@ -42,7 +53,10 @@ public:
       kept_.erase(0, cut + 1);
       while (!one.empty() && (one.back() == '\r' || one.back() == ' '))
         one.pop_back();
-      line_said(one);
+      if (wire_ == wire::anthropic)
+        anthropic_line(one);
+      else
+        line_said(one);
     }
   }
 
@@ -64,6 +78,71 @@ public:
   [[nodiscard]] std::string_view finish() const { return finish_; }
 
 private:
+  // One line of anthropic's SSE: the framing the chat wire reads, with the
+  // payload whole at the blank line that ends the frame -- what an anthropic
+  // event means is the reader's, and not this line's to know.
+  void anthropic_line(const std::string &one) {
+    if (one.empty()) {
+      if (wire_payload_.empty())
+        return;
+      const std::vector<anthropic_frame> came = anthropic_step(wire_state_.get(), wire_payload_);
+      wire_payload_.clear();
+      for (const anthropic_frame &frame : came)
+        anthropic_said(frame);
+      return;
+    }
+    if (one.front() == ':')
+      return;
+    if (!one.starts_with("data:"))
+      return; // event:, id:, retry: -- the payload says its own type
+    std::string_view data(one);
+    data.remove_prefix(5);
+    if (!data.empty() && data.front() == ' ')
+      data.remove_prefix(1);
+    if (!wire_payload_.empty())
+      wire_payload_.push_back('\n');
+    wire_payload_.append(data);
+  }
+
+  // One decoded frame said the way everything here is said: into the same
+  // accumulators the chat wire fills, so nothing reading an answer can tell
+  // which of the two shapes it arrived in.
+  void anthropic_said(const anthropic_frame &one) {
+    switch (one.what) {
+    case anthropic_frame::kind::text:
+      answer_said(one.said);
+      return;
+    case anthropic_frame::kind::thought:
+      thought_said(one.said);
+      return;
+    case anthropic_frame::kind::tool: {
+      const tool_call call{
+          .id = one.call_id, .name = one.call_name, .arguments = one.call_arguments};
+      calls_.push_back(call);
+      said_.push_back(event{.what = event::kind::tool, .call = call});
+      return;
+    }
+    case anthropic_frame::kind::usage:
+      cost_.in = one.used_in;
+      cost_.out = one.used_out;
+      said_.push_back(event{.what = event::kind::usage, .cost = cost_});
+      return;
+    case anthropic_frame::kind::ended:
+      content_ended();
+      if (ended_)
+        return;
+      finish_ = one.finish.empty() ? std::string("stop") : one.finish;
+      ended_ = true;
+      said_.push_back(event{.what = event::kind::ended, .finish = finish_});
+      return;
+    case anthropic_frame::kind::failed:
+      failed_ = true;
+      failure_ = one.said;
+      said_.push_back(event{.what = event::kind::failed, .said = failure_});
+      return;
+    }
+  }
+
   // One line of SSE: a comment, a field, or the blank line that ends a frame.
   void line_said(const std::string &one) {
     if (one.empty() || one.front() == ':')
@@ -487,6 +566,13 @@ private:
   }
 
   std::string kept_;
+  // Which shape this stream reads: the chat one parses above, the anthropic one
+  // goes through the reader its folder keeps -- move-only from there on, and
+  // never copied where a run is passed along.
+  wire wire_ = wire::chat;
+  std::unique_ptr<anthropic_state, void (*)(anthropic_state *)> wire_state_{nullptr,
+                                                                            &anthropic_close};
+  std::string wire_payload_;
   // What the thinking lexer holds: a beginning of a tag it has not settled
   // yet, whether it is reading thought at this moment, and which tag is to
   // shut the one it opened.

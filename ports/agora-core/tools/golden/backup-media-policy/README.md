@@ -12,10 +12,7 @@ canonical trace is frozen under `golden/`; the C++ port
 | --- | --- |
 | `scenarios/*.json` | One case per file, 112 frozen edge cases |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `BackupMediaTraceDump.kt` | The stand driver (decodes a scenario, calls the policy, prints the trace) |
 | `agora_extract message-segment` | Lifts `MessageSegment`, `ToolImageAttachment` and `StreamingTextDelta` out of `model/ChatMessage.kt` |
-| `PlatformStubs.kt` | The `@Immutable` Compose marker annotation |
-| `run_golden.sh` | Extracts, compiles and regenerates or verifies the traces |
 | `agora_scenarios backup-media-policy <stand>` | Generates the scenarios (deterministic; rerun after editing) |
 
 ## What is pinned
@@ -122,8 +119,6 @@ Escaping: `\` `|` `;` `\n` `\r` `\t` → `\\\\` `\\p` `\\s` `\\n` `\\r` `\\t`; a
 ## Regenerating
 
 ```bash
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc-2.3.21 KOTLINX_JARS=core-1.11.0.jar:json-1.11.0.jar ./run_golden.sh          # verify
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc-2.3.21 KOTLINX_JARS=core-1.11.0.jar:json-1.11.0.jar ./run_golden.sh --freeze # regenerate
 ../../../build/agora_scenarios backup-media-policy .                                                                                                     # rewrite scenarios
 ```
 
@@ -134,5 +129,3 @@ which compiles only because 1.11.0 exposes `encodeToString(T)` as a reified **me
 on the older 1.6.3 the file does not compile at all. Matching versions is what lets the stand
 compile the source verbatim instead of patching an import into it.
 
-`run_golden.sh` wipes the stand's `build/` (its git-ignored scratch, including the extracted
-`MessageSegment.kt`) before each run, so runs are idempotent.

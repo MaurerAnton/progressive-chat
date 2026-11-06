@@ -43,9 +43,7 @@ The loop semantics, in provider order:
 | --- | --- |
 | `scenarios/*.json` | One transcript per file (`name`, `providerName`, `ops`), 36 frozen edge cases |
 | `golden/*.trace` | Frozen canonical output of the Kotlin reference, one per transcript |
-| `GeminiStreamTraceDump.kt` | The stand driver (see "How the driver works") |
 | ``agora_extract gemini-stream`` | Verbatim extraction of the stream-side provider helpers |
-| `run_golden.sh` | Extracts, compiles and regenerates or verifies the traces |
 | `agora_scenarios gemini-stream <stand>` | Generates the transcripts (deterministic; rerun after editing) |
 | `stubs/` | Leaf stubs for Android-only types the reference sources touch |
 
@@ -113,8 +111,6 @@ not pinned (only `rawLine.take(512)` in UTF-16 units — a split surrogate pair 
 ## Regenerating
 
 ```
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 ../../../build/agora_scenarios gemini-stream .   # rewrite scenarios
 ```
 

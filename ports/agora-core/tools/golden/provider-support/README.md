@@ -16,8 +16,6 @@ and by the endpoint configuration path, so one stand pins them once for all of t
 | --- | --- |
 | `scenarios/*.json` | One case per file, 49 frozen edge cases across three modes |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `ProviderSupportTraceDump.kt` | The stand driver (renders one line per function call) |
-| `run_golden.sh` | Compiles the app sources and regenerates or verifies the traces |
 | `agora_scenarios provider-support` | Generates the scenarios (deterministic; rerun after editing) |
 
 No extraction step: all three Kotlin files compile standalone (only `GenerationError.kt` and
@@ -81,8 +79,6 @@ Escaping is the shared `\\` `\p` `\s` `\n` `\r` `\t` set.
 ## Regenerating
 
 ```
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios provider-support core/tools/golden/provider-support                                                          # rewrite scenarios
 ```
 

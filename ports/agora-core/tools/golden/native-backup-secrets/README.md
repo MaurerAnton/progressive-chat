@@ -13,10 +13,8 @@ shell credentials, embedding keys and MCP headers in and out of a native backup.
 | --- | --- |
 | `scenarios/*.json` | 9 capture/restore cases |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `NativeBackupSecretsTraceDump.kt` | Driver: seeds settings, runs the policy, prints the trace |
 | `platform/` | DataStore preferences keys, crypto/debug shims, in-memory `SettingsManager` |
 | `agora_scenarios native-backup-secrets` | Deterministic scenario generator |
-| `run_golden.sh` | Compiles, freezes (`--freeze`) or verifies the traces |
 
 ## What is pinned
 
@@ -50,10 +48,5 @@ shell credentials, embedding keys and MCP headers in and out of a native backup.
 ## Running
 
 ```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=...core.jar:...json.jar \
-COROUTINES_JAR=.../kotlinx-coroutines-core-jvm-1.9.0.jar \
-./run_golden.sh            # verify
 # add --freeze to regenerate golden/
 ```

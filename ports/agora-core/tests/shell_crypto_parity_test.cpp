@@ -3,7 +3,7 @@
 // Replays every scenario under core/tools/golden/shell-crypto/scenarios through
 // agora::core::shell_crypto and requires the produced trace to equal the frozen Kotlin trace
 // byte for byte after the stand's non-determinism mask
-// (core/tools/golden/shell-crypto/mask_trace.py) is applied -- exactly as run_golden.sh masks
+// (core/tools/golden/shell-crypto/mask_trace.py) is applied -- exactly as the frozen goldens show it masked
 // both the fresh and the frozen side before diffing. The trace format mirrors the reference
 // driver (core/tools/golden/shell-crypto/ShellCryptoTraceDump.kt), including the driver-level
 // base64url decoding of the scenario inputs (java.util.Base64 URL decoder semantics).
@@ -156,7 +156,7 @@ std::string b64url(const crypto::PublicKeyRaw& raw) {
                                /*url_safe=*/true, /*padding=*/false);
 }
 
-// java.util.Base64 URL decoder (as vendored by platform/Base64.java): accepts padded and
+// java.util.Base64 URL decoder: accepts padded and
 // unpadded input, maps -/ back to +/ and rejects characters outside the alphabet.
 std::vector<std::uint8_t> url_decode(const std::string& input, const std::string& scenario) {
     const prim::Base64Decode decoded = prim::base64_decode(input, /*url_safe=*/true);
