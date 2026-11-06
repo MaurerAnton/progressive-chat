@@ -613,8 +613,12 @@ struct settings_rows : scene::Node {
     fVersion.setColour(look.dim);
     // How tall, then: as far as the layout reached, and the room left under
     // it. This is what scrolls, and it scrolls no further than the last thing
-    // said in it.
+    // said in it. Its own top is the top of that: a column this tall is put
+    // by its top and read downwards, and stood by its middle instead it put
+    // half of itself above where it began -- every row before the middle
+    // read nowhere, and pressed by nothing.
     this->apply({.anchor = scene::anchor::kTopLeft,
+                 .origin = scene::anchor::kTopLeft,
                  .x = 0.0f,
                  .y = 0.0f,
                  .relativeSize = scene::axes::kNone,
