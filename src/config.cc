@@ -44,6 +44,12 @@ constexpr color_scheme colors_of(const looks& shown, bool system_dark = true) {
   return with_amoled(scheme_for(shown.preset, shown.style, dark), dark, shown.amoled);
 }
 
+// The tools this program owns itself (pchat.tools), said by which is which
+// because a row in the settings and a body written for a wire both have to
+// name the same one.
+enum class tool_choice { conversation_search, how_much, when_it_is };
+inline constexpr std::size_t tools_owned = 3u;
+
 // How an answer is asked for: what a model is told to do with its own choices
 // while it writes one, whichever wire it is asked through. Five of them, and
 // none of them anything this program answers itself -- every one is said as
@@ -61,6 +67,10 @@ struct asking {
   // having been said often: the two ways a wire is asked not to repeat.
   double presence = 0.0;
   double often = 0.0;
+  // Which of the tools this program owns may be asked for at all: one for
+  // each of the three, and every one of them offered until a row says
+  // otherwise.
+  std::array<bool, tools_owned> tools{true, true, true};
   friend bool operator==(const asking&, const asking&) = default;
 };
 
@@ -117,6 +127,18 @@ struct asking_range {
     break;
   }
   return one.often;
+}
+
+// Whether one of the tools is offered to a model, and the same with that one
+// switched: what a row of the Tools group asks for.
+[[nodiscard]] constexpr bool offered_of(const asking &one, tool_choice which) {
+  return one.tools[static_cast<std::size_t>(which)];
+}
+[[nodiscard]] constexpr asking set_of(const asking &one, tool_choice which,
+                                      bool on) {
+  asking out = one;
+  out.tools[static_cast<std::size_t>(which)] = on;
+  return out;
 }
 
 // The same, with one of them moved: what a row's press either side of one

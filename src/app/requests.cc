@@ -113,6 +113,12 @@ struct set_generation {
   asking_what field = asking_what::temperature;
   double value = 0.0;
 };
+// One of the tools this program owns, switched: on, and a model is told it
+// may ask for it; off, and no answer this program writes mentions it.
+struct set_tool {
+  tool_choice which = tool_choice::conversation_search;
+  bool on = false;
+};
 
 // What is asked, as one value: spl::variant, so that every kind of it is
 // handled where it is read and a new one cannot be forgotten.
@@ -125,7 +131,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              close_system_prompt, set_system_prompt,
                              toggle_more, open_design, close_design,
                              pick_seed, set_amoled, set_font_scale, pick_theme,
-                              set_generation>;
+                              set_generation, set_tool>;
 
 class requests {
 public:

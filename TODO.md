@@ -46,6 +46,13 @@ build and the next.
       counted for real.
 - [ ] Copy to the clipboard only keeps the text in the program
       (`copied_`); nothing carries it to the host's own clipboard.
+      Written again on 2026-11-06: it is given to the machine's own
+      clipboard now (`scene::setClipboardText`), which no probe has read
+      back yet -- a page kept in a browser is asked for its clipboard by
+      permission and nobody has asked.
+- [ ] Seven of the eight settings groups still stand named and empty: what
+      Generation says under Responses is drawn and moved, and what Appearance
+      says, and nothing behind any other row yet.
 - [x] **Search does nothing yet** -- done 2026-11-06: what is typed in the
       drawer's field is asked for at every edit of it and not only when Enter
       is pressed, and what it keeps is every conversation named after it or
@@ -59,6 +66,16 @@ build and the next.
       once a frame, which nothing here had done (`src/app/program.cc`,
       `skiff::bind::press`). Everything a field asks for went the same way --
       including what the system prompt's card was typed into.
+- [x] **Generation stood named and empty like the rest of the settings** --
+      done 2026-11-06: the five things an answer is asked with are drawn
+      under their row now, each said as it stands and moved one step either
+      way by a press (`src/ui/settings.cc`, `knob_row`; `src/config.cc`,
+      `asking`). Where each of them stops, and by how much one press moves
+      it, is said once and asked for by both the row and the program that
+      keeps it. From there they go on into every body written for a wire
+      (`src/provider.cc`, `wants_of`), which is what the tests read back out
+      of the json.
+
 - [x] **Nothing could install a browser to drive the page with** -- done
       2026-11-05: a playwright is put out before the core it is said on
       top of, so asking for the newest asked for a `playwright-core` that

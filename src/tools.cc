@@ -12,6 +12,7 @@
 export module pchat.tools;
 
 import std;
+import pchat.config;
 import pchat.core;
 import pchat.json;
 import pchat.provider;
@@ -20,7 +21,59 @@ export namespace pchat::tools {
 
 // Every tool this program owns, and nothing else: written here once, said to
 // a wire in the shape a wire reads tools in, and read back by whoever runs
-// what a model asked for.
+// what a model asked for. Named before they are owned, because what owns
+// them names them by this, and by whoever names the ones a reader has left
+// switched on.
+[[nodiscard]] inline std::vector<provider::offered> every_offered() {
+  return {
+      {.name = "look_up_in_this_conversation",
+       .told = "Read back what was said in this very conversation: the "
+               "messages that mention the words asked about, oldest first, "
+               "and who said each of them.",
+       .taken = {{"what", "the words to look for, as one string"}}},
+      {.name = "how_much_has_been_said",
+       .told = "How much has been said in this conversation: how many "
+               "messages, how many came from the reader, and how many "
+               "tokens they counted as a whole.",
+       .taken = {}},
+      {.name = "when_this_is_being_asked",
+       .told = "What time it is for this program right now, as "
+               "milliseconds since 1970, and nothing else: say nothing "
+               "about the time unless a question needs it.",
+       .taken = {}}};
+}
+
+// Which of them is which, in the order they are named above: the same three
+// `tool_choice` names (pchat.config) in the same order, so that a switch in
+// the settings and a body written for a wire mean the same one by either.
+[[nodiscard]] inline std::string_view name_of(tool_choice one) {
+  switch (one) {
+  case tool_choice::conversation_search:
+    return "look_up_in_this_conversation";
+  case tool_choice::how_much:
+    return "how_much_has_been_said";
+  case tool_choice::when_it_is:
+    return "when_this_is_being_asked";
+  }
+  return {};
+}
+
+// The ones a reader has left switched on, in what a wire is told this
+// program owns: nothing for a tool switched off, whatever is said about it
+// elsewhere.
+[[nodiscard]] inline std::vector<provider::offered> tools_of(const asking &how) {
+  std::vector<provider::offered> out;
+  for (std::size_t at = 0u; at < tools_owned; ++at) {
+    const tool_choice which = static_cast<tool_choice>(at);
+    if (!offered_of(how, which))
+      continue;
+    for (const provider::offered &one : every_offered())
+      if (std::string_view(one.name) == name_of(which))
+        out.push_back(one);
+  }
+  return out;
+}
+
 class owned {
 public:
   // What it may look things up in -- one conversation, and not another one --
@@ -31,24 +84,11 @@ public:
   owned(Said &&said, moment now)
       : said_(std::ranges::to<std::vector<message>>(said)), now_(now) {}
 
-  // What a model may be told it can ask for.
+  // What a model may be told it can ask for: every one of them. Whether one
+  // of them is offered at all is not this owner's to say -- that is said
+  // below, against what the reader asked for.
   [[nodiscard]] std::vector<provider::offered> offered() const {
-    return {
-        {.name = "look_up_in_this_conversation",
-         .told = "Read back what was said in this very conversation: the "
-                 "messages that mention the words asked about, oldest first, "
-                 "and who said each of them.",
-         .taken = {{"what", "the words to look for, as one string"}}},
-        {.name = "how_much_has_been_said",
-         .told = "How much has been said in this conversation: how many "
-                 "messages, how many came from the reader, and how many "
-                 "tokens they counted as a whole.",
-         .taken = {}},
-        {.name = "when_this_is_being_asked",
-         .told = "What time it is for this program right now, as "
-                 "milliseconds since 1970, and nothing else: say nothing "
-                 "about the time unless a question needs it.",
-         .taken = {}}};
+    return every_offered();
   }
 
   // One call answered: whole, and nothing where no tool of ours is called
@@ -117,5 +157,14 @@ private:
   std::vector<message> said_;
   moment now_;
 };
+
+// What one answer is asked with, whole: the five numbers come from how the
+// program asks (pchat.provider, `wants_of`), and into them go the tools that
+// were left on. This is the one place both halves are said together.
+[[nodiscard]] inline provider::wanted wanted_of(const asking &how) {
+  provider::wanted out = provider::wants_of(how);
+  out.tools = tools_of(how);
+  return out;
+}
 
 } // namespace pchat::tools

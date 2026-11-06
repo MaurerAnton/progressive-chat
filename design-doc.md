@@ -125,7 +125,12 @@ this program has to be able to say yes or no to, and to what degree.
 
 * **System prompts** — the instructions every answer is given before it is
   asked, created and kept here.
-* **Generation** — the parameters an answer is asked with.
+* **Generation** — the parameters an answer is asked with, and what each of
+  them stands at now: **temperature**, **top p**, **maximum tokens**,
+  **presence penalty** and **frequency penalty**, each moved one step either
+  way by a press beside it and kept inside the lines it has (`0…2`, `0…1`,
+  `256…32768`, `-2…2`, `-2…2`). Nothing else behind them yet: what they are set
+  to is what every answer is asked with, once anything is asked for.
 * **Context** — what is kept of a conversation when the window is smaller than
   the talking.
 * **Title generation** — a conversation named for itself, without being asked.
@@ -140,7 +145,10 @@ this program has to be able to say yes or no to, and to what degree.
 
 * **Web search** — one search tool, configured once, for every provider.
 * **Conversation search** — the history of this conversation, and how it is
-  looked through.
+  looked through. What this program owns itself stands under this row as a
+  switch to each of the three: **look up what was said here**, **say how much
+  has been said**, and **say what time it is**. One switched off is not
+  offered to a model at all, whatever else this program would answer for it.
 * **Shell** — commands run on a machine elsewhere.
 * **Tor** — an asking put through the Tor network. *Where this belongs is not
   settled:* it is a tool here, and it could as well be under Network, or under

@@ -63,6 +63,9 @@ struct settings_group {
   // group says `max_settings_items`, which no item is ever at.
   std::size_t drawn = max_settings_items;
   std::size_t drawn_too = max_settings_items;
+  // Where what a group draws is not what the others draw: the three tools
+  // this program owns, under Tools.
+  std::size_t tools_drawn = max_settings_items;
 };
 inline constexpr std::array<settings_group, max_settings_groups> settings_groups{{
     {"Services", {{"Providers", "Models"}}, 2u, max_settings_items},
@@ -77,7 +80,9 @@ inline constexpr std::array<settings_group, max_settings_groups> settings_groups
      {{"Web search", "Conversation search", "Shell", "Tor", "MCP",
        "Automation", "Interaction"}},
      7u,
-     max_settings_items},
+     max_settings_items,
+     max_settings_items,
+     2u},
     {"Network", {{"Proxy", "WebUI"}}, 2u, max_settings_items},
     {"Memory & Data", {{"Memory", "Skills", "Data control"}}, 3u,
      max_settings_items},
@@ -163,6 +168,18 @@ struct switch_row : scene::Node {
   return field == asking_what::max_tokens ? std::format("{:.0f}", value)
                                           : std::format("{:.2f}", value);
 }
+
+// The three tools this program owns (pchat.tools), as the page says them:
+// what each is called here, and which of them that is.
+struct tool_row_name {
+  tool_choice which;
+  std::string_view name;
+};
+inline constexpr std::array<tool_row_name, tools_owned> tool_names{{
+    {tool_choice::conversation_search, "Look up what was said here"},
+    {tool_choice::how_much, "Say how much has been said"},
+    {tool_choice::when_it_is, "Say what time it is"},
+}};
 
 // The five, in the order the page says them in, and what each is called.
 struct asking_choice {
@@ -286,6 +303,9 @@ struct settings_rows : scene::Node {
   switch_row fLight;
   // Generation, drawn: one row for each of the five an answer is asked with.
   std::array<knob_row, asking_offered.size()> fKnobs;
+  // The tools, drawn: a switch to each of the three, whether it is offered
+  // to a model or not.
+  std::array<switch_row, tool_names.size()> fTools;
   // What the design is called when it is offered: pressed, the whole of it
   // is said in the room, where it can be read against what is drawn.
   ask_box fReadPlate{};
@@ -319,6 +339,8 @@ struct settings_rows : scene::Node {
       fSeeds[at].blank();
     for (knob_row &one : fKnobs)
       one.setVisible(false);
+    for (switch_row &one : fTools)
+      one.setVisible(false);
     fBlack.fName.setText("Pure black");
     fLarge.fName.setText("Larger type");
     fLight.fName.setText("Light colours");
@@ -326,6 +348,29 @@ struct settings_rows : scene::Node {
     fVersion.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
                     .autoSize = scene::axes::kBoth});
+  }
+
+  // The three tools, drawn: a switch to each, standing under the name of the
+  // group's third row, which is the one that is about looking things up.
+  [[nodiscard]] float say_tools(app::requests *asked, const paints &look,
+                                const asking &how, float row_width,
+                                float base) {
+    float at = base;
+    for (std::size_t one = 0u; one < tool_names.size(); ++one) {
+      const tool_row_name &said = tool_names[one];
+      fTools[one].again(asked,
+                        {.anchor = scene::anchor::kTopLeft,
+                         .x = 16.0f,
+                         .y = at,
+                         .relativeSize = scene::axes::kNone,
+                         .width = row_width,
+                         .height = settings_row_height,
+                         .cornerRadius = 14.0f},
+                        look, said.name, offered_of(how, said.which),
+                        app::set_tool{said.which, !offered_of(how, said.which)});
+      at += settings_row_stride;
+    }
+    return at;
   }
 
   // Generation, drawn: one row to each of the five, under the name the page
@@ -492,6 +537,10 @@ struct settings_rows : scene::Node {
         // each of them moved by a press either side of it.
         if (named.drawn_too == one)
           at = say_generation(asked, look, how, row_width, at);
+        // Tools is drawn there too, and what it draws is not the five: it is
+        // the three this program owns, switched on or off.
+        if (named.tools_drawn == one)
+          at = say_tools(asked, look, how, row_width, at);
       }
       at += settings_group_gap;
     }
@@ -524,6 +573,8 @@ struct settings_rows : scene::Node {
     f(fLarge);
     f(fLight);
     for (knob_row &one : fKnobs)
+      f(one);
+    for (switch_row &one : fTools)
       f(one);
     f(fReadPlate);
     f(fRead);

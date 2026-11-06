@@ -245,7 +245,12 @@ public:
             // How an answer is asked for: the one of the five a row was
             // pressed for, kept inside the lines it is said to have
             // (pchat.config, `asking`).
-            [&](const set_generation &asking) { how(asking.field, asking.value); }},
+            [&](const set_generation &asking) { how(asking.field, asking.value); },
+            // A tool switched: one of the three this program owns, and what
+            // it is switched to.
+            [&](const set_tool &asking) {
+              how_ = set_of(how_, asking.which, asking.on);
+            }},
         one);
   }
 
