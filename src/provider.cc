@@ -154,6 +154,13 @@ struct offered {
 // told one has nothing to say about it.
 struct wanted {
   bool stream = true;
+  // That it thinks before it answers, and how hard: written as the family
+  // being spoken to names it, because no two of them do -- openai's own wire
+  // takes a reasoning effort, the relays that carry many take a thing of that
+  // name inside one, and deepseek takes nothing at all, thinking whenever it
+  // answers and never asked to.
+  bool thinking = false;
+  std::optional<effort> how_hard;
   std::vector<offered> tools;
   std::optional<double> temperature;
   std::optional<double> top_p;
@@ -170,6 +177,9 @@ struct wanted {
 // lost going either way, and nothing is said for one that was never set.
 [[nodiscard]] inline wanted wants_of(const asking &how) {
   return wanted{.stream = true,
+                .thinking = how.thinking,
+                .how_hard = how.thinking ? std::optional<effort>(how.how_hard)
+                                         : std::nullopt,
                 .temperature = how.temperature,
                 .top_p = how.top_p,
                 .max_tokens = how.max_tokens,
@@ -223,6 +233,14 @@ template <std::ranges::forward_range Turns>
   // How it is to write, where anything was said about that: five numbers a
   // wire reads whether it streams or not, and none of them written for a wire
   // that was told nothing about how to choose.
+  if (wants.thinking && wants.how_hard) {
+    const std::string hard = std::string(said_by(*wants.how_hard));
+    const std::string_view base(one.base);
+    if (base.find("openrouter") != std::string::npos)
+      out.name("reasoning").thing().name("effort").text(hard).shut();
+    else if (base.find("deepseek") == std::string::npos)
+      out.name("reasoning_effort").text(hard);
+  }
   if (wants.temperature)
     out.name("temperature").number(*wants.temperature);
   if (wants.top_p)

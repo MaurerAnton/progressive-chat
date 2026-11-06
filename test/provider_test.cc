@@ -259,4 +259,26 @@ SAID(provider, a_tool_written_in_the_answer_is_a_call_and_not_text) {
   EXPECT_EQ(one.calls().front().arguments, std::string("{\"city\":\"Oslo\"}"));
 }
 
+// Thinking, asked for in the words each family takes it in: openai's own
+// reasoning effort, the relay's thing inside the body, and deepseek, which is
+// never asked because it thinks whenever it answers.
+SAID(provider, thinking_is_asked_for_as_each_family_names_it) {
+  const std::vector<provider::turn> no_turns;
+  const provider::wanted most{.thinking = true, .how_hard = config::effort::most};
+  const provider::endpoint openai{.base = "https://api.openai.com/v1", .model = "o4-mini"};
+  const provider::endpoint relay{.base = "https://openrouter.ai/api/v1", .model = "o4-mini"};
+  const provider::endpoint deep{.base = "https://api.deepseek.com/v1", .model = "deepseek-r1"};
+  EXPECT_TRUE(provider::body_of(openai, no_turns, most).find("\"reasoning_effort\":\"high\"") !=
+              std::string::npos);
+  EXPECT_TRUE(provider::body_of(relay, no_turns, most).find(
+                  "\"reasoning\":{\"effort\":\"high\"}") != std::string::npos);
+  EXPECT_TRUE(provider::body_of(deep, no_turns, most).find("reasoning") == std::string::npos);
+}
+
+SAID(provider, thinking_turned_off_is_asked_for_nowhere) {
+  const provider::wanted none{.thinking = false};
+  const provider::endpoint openai{.base = "https://api.openai.com/v1", .model = "o4-mini"};
+  EXPECT_TRUE(provider::body_of(openai, no_turns, none).find("reasoning") == std::string::npos);
+}
+
 int main() { return pchat::tests::run(); }

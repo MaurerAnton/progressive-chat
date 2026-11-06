@@ -54,7 +54,32 @@ inline constexpr std::size_t tools_owned = 3u;
 // while it writes one, whichever wire it is asked through. Five of them, and
 // none of them anything this program answers itself -- every one is said as
 // part of every body written for a provider (pchat.provider, `wanted`).
+// How hard a model is to think before it answers, in the only four ways any
+// wire is asked for it: a little, some, most of what it can, or all of it.
+// Said once here and written as each family names it by pchat.provider.
+enum class effort { least, some, most, all };
+
+[[nodiscard]] inline std::string_view said_by(effort one) {
+  switch (one) {
+  case effort::least:
+    return "low";
+  case effort::some:
+    return "medium";
+  case effort::most:
+    return "high";
+  case effort::all:
+    break;
+  }
+  return "all";
+}
+
 struct asking {
+  // That it thinks at all before it answers: off, and a model answers out of
+  // whatever it knows; on, and every wire this program speaks to is asked for
+  // the thinking in the words that family takes it in.
+  bool thinking = true;
+  // How hard, where thinking is on at all.
+  effort how_hard = effort::some;
   // How far it may wander from the words most likely to come next.
   double temperature = 0.7;
   // How much of what is likely it is allowed to choose between: a share of
