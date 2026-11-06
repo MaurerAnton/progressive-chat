@@ -176,7 +176,7 @@ endif()
 # Optional host-side HTTP transport: the OkHttp surface HttpClient.kt drives, backed by libcurl+OpenSSL.
 # Android ships without libcurl (OkHttp stays the Kotlin stack there) and the NDK sysroot has no
 # curl headers, so the transport is host-only; curl_transport.hpp degrades without the define.
-if(CMAKE_SYSTEM_NAME STREQUAL "Android")
+if(ANDROID OR CMAKE_SYSTEM_NAME STREQUAL "Android")
     set(AGORA_CORE_HAVE_CURL OFF)
     message(STATUS "agora core: libcurl HTTP transport disabled (Android)")
 else()
@@ -195,7 +195,7 @@ endif()
 
 # SQLite3 for the database layer (replaces Room on host). Android keeps Room and the NDK sysroot
 # ships no sqlite3 headers, so SqliteExecutor stays host-only.
-if(CMAKE_SYSTEM_NAME STREQUAL "Android")
+if(ANDROID OR CMAKE_SYSTEM_NAME STREQUAL "Android")
     set(AGORA_CORE_HAVE_SQLITE3 OFF)
     message(STATUS "agora core: SQLite3 disabled (Android keeps Room)")
 else()
@@ -211,9 +211,11 @@ else()
     endif()
 endif()
 
-# POSIX submission receivers (server/): host-only POSIX, excluded on Android and Windows.
+# POSIX submission receivers (server/): host-only POSIX. A phone build is either
+# CMAKE_SYSTEM_NAME=Android (Agora's own build) or ANDROID set alone (this tree's
+# toolchain, which names itself) -- both answers keep the receivers out.
 # Threads::Threads covers the per-connection accept threads on glibc older than 2.34 as well.
-if(UNIX AND NOT CMAKE_SYSTEM_NAME STREQUAL "Android" AND NOT CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+if(UNIX AND NOT ANDROID AND NOT CMAKE_SYSTEM_NAME STREQUAL "Android" AND NOT CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
     find_package(Threads REQUIRED)
     target_sources(agora_core_lib PRIVATE
         src/server/submission_messages.cpp
@@ -253,14 +255,14 @@ if(AGORA_CORE_BUILD_TESTS)
     target_link_libraries(agora_scenarios PRIVATE agora_core_lib ZLIB::ZLIB OpenSSL::Crypto)
 endif()
 
-if(UNIX AND NOT CMAKE_SYSTEM_NAME STREQUAL "Android" AND NOT CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+if(UNIX AND NOT ANDROID AND NOT CMAKE_SYSTEM_NAME STREQUAL "Android" AND NOT CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
     # C++ replacement for the Python receiver scripts in server/ (reference implementations live
     # in the git history of server/*.py; wire semantics pinned by core/tests/server_submission_test.cpp).
     add_executable(agora_server tools/server_main.cpp)
     target_link_libraries(agora_server PRIVATE agora_core_lib Threads::Threads)
 endif()
 
-if(NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
+if(NOT ANDROID AND NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
     # Icon generator (scripts/round_icon.py port): header-only vendored stb, no core dependency.
     add_executable(agora_icon tools/icon_main.cpp)
     target_include_directories(agora_icon PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/stb)
