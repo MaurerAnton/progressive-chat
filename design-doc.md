@@ -86,8 +86,12 @@ Folded above an answer: **how long it was thinking, and how often it reached
 for a tool** — `Thought for 4.2 s · 3 tool calls`. The whole line is **one
 press**, and a press **opens it**: what the model wrote to itself while it was
 thinking is said under it, greentext, and beneath that **every tool call it
-made on the way**, one line each — what it asked for, and what it was given
-back — for those three are what the count was counting. Pressed again it folds.
+made on the way**, one line each — what it is called, what it asked for, and
+what it was given back — for those are what the count was counting. What each
+was asked for and what was given back to it is kept nowhere but with the answer
+it belongs to (`called` in pchat.core, `called_row` in src/ui/message_list.cc),
+and the sample's answers keep theirs from the start, so the fold has something
+to say before any wire has answered anything. Pressed again it folds.
 
 ### The editor's row
 

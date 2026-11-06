@@ -306,6 +306,11 @@ private:
     std::optional<provider::run> asked;
     platform::carrying carried;
     tools::owned mine;
+    // Every tool it stopped to ask for on the way, and what each was given
+    // back: said of the answer above which the fold counts them, and kept
+    // whole here, for a round of this loop is answered before it is written
+    // into the message it belongs to.
+    std::vector<called> calls;
     moment began;
   };
   std::optional<answer_coming> answering_;
@@ -399,12 +404,14 @@ private:
       return;   // and it is not over yet
     }
     const moment ended = now_ms();
-    if (message *there = found(one.said))
+    if (message *there = found(one.said)) {
       *there = one.going.answer_of(provider::put_in{.id = one.said,
                                                     .chat = one.chat,
                                                     .author = ending_of(one.chat),
                                                     .sent = ended,
                                                     .took_ms = ended - one.began});
+      there->calls = std::move(one.calls);
+    }
     recount(one.chat);
     answering_.reset();
   }
@@ -415,11 +422,14 @@ private:
   // where it belongs.
   [[nodiscard]] bool asked_again(answer_coming &one) {
     std::vector<provider::call_answered> answered;
-    for (const provider::tool_call &call : one.going.asked_for())
-      answered.push_back(
-          provider::call_answered{.own = call.id,
-                                  .said = one.mine.answered(call.name, call.arguments)
-                                              .value_or("nothing here answers that call")});
+    for (const provider::tool_call &call : one.going.asked_for()) {
+      const std::string said =
+          one.mine.answered(call.name, call.arguments)
+              .value_or("nothing here answers that call");
+      answered.push_back(provider::call_answered{.own = call.id, .said = said});
+      one.calls.push_back(
+          called{.name = call.name, .asked = call.arguments, .said = said});
+    }
     return one.going.again(std::move(answered));
   }
 

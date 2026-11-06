@@ -232,12 +232,55 @@ struct foot_row : nodes::Stack {
 
 // ---- what was thought before an answer -----------------------------------
 
+// One tool it reached for, said where the fold has been pressed open: what
+// it is called, what it asked for, and what it was given back -- one line
+// each, and every one of them as wide as the fold is.
+struct called_row : nodes::Stack {
+  nodes::Text fName{"", 11.5f, 0u, true};
+  nodes::Text fAsked{"", 11.0f, 0u};
+  nodes::Text fSaid{"", 11.0f, 0u};
+
+  called_row() {
+    this->apply({.fillX = true, .autoSize = scene::axes::kY});
+    fStack = {.direction = nodes::direction::vertical{}, .spacingY = 2.0f};
+    fAsked.setMonospace(true);
+    fSaid.setMonospace(true);
+  }
+
+  void again(const paints &look, const called &one, float widest) {
+    this->setVisible(true);
+    fName.setText(one.name);
+    fName.setColour(look.primary);
+    fName.apply({.autoSize = scene::axes::kBoth, .maxWidth = widest});
+    fAsked.setText(one.asked);
+    fAsked.setColour(look.dim);
+    fAsked.apply({.autoSize = scene::axes::kBoth, .maxWidth = widest});
+    fSaid.setText(one.said);
+    fSaid.setColour(look.faint);
+    fSaid.apply({.autoSize = scene::axes::kBoth, .maxWidth = widest});
+  }
+
+  void blank() { this->setVisible(false); }
+
+  void forEachChild(auto &&f) {
+    f(fName);
+    f(fAsked);
+    f(fSaid);
+  }
+};
+
+// How many of them one fold says: what the count above them counted, said
+// one line at a time and read whole by nobody until it is pressed open.
+inline constexpr std::size_t called_at_most = 6u;
+
 // Folded above an answer: how long it was thinking, how many tool calls it
 // made, and -- once it is pressed open -- what it wrote to itself while it
-// was, in green, the way a thread writes it.
+// was, in green, the way a thread writes it, and every call it made on the
+// way under that.
 struct history_fold : nodes::Stack {
   nodes::Text fSummary{"", 12.0f, 0u};
   nodes::Text fThought{"", 12.0f, 0u};
+  std::array<called_row, called_at_most> fCalls;
   bool fOpen = false;
 
   history_fold() {
@@ -263,9 +306,12 @@ struct history_fold : nodes::Stack {
     fThought.setText("");
     fOpen = false;
     fThought.setVisible(false);
+    for (called_row &one : fCalls)
+      one.blank();
   }
 
-  void again(const paints &look, const thought &before, float widest) {
+  void again(const paints &look, const thought &before,
+             std::span<const called> calls, float widest) {
     this->setVisible(true);
     this->apply({.autoSize = scene::axes::kBoth,
                  .maxWidth = widest,
@@ -283,11 +329,23 @@ struct history_fold : nodes::Stack {
     fThought.setVisible(fOpen && !before.said.empty());
     fThought.apply(
         {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
+    // What it reached for, said under what it thought, and only while the
+    // fold is open: the count over them counts these, so it is not said
+    // twice that it reached for nothing where none was reached for.
+    const std::size_t said = std::min(calls.size(), called_at_most);
+    for (std::size_t at = 0; at < called_at_most; ++at) {
+      if (at < said && fOpen)
+        fCalls[at].again(look, calls[at], widest - 24.0f);
+      else
+        fCalls[at].blank();
+    }
   }
 
   void forEachChild(auto &&f) {
     f(fSummary);
     f(fThought);
+    for (called_row &one : fCalls)
+      f(one);
   }
 };
 
@@ -360,7 +418,7 @@ struct answer_row : nodes::Stack {
                  .autoSize = scene::axes::kY,
                  .margin = scene::Margin{run_gap, 0.0f, 0.0f, 0.0f}});
     if (said.before)
-      fFold.again(look, *said.before, widest);
+      fFold.again(look, *said.before, said.calls, widest);
     else
       fFold.blank();
     fBody.setText(said.text);

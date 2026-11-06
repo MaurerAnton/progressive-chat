@@ -103,6 +103,18 @@ struct thought {
   friend bool operator==(const thought &, const thought &) = default;
 };
 
+// One tool a model stopped to ask for on its way to an answer: what it is
+// called, what it was asked for, and what it was given back. Kept with the
+// answer that stopped to ask for it, which is the answer whose fold counts
+// them and says them one line each (`tool_calls` and the rows under it, in
+// src/ui/message_list.cc).
+struct called {
+  std::string name;
+  std::string asked;
+  std::string said;
+  friend bool operator==(const called &, const called &) = default;
+};
+
 // A message: one thing said in one conversation, by somebody or by its
 // reader. Which of the two decides where it is drawn.
 struct message {
@@ -120,6 +132,12 @@ struct message {
   // What this one is worth, in tokens: read out of a protocol where it says,
   // counted out of its words where it does not.
   std::uint32_t tokens = 0;
+  // Every tool it stopped to ask for on the way, said one line each in the
+  // fold above the answer it belongs to. Standing last, as everything added
+  // after this struct was first said does: what says a message whole, field
+  // after field -- in src/app/sample.cc -- keeps saying what it said before
+  // any of them existed.
+  std::vector<called> calls;
   friend bool operator==(const message &, const message &) = default;
 };
 

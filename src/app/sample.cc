@@ -63,7 +63,17 @@ export namespace pchat::app {
        thought{4'200, 3,
                "no recipe of its own known; three reads of the pantry, then "
                "written"},
-       1'240},
+       1'240,
+       {called{.name = "look_up_in_this_conversation",
+               .asked = R"({"what": "eggs"})",
+               .said = "Reader: Two eggs, a lemon, half a loaf, and too much "
+                       "butter."},
+        called{.name = "how_much_has_been_said",
+               .asked = "{}",
+               .said = R"({"messages": 1, "from_the_reader": 1})"},
+        called{.name = "when_this_is_being_asked",
+               .asked = "{}",
+               .said = "1763000200000"}}},
       {message_id{"3"}, conversation_id{"kitchen"}, "Reader", true,
        "And if I would rather have it sweet?", 1'763'000'300'000,
        delivery::seen, std::nullopt, std::nullopt, 14},
@@ -75,7 +85,11 @@ export namespace pchat::app {
        1'763'000'400'000, delivery::sent, std::nullopt,
        thought{1'900, 1,
                "the same four things asked again, the sweet way round"},
-       680},
+       680,
+       {called{.name = "look_up_in_this_conversation",
+               .asked = R"({"what": "lemon"})",
+               .said = "Reader: Two eggs, a lemon, half a loaf, and too much "
+                       "butter."}}},
       {message_id{"5"}, conversation_id{"sieve"}, "Reader", true,
        "Write me a sieve of Eratosthenes in C++ that takes its bound at run "
        "time.",
@@ -96,7 +110,14 @@ export namespace pchat::app {
                "the bound written down before the loop; the overflow thought "
                "about twice, once past "
                "four billion; one small test compiled and run"},
-       2'310},
+       2'310,
+       {called{.name = "look_up_in_this_conversation",
+               .asked = R"({"what": "sieve"})",
+               .said = "Reader: Write me a sieve of Eratosthenes in C++ that "
+                       "takes its bound at run time."},
+        called{.name = "when_this_is_being_asked",
+               .asked = "{}",
+               .said = "1763000200000"}}},
       {message_id{"7"}, conversation_id{"notices"}, "", false,
        "Nothing of this is answered yet: what fills this is the sample, until "
        "the client is.",
