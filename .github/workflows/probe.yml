@@ -97,12 +97,27 @@ jobs:
       - name: What to say to the page, when it is said by hand
         if: ${{ github.event.inputs.script != '' }}
         run: printf '%s' "${{ github.event.inputs.script }}" > said_by_hand.mjs
+      # Three probes, asked in this order: a whole script written out here,
+      # one this very tree keeps of its own say (tools/probe_by_hand.mjs),
+      # and the tester's -- the last of them asked of everything else.
+      - name: Which probe is asked
+        run: |
+          set -euo pipefail
+          if [ -f said_by_hand.mjs ]; then
+            probe=said_by_hand.mjs
+          elif [ -f tools/probe_by_hand.mjs ]; then
+            probe=tools/probe_by_hand.mjs
+          else
+            probe=tools/probe_painted.mjs
+          fi
+          echo "asked of the page: $probe"
+          echo "PCHAT_PROBE=$probe" >> "$GITHUB_ENV"
       - name: Shoot the page this ref built
         env:
           # What the probe asks, in place of the page everybody else sees:
           # this ref's own, off the host it was served onto above.
           PCHAT_PAGE: http://127.0.0.1:8123/index.html
-        run: node ${{ github.event.inputs.script != '' && 'said_by_hand.mjs' || 'tools/probe_painted.mjs' }}
+        run: node "$PCHAT_PROBE"
       - uses: actions/upload-artifact@v4
         with:
           name: painted-here
