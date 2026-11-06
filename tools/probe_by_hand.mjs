@@ -182,10 +182,23 @@ for (const [name, x, y, wants] of places) {
 // expected is the only way a next question about it can be asked.
 const before = await read(page);
 const greentext = 'three reads of the pantry';
+// What came out of nothing: the words the page has that it did not have a
+// moment ago, and said apart, for what a fold opens is somewhere in six
+// thousand characters of design.
+const came_of = (was, now) => {
+  let at = 0;
+  while (at < was.length && at < now.length && was[at] === now[at]) at++;
+  let to = 0;
+  while (to < was.length - at && to < now.length - at &&
+         was[was.length - 1 - to] === now[now.length - 1 - to])
+    to++;
+  return now.slice(at, now.length - to);
+};
 const opened = await press_until(page, 'Thought for', async () => {
   const open = await read(page);
-  if (open.length <= before.length + 8) return null;
-  console.log(`said with the fold open: ${open.slice(0, 1200)}`);
+  const came = came_of(before, open);
+  if (came.length <= 8) return null;
+  console.log(`came out of pressing the fold: ${came.slice(0, 1200)}`);
   return open;
 });
 if (opened) {
@@ -201,6 +214,26 @@ if (opened) {
   console.log('the fold pressed open: no press anywhere opened it');
 }
 
+// That this browser's clipboard can be written and read at all, asked before
+// the program is asked to write to it: a probe that is given no leave to read
+// it would say of every program that its copy does nothing.
+const held = await page.evaluate(async () => {
+  try {
+    await navigator.clipboard.writeText('written by the probe itself');
+    return await navigator.clipboard.readText();
+  } catch (gone) {
+    return `this browser lets nothing be read back: ${gone}`;
+  }
+});
+console.log(`the clipboard read by the probe itself: ${JSON.stringify(String(held).slice(0, 200))}`);
+await page.evaluate(async () => {
+  try {
+    await navigator.clipboard.writeText('');
+  } catch (gone) {
+    // Left as it was: the next line is the first thing written since.
+  }
+});
+
 // What a press of Copy keeps for the machine itself, read out of the host.
 const kept_text = async () => {
   await page.waitForTimeout(1200);
@@ -208,7 +241,7 @@ const kept_text = async () => {
     try {
       return await navigator.clipboard.readText();
     } catch (gone) {
-      return `nothing read out of it: ${gone}`;
+      return '';
     }
   });
   return kept.length > 0 ? kept : null;
