@@ -55,7 +55,13 @@ jobs:
       - uses: actions/checkout@v5
       - name: No license left unsaid
         run: |
+          # Every file this program is made of says its license in itself.
+          # The one thing left out of that is the golden traces a ported tree
+          # came with: those are the data another build was measured against,
+          # and a line put above one would make it say something else than
+          # what it was recorded from.
           missing=$(git ls-files '*.cc' '*.cmake' '*.txt' 'CMakeLists.txt' '*.yml' \
+            ':(exclude)ports/*/tools/golden/*' \
             | xargs grep -L "SPDX-License-Identifier" || true)
           if [ -n "$missing" ]; then
             echo "These files say no license:"

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-only
 find_package(Threads REQUIRED)
 find_package(SQLite3 REQUIRED)
 
