@@ -53,12 +53,126 @@ context_ring(float used, scene::Colour track, scene::Colour filled) {
   return out;
 }
 
+// The three dots beside the answerer's circle, and the one menu they open:
+// what the next answer is asked with, said where it is asked about and not
+// on a page of its own. Thinking, switched, and beside it how hard it is
+// asked to think; and Advanced, which is the large settings said whole
+// (design-doc.md, "The foot"). What this program does not answer yet --
+// looking something up on the web, making what has been said shorter --
+// stands in this menu when it answers it, and not as a row that does
+// nothing.
+inline constexpr float thinking_menu_width = 232.0f;
+inline constexpr float thinking_menu_row = 34.0f;
+inline constexpr float thinking_menu_rows = 3.0f;
+
+struct thinking_menu : scene::Node {
+  nodes::Box<> fPlate{0u};
+  ask_box fThinkingPlate{};
+  nodes::Text fThinkingName{"Thinking", 13.0f, 0u};
+  nodes::Text fThinkingNow{"", 13.0f, 0u};
+  ask_box fHardPlate{};
+  nodes::Text fHardName{"How hard it thinks", 13.0f, 0u};
+  nodes::Text fHardNow{"", 13.0f, 0u};
+  ask_box fAdvancedPlate{};
+  nodes::Text fAdvancedName{"Advanced", 13.0f, 0u};
+
+  thinking_menu() {
+    this->apply({.anchor = scene::anchor::kTopRight,
+                 .origin = scene::anchor::kBottomRight,
+                 .x = -(edge + 13.0f),
+                 .y = -6.0f,
+                 .relativeSize = scene::axes::kNone,
+                 .width = thinking_menu_width,
+                 .height = thinking_menu_rows * thinking_menu_row + 12.0f,
+                 .cornerRadius = card_radius,
+                 .visible = false});
+    fPlate.apply({.fill = true});
+    // Three rows, one above the next, and each of them the whole width of
+    // the menu: what a press is said of is the row it stands in.
+    const float wide = thinking_menu_width - 16.0f;
+    fThinkingPlate.apply(row_spec(8.0f, wide));
+    fHardPlate.apply(row_spec(8.0f + thinking_menu_row, wide));
+    fAdvancedPlate.apply(row_spec(8.0f + 2.0f * thinking_menu_row, wide));
+    fThinkingName.apply(name_spec(8.0f));
+    fThinkingNow.apply(value_spec(8.0f));
+    fHardName.apply(name_spec(8.0f + thinking_menu_row));
+    fHardNow.apply(value_spec(8.0f + thinking_menu_row));
+    fAdvancedName.apply(name_spec(8.0f + 2.0f * thinking_menu_row));
+  }
+
+  void again(app::requests *sink, const paints &look, const asking &how,
+             bool open) {
+    this->setVisible(open);
+    if (!open)
+      return;
+    fPlate.setColour(look.card);
+    fThinkingPlate.again(sink, app::set_thinking{!how.thinking}, look.raised);
+    fThinkingName.setColour(look.text);
+    fThinkingNow.setText(how.thinking ? "on" : "off");
+    fThinkingNow.setColour(look.dim);
+    // Round the four and back again at the top: how hard is said beside the
+    // row it stands in, and a press on either walks it on one.
+    const effort next = how.how_hard == effort::all ? effort::least
+                                                    : stepped_of(how.how_hard, 1);
+    fHardPlate.again(sink, app::set_effort{next}, look.raised);
+    fHardName.setColour(look.text);
+    fHardNow.setText(std::string(said_how(how.how_hard)));
+    fHardNow.setColour(look.dim);
+    fAdvancedPlate.again(sink, app::open_settings{}, look.raised);
+    fAdvancedName.setColour(look.text);
+  }
+
+  void forEachChild(auto &&f) {
+    f(fPlate);
+    f(fThinkingPlate);
+    f(fThinkingName);
+    f(fThinkingNow);
+    f(fHardPlate);
+    f(fHardName);
+    f(fHardNow);
+    f(fAdvancedPlate);
+    f(fAdvancedName);
+  }
+
+private:
+  [[nodiscard]] static scene::Spec row_spec(float y, float wide) {
+    return {.anchor = scene::anchor::kTopLeft,
+            .origin = scene::anchor::kTopLeft,
+            .x = 8.0f,
+            .y = y,
+            .relativeSize = scene::axes::kNone,
+            .width = wide,
+            .height = thinking_menu_row - 4.0f,
+            .cornerRadius = 10.0f};
+  }
+  // What a row is called, on its left.
+  [[nodiscard]] static scene::Spec name_spec(float y) {
+    return {.anchor = scene::anchor::kTopLeft,
+            .origin = scene::anchor::kCentreLeft,
+            .x = 20.0f,
+            .y = y + 15.0f,
+            .autoSize = scene::axes::kBoth};
+  }
+  // What it stands at, on its right.
+  [[nodiscard]] static scene::Spec value_spec(float y) {
+    return {.anchor = scene::anchor::kTopRight,
+            .origin = scene::anchor::kCentreRight,
+            .x = -20.0f,
+            .y = y + 15.0f,
+            .autoSize = scene::axes::kBoth};
+  }
+};
+
 struct composer : scene::Node {
   nodes::Box<> fCard{0u};
   // What answers here, and how much of its window this chat has taken: said
   // over the field every time, not only when it is asked about.
   nodes::Text fModel{"", 12.0f, 0u, true};
   nodes::Icon fGauge{shape::info(), 0u};
+  // Three dots after the circle, and what they open above the card.
+  ask_box fDots{};
+  nodes::Icon fDotsMark{shape::more(), 0u};
+  thinking_menu fMenu{};
   std::shared_ptr<message_sink> fSink = std::make_shared<message_sink>();
   widgets::TextArea<message_given> fField{widgets::Theme{}, "Message",
                                           message_given{fSink}};
@@ -83,12 +197,29 @@ struct composer : scene::Node {
                   .x = 18.0f,
                   .y = 22.0f,
                   .autoSize = scene::axes::kBoth});
+    // The circle, and three dots after it: the two of them are what the
+    // card says over the field and never take away, whichever room it is
+    // drawn in, so the circle stands where it left room for the dots.
     fGauge.apply({.width = 18.0f,
                   .height = 18.0f,
                   .anchor = scene::anchor::kTopRight,
                   .origin = scene::anchor::kCentre,
-                  .x = -(edge + 18.0f),
+                  .x = -(edge + 50.0f),
                   .y = 22.0f});
+    fDots.apply({.anchor = scene::anchor::kTopRight,
+                 .origin = scene::anchor::kTopRight,
+                 .x = -edge,
+                 .y = 9.0f,
+                 .relativeSize = scene::axes::kNone,
+                 .width = 26.0f,
+                 .height = 26.0f,
+                 .cornerRadius = 13.0f});
+    fDotsMark.apply({.width = 18.0f,
+                     .height = 18.0f,
+                     .anchor = scene::anchor::kTopRight,
+                     .origin = scene::anchor::kCentre,
+                     .x = -(edge + 13.0f),
+                     .y = 22.0f});
     fField.apply(
         {.anchor = scene::anchor::kTopLeft,
          .x = 16.0f,
@@ -125,8 +256,8 @@ struct composer : scene::Node {
                      .y = 45.0f + send_size / 2.0f});
   }
 
-  void again(const paints &look, const conversation &chat,
-             app::requests *asked) {
+  void again(const paints &look, const conversation &chat, const asking &how,
+             app::requests *asked, bool menu_open) {
     fSink->asked = asked;
     fSink->chat = chat.id;
     fCard.setColour(look.card);
@@ -143,6 +274,10 @@ struct composer : scene::Node {
     fModel.setColour(look.primary);
     fGauge.setShape(context_ring(used, look.outline, look.primary));
     fGauge.setColour(look.primary);
+    // The dots, and the menu they keep open or shut.
+    fDots.again(asked, app::toggle_thinking{}, look.search_bar);
+    fDotsMark.setColour(look.text);
+    fMenu.again(asked, look, how, menu_open);
   }
 
   void clear() { fField.setText(""); }
@@ -151,6 +286,9 @@ struct composer : scene::Node {
     f(fCard);
     f(fModel);
     f(fGauge);
+    f(fDots);
+    f(fDotsMark);
+    f(fMenu);
     f(fField);
     f(fClip);
     f(fFace);
