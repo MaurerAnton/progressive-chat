@@ -22,15 +22,21 @@ begins a new chat, and beside it **how many tokens this chat is** (for example
 put together. Nothing else is in the top. No search of its own: the drawer
 searches.
 
-### What the top holds that is not drawn yet
+### What the top holds
 
-Everything below this line is said because it is wanted, and none of it stands
-in the program today.
+Everything below this line is said because it is wanted, and all of it stands
+in the program today (`src/ui/top_bar.cc`), in that order across the edge: the
+pill that opens the drawer at the left, the conversation's name in the middle,
+and at the right what answers in it, what the whole conversation has been
+worth, and the presses that say something else can be begun in it.
 
 * **The models that answer this conversation** stand on the top edge of the
   main panel, one bubble each: the name in a bubble is **what the model is
-  called**, and pressing the bubble is how you say which model this is and read
-  which it has been. What it has used of its window is **not** said again in
+  called**. Which models answer in this conversation is said under
+  **Services → Models** in the settings, and nowhere else: bubbles are read
+  out of that, and say nothing back into it. Four of them are said at most,
+  and the count beside them belongs to the conversation and not to any one of
+  them. What it has used of its window is **not** said again in
   every bubble — one conversation's share of one window is said once, beside
   the editor below (**The editor's row**), where every model that answers in it
   would otherwise say the same count three times over.
@@ -41,10 +47,12 @@ in the program today.
 * **Fork conversation** and **share** stand in the top as well: the one takes
   this conversation as a new one written from here on apart, the other gives it
   out.
-* **Where the screen is narrow**, four of these go behind **three dots** beside
-  the plus and come out of it: **search**, **system prompt**, **fork
-  conversation**, **share**. Wide, they stand as themselves; narrow, they are
-  one press deep.
+* **Where the screen is narrow**, three of them go behind **three dots**
+  beside the plus and come out of it: **system prompt**, **fork conversation**,
+  **share**. Wide, they stand as themselves; narrow, they are one press deep.
+  Search is not among them, for it is what the drawer keeps: what is typed
+  there is looked for in every conversation, and the drawer stands beside the
+  messages wherever there is room for both.
 
 The foot is the editor. It always says **which model it will send to**, even
 before anything has been written, and beside that a **circle that shows how full
