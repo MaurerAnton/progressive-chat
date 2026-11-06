@@ -63,6 +63,30 @@ it does too. A press outside every node's bounds is given to nobody.
 What it costs: a press into a card is nothing unless something was put in
 the card where the press was -- the paper under everything is not enough.
 
+## A press a node keeps is the program's to deliver
+
+A node whose action answers by a type of its own (`Answer`) does not ask for
+anything when it answers: it says it was pressed, and the scene keeps that,
+as the path to the node that said so, in `skiff::scene::hostWork().pressed`.
+Nothing delivers it until the program does, with `skiff::bind::press(root,
+model, path)` -- which walks the tree itself, so a tree filled in imperatively
+is walked as any other; a model that holds nothing is enough for the walk.
+
+Without it nothing of the kind ever runs: every edit of a search field was
+typed into the field and asked the program nothing, and the field's own text
+was all there was to show for it. This is the whole difference between "the
+search does nothing" and "the search asks for what was typed, every edit".
+
+What it costs: a search that kept the whole list whatever was typed, and a
+card whose field was typed into and forgotten -- read as a fault in the rows,
+in the layout, and in the request, one after another, before it was read here.
+
+What is said instead: once a frame, before what was asked for is answered and
+the tree filled in again, every path the scene kept, delivered; and an action
+that asks the program itself wants `using Answer = void;`, for an answer of
+another type is looked for by nothing in a tree with no frames around it and
+does not compile.
+
 ## Nothing else that has surprised this program yet
 
 Written down when it does, with what it cost and what is said instead.

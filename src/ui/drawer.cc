@@ -17,6 +17,7 @@ import skiff.nodes;
 import skiff.widgets.textarea;
 import pchat.core;
 import pchat.logic.lists;
+import pchat.logic.search;
 import pchat.app.requests;
 import :theme;
 import :base;
@@ -234,7 +235,9 @@ struct drawer_screen : scene::Node {
     fNone.setVisible(rows.empty());
     for (std::size_t at = 0; at < rows.size(); ++at) {
       const conversation &chat = *rows[at];
-      // What the row says under the name: the last message in it, if there is
+      // What the row says under the name: where something was searched for
+      // and this conversation says it, the message it is said in, which is
+      // what the row was kept for; else the last message in it, if there is
       // one, else what the conversation is.
       std::string said = chat.kind == conversation_kind::direct
                              ? "Say something"
@@ -242,6 +245,10 @@ struct drawer_screen : scene::Node {
       for (const message &one : root.messages)
         if (one.chat.value == chat.id.value)
           said = one.text;
+      const std::vector<logic::hit> places =
+          logic::hits_of(root, chat.id, query);
+      if (!places.empty())
+        said = places.front().found->text;
       // How long ago, as the clock reads it: the moment the last thing was
       // said in it, which is what the order of these rows comes from too.
       this->row_at(at).again(asked, look, chat, said,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.logic.search -- Finding words in a conversation's messages: every
-// place a query is said, so that its screen can count them, walk them, and
-// hold the one it is at.
+// place a query is said, in the order the timeline has them, so that what
+// keeps a conversation for saying it can say which of them that was.
 export module pchat.logic.search;
 
 import std;
@@ -33,18 +33,6 @@ struct hit {
     }
   }
   return hits;
-}
-
-// The one the screen is looking at, and how many there are in all. Empty
-// when nothing was said: "0 of 0" says it better than "1 of 0".
-struct search_position {
-  std::size_t count = 0;
-  std::optional<std::size_t> index;
-};
-
-[[nodiscard]] inline std::string label_of(const search_position& where) {
-  return where.count == 0 ? std::string("0 of 0")
-                          : std::format("{} of {}", where.index.value_or(0) + 1, where.count);
 }
 
 }  // namespace pchat::logic
