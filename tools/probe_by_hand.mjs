@@ -41,26 +41,61 @@ const lines = async page =>
             y: Math.round(r.y + r.height / 2),
             wide: Math.round(r.width),
             tall: Math.round(r.height),
+            // Kept in the mirror though it is folded away: a line nothing is
+            // showing is not one a press can be aimed at.
+            shown: one.checkVisibility
+                ? one.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })
+                : true,
           };
         })
-        .filter((one) => one.said.length > 0 && one.wide > 0 && one.tall > 0)
+        .filter((one) => one.said.length > 0 && one.wide > 0 && one.tall > 0 && one.shown)
         .slice(0, 400);
   });
 
-// Pressed in the middle of the smallest thing that says it: what is looked
-// for is said once by the line itself and again by everything holding it, so
-// the little one is the line.
-const press = async (page, wants) => {
+// Every place a line that says it could be pressed at, smallest first: what
+// is looked for is said once by the line itself and again by everything
+// holding it, so several of them are said of the same words.
+const places_saying = async (page, wants) => {
   const every = await lines(page);
-  const said = every
+  return every
       .filter((one) => one.said.includes(wants))
-      .sort((a, b) => a.wide * a.tall - b.wide * b.tall);
-  if (said.length === 0) return false;
+      .sort((a, b) => a.wide * a.tall - b.wide * b.tall)
+      .slice(0, 5);
+};
+
+// Pressed in the middle of the smallest thing that says it.
+const press = async (page, wants) => {
+  const said = await places_saying(page, wants);
+  if (said.length === 0) return null;
   const at = said[0];
   await page.mouse.click(at.x, at.y);
   await page.waitForTimeout(900);
   console.log(`pressed "${wants}" at ${at.x},${at.y} (${at.wide}x${at.tall})`);
-  return true;
+  return at;
+};
+
+// Pressed until something else is said, one place after another: a line keeps
+// what a press is for inside a row of its own, and which of them the press
+// belongs to -- the words, the row, the whole card -- is not said anywhere but
+// by pressing them.
+const press_until = async (page, wants, came) => {
+  const said = await places_saying(page, wants);
+  if (said.length === 0) {
+    console.log(`nothing anywhere said "${wants}"`);
+    return null;
+  }
+  for (const at of said) {
+    await page.mouse.click(at.x, at.y);
+    await page.waitForTimeout(900);
+    console.log(`pressed "${wants}" at ${at.x},${at.y} (${at.wide}x${at.tall})`);
+    const after = await came();
+    if (after) return { at, after };
+    // Taken back where it was, for the next place is asked of the page as it
+    // was before anything was pressed at all.
+    await page.mouse.click(at.x, at.y);
+    await page.waitForTimeout(500);
+  }
+  return null;
 };
 
 // Whether it starts at all, asked of one kind of browser at a time: how wide
@@ -145,23 +180,30 @@ for (const [name, x, y, wants] of places) {
 // read back whole, and pressed again it is folded away again. Said as it is
 // read and not only whether it was, for what the page says when nothing was
 // expected is the only way a next question about it can be asked.
+const before = await read(page);
 const greentext = 'three reads of the pantry';
-if (await press(page, 'Thought for')) {
+const opened = await press_until(page, 'Thought for', async () => {
   const open = await read(page);
+  if (open.length <= before.length + 8) return null;
+  console.log(`said with the fold open: ${open.slice(0, 1200)}`);
+  return open;
+});
+if (opened) {
   console.log(
-    `the fold pressed open: ` +
-      `${open.includes(greentext) ? 'what it thought is said' : 'what it thought is still not said'}`);
-  console.log(`said with the fold open: ${open.slice(0, 900)}`);
+    `the fold pressed open at ${opened.at.x},${opened.at.y}: ` +
+      `${opened.after.includes(greentext) ? 'what it thought is said' : 'it is open, and other than that it said something else'}`);
   await page.screenshot({ path: 'pressed-fold.png' });
-  await press(page, 'Thought for');
+  await page.mouse.click(opened.at.x, opened.at.y);
+  await page.waitForTimeout(900);
   const shut = await read(page);
-  console.log(`the fold pressed again: ${shut.includes(greentext) ? 'still said' : 'said no more'}`);
+  console.log(`the fold pressed again: ${shut.length < opened.after.length ? 'folded away again' : 'still open'}`);
 } else {
-  console.log('the fold pressed open: no line said "Thought for" at all');
+  console.log('the fold pressed open: no press anywhere opened it');
 }
 
 // What a press of Copy keeps for the machine itself, read out of the host.
-if (await press(page, 'Copy')) {
+const kept_text = async () => {
+  await page.waitForTimeout(1200);
   const kept = await page.evaluate(async () => {
     try {
       return await navigator.clipboard.readText();
@@ -169,10 +211,12 @@ if (await press(page, 'Copy')) {
       return `nothing read out of it: ${gone}`;
     }
   });
-  console.log(`what the host's clipboard keeps: ${JSON.stringify(String(kept).slice(0, 300))}`);
-} else {
-  console.log("a press of Copy: nothing anywhere said 'Copy'");
-}
+  return kept.length > 0 ? kept : null;
+};
+const copied = await press_until(page, 'Copy', kept_text);
+console.log(
+  `what the host's clipboard keeps: ` +
+    `${copied ? JSON.stringify(String(copied.after).slice(0, 400)) : 'nothing at all, whichever Copy was pressed'}`);
 
 await context.close();
 await browser.close();
