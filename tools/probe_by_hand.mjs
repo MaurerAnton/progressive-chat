@@ -254,5 +254,20 @@ console.log(
   `what the host's clipboard keeps: ` +
     `${copied ? JSON.stringify(String(copied.after).slice(0, 400)) : 'nothing at all, whichever Copy was pressed'}`);
 
+// Whether a press inside the room reaches anything at all. The two asked of
+// it above -- the fold, and Copy under an answer -- both came back with
+// nothing said and nothing kept, and which they are, two things that do
+// nothing of their own or one room no press reaches into, is said by neither
+// of them alone. So: one of the six pressed where only an answer stands, and
+// what it did read as what is no longer said in the room.
+const spoken = await shown_text(page);
+const rubbed = await press_until(page, 'Delete', async () => {
+  const now = await shown_text(page);
+  return now.length < spoken.length - 40 ? now : null;
+});
+console.log(
+  `a press inside the room: ` +
+    `${rubbed ? 'it reaches what stands there, and one answer is gone' : 'nothing of the room is reached by a press at all'}`);
+
 await context.close();
 await browser.close();
