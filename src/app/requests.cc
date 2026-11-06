@@ -77,6 +77,13 @@ struct share_conversation {
 // last thought is kept back out of what a wire is given from now on
 // (pchat.logic.compacted). One way only -- asking twice keeps nothing more
 // back than asking once did.
+// Switched for one conversation: what answers in it may look something up
+// as it answers. The looking up is the wire's own, and nothing here searches
+// anything -- only what the asking says about searching.
+struct set_web_search {
+  conversation_id chat;
+  bool now = false;
+};
 struct compact_context {
   conversation_id chat;
 };

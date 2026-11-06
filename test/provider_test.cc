@@ -282,4 +282,24 @@ SAID(provider, thinking_turned_off_is_asked_for_nowhere) {
   EXPECT_TRUE(provider::body_of(openai, no_turns, none).find("reasoning") == std::string::npos);
 }
 
+// Looking something up as it answers, which is the wire's own to do: written
+// in the asking where it was asked for, and nowhere where it was not.
+SAID(provider, a_search_is_asked_for_where_it_is_asked_for) {
+  const std::vector<provider::turn> no_turns;
+  const provider::endpoint openai{.base = "https://api.openai.com/v1", .model = "o4-mini"};
+  const provider::wanted yes{.search = true};
+  const provider::wanted no{};
+  EXPECT_TRUE(provider::body_of(openai, no_turns, yes).find(
+                  "\"web_search_options\":{\"search_context_size\":\"medium\"}") !=
+              std::string::npos);
+  EXPECT_TRUE(provider::body_of(openai, no_turns, no).find("search") ==
+              std::string::npos);
+  // Asked for a model that has no search of its own all the same: how much
+  // of what it reads is kept beside the answer is what is being said here,
+  // and not which wire is being spoken to.
+  const provider::endpoint relay{.base = "https://openrouter.ai/api/v1", .model = "o4-mini"};
+  EXPECT_TRUE(provider::body_of(relay, no_turns, yes).find("web_search_options") !=
+              std::string::npos);
+}
+
 int main() { return pchat::tests::run(); }

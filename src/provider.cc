@@ -161,6 +161,10 @@ struct wanted {
   // answers and never asked to.
   bool thinking = false;
   std::optional<effort> how_hard;
+  // Whether what answers may look things up on the web as it answers: asked
+  // of the wire, whose own searching it is and whose own words come back in
+  // the answer. Nothing here searches anything, and nothing here is told to.
+  bool search = false;
   std::vector<offered> tools;
   std::optional<double> temperature;
   std::optional<double> top_p;
@@ -255,6 +259,15 @@ template <std::ranges::forward_range Turns>
   // no choice in it, and without this there would be nothing in it to read.
   if (wants.stream)
     out.name("stream_options").thing().name("include_usage").truth(true).shut();
+  // Allowed to search, where the asking says so: what a wire is told once
+  // and for every answer after it, and nothing written where it was not
+  // asked for -- a wire that has no search of its own is told nothing of one.
+  if (wants.search)
+    out.name("web_search_options")
+        .thing()
+        .name("search_context_size")
+        .text("medium")
+        .shut();
   if (!wants.tools.empty()) {
     out.name("tools").list();
     for (const offered &one_tool : wants.tools) {
