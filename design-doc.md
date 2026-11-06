@@ -246,3 +246,13 @@ name, waiting for the thing behind it.
 * It does not yet count anything for real. Until the program's own back end is
   here, what fills the room is sample: the numbers said above are written in it
   like any other words, and nothing measures them.
+
+
+## Where what is said here is read further
+
+* [How a model is spoken to](docs/PROTOCOL.md) -- the wire, what is written
+  for it, and what comes back off it.
+* [How a press is answered](docs/how-a-press-is-answered.md) -- one press,
+  one request, one place that reads it, and the frame after that says it.
+* [What skiff says about a node](docs/skiff-notes.md) -- read before drawing
+  anything new, and added to when something is learned about it.
