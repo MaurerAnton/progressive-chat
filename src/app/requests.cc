@@ -77,6 +77,14 @@ struct open_system_prompt {
   conversation_id chat;
 };
 struct close_system_prompt {};
+// What is being written to a conversation and has not been sent: said again
+// every time what stands in the field changes, so that leaving a
+// conversation and coming back to it finds it as it was left
+// (src/logic/drafts.cc).
+struct keep_draft {
+  conversation_id chat;
+  std::string text;
+};
 struct set_system_prompt {
   conversation_id chat;
   std::string text;
@@ -132,7 +140,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              toggle_drawer, open_settings, close_settings,
                              fork_conversation,
                              share_conversation, open_system_prompt,
-                             close_system_prompt, set_system_prompt,
+                             close_system_prompt, keep_draft, set_system_prompt,
                              toggle_more, open_design, close_design,
                              pick_seed, set_amoled, set_font_scale, pick_theme,
                               set_generation, set_tool,

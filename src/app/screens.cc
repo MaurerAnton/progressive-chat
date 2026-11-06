@@ -24,6 +24,7 @@ import pchat.tools;
 import pchat.app.requests;
 import pchat.app.sample;
 import pchat.logic.composer;
+import pchat.logic.drafts;
 import pchat.logic.lists;
 
 namespace scene = skiff::scene;
@@ -60,6 +61,9 @@ public:
                 drawer_ = false;
             },
             [&](const send_message &asking) {
+              // Sent, and so nothing is being written to it any more: what
+              // the field does with what it had is its own to do.
+              drafts_.clear(asking.chat);
               const logic::sent_message said = logic::send(
                   logic::sending_request{
                       asking.chat, asking.text, {}, std::nullopt},
@@ -125,6 +129,11 @@ public:
             [&](const delete_answer &asking) { cut_away(asking.said); },
             [&](const set_query &asking) { query_ = asking.text; },
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
+            // What is being written, kept until it is sent: said by the field
+            // again every time what stands in it changes.
+            [&](const keep_draft &asking) {
+              drafts_.write(asking.chat, asking.text);
+            },
             [&](const open_settings &) { settings_ = true; },
             [&](const close_settings &) { settings_ = false; },
             [&](const fork_conversation &asking) {
@@ -253,9 +262,14 @@ public:
     for (const request &one : asked_.drain())
       take(one);
     read_what_arrived();
-    scene_.root().again(look_, root_, shown_, how_, query_, dark_, settings_,
-                        design_, system_, more_, drawer_, width_, height_,
-                        &asked_);
+    // What was being written in the conversation that is open, as the field
+    // is to be filled: nothing, where none of them is open.
+    const std::string draft =
+        root_.opened ? std::string(drafts_.text_of(*root_.opened))
+                     : std::string{};
+    scene_.root().again(look_, root_, shown_, how_, query_, draft, dark_,
+                        settings_, design_, system_, more_, drawer_, width_,
+                        height_, &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -520,6 +534,9 @@ private:
   ui::paints look_;
   requests asked_;
   std::string query_;
+  // What is being written in each conversation while it is not being looked
+  // at: kept by the program and not by the field (src/logic/drafts.cc).
+  logic::drafts drafts_;
   bool dark_ = true;
   bool settings_ = false;
   // The drawer is beside the messages, where the window has room for both,

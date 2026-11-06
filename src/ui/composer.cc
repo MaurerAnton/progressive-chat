@@ -60,6 +60,13 @@ struct composer : scene::Node {
   nodes::Text fModel{"", 12.0f, 0u, true};
   nodes::Icon fGauge{shape::info(), 0u};
   std::shared_ptr<message_sink> fSink = std::make_shared<message_sink>();
+  // Which conversation the field last took its words from, and what those
+  // were: another conversation opened puts the words being written to *it*
+  // in the field -- and not what the last one had in it -- while what is
+  // typed is left alone, because what stands in the field then is what put
+  // them there.
+  conversation_id fShownChat;
+  std::string fShownDraft;
   widgets::TextArea<message_given> fField{widgets::Theme{}, "Message",
                                           message_given{fSink}};
   nodes::Icon fClip{shape::clip(), 0u};
@@ -126,9 +133,25 @@ struct composer : scene::Node {
   }
 
   void again(const paints &look, const conversation &chat,
-             app::requests *asked) {
+             const std::string &draft, app::requests *asked) {
     fSink->asked = asked;
     fSink->chat = chat.id;
+    // What was being written to this conversation when it was last left, put
+    // in the field the moment it is the one being written to.
+    if (fSink->chat != fShownChat) {
+      fShownChat = fSink->chat;
+      fShownDraft = draft;
+      if (draft != fField.text())
+        fField.setText(draft);
+    }
+    // And what is written in it is said back, once for every time it
+    // changes: the program keeps it until it is sent, which is what leaving
+    // a conversation and coming back to it is expected to find.
+    const std::string written(fField.text());
+    if (written != fShownDraft && asked) {
+      asked->ask(app::keep_draft{fSink->chat, written});
+      fShownDraft = written;
+    }
     fCard.setColour(look.card);
     fClip.setColour(look.faint);
     fFace.setColour(look.faint);

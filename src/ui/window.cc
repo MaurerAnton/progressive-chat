@@ -66,7 +66,8 @@ struct app_window : scene::Node {
 
   // Everything drawn again from the model, for this size of window.
   void again(const paints &look, const chats_root &root, const looks &shown,
-             const asking &how, const std::string &query, bool dark,
+             const asking &how, const std::string &query,
+             const std::string &draft, bool dark,
              bool settings_open,
              bool design_open, bool prompt_open, bool more_open,
              bool drawer_open, float width,
@@ -184,7 +185,7 @@ struct app_window : scene::Node {
                      .height = composer_height + 2.0f * edge,
                      .visible = in_chat});
     if (open_chat)
-      fComposer.again(look, *open_chat, asked);
+      fComposer.again(look, *open_chat, draft, asked);
     // The settings page, over everything, when it is opened.
     if (settings_open)
       fSettings.again(asked, look, shown, how, answering, dark, width,
