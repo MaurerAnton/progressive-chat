@@ -82,7 +82,7 @@ inline constexpr std::array<settings_group, max_settings_groups> settings_groups
      7u,
      max_settings_items,
      max_settings_items,
-     2u},
+     1u},
     {"Network", {{"Proxy", "WebUI"}}, 2u, max_settings_items},
     {"Memory & Data", {{"Memory", "Skills", "Data control"}}, 3u,
      max_settings_items},
@@ -337,6 +337,9 @@ struct settings_rows : scene::Node {
       }
     for (std::size_t at = 0; at < max_seeds; ++at)
       fSeeds[at].blank();
+    // Hidden until the group that holds them is said: whatever is not
+    // drawn under any name stays the way a card it was never given leaves
+    // it, and each of these says it is drawn when it is.
     for (knob_row &one : fKnobs)
       one.setVisible(false);
     for (switch_row &one : fTools)
@@ -365,7 +368,8 @@ struct settings_rows : scene::Node {
                          .relativeSize = scene::axes::kNone,
                          .width = row_width,
                          .height = settings_row_height,
-                         .cornerRadius = 14.0f},
+                         .cornerRadius = 14.0f,
+                         .visible = true},
                         look, said.name, offered_of(how, said.which),
                         app::set_tool{said.which, !offered_of(how, said.which)});
       at += settings_row_stride;
@@ -389,7 +393,8 @@ struct settings_rows : scene::Node {
                          .relativeSize = scene::axes::kNone,
                          .width = row_width,
                          .height = settings_row_height,
-                         .cornerRadius = 14.0f},
+                         .cornerRadius = 14.0f,
+                         .visible = true},
                         look, said.name, said.field,
                         value_of(how, said.field));
       at += settings_row_stride;
