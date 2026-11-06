@@ -51,20 +51,26 @@ struct ask_box : scene::Node {
   nodes::Box<> fPlate{0u};
   app::requests *asked = nullptr;
   app::request one{app::toggle_drawer{}};
+  // Whether a press of it has anything to say: what nothing answers yet
+  // stands grey and asks nobody, rather than standing as it did and saying
+  // nothing (src/ui/composer.cc, the compact row).
+  bool answers = true;
 
   ask_box() { fPlate.apply({.fill = true}); }
 
   [[nodiscard]] bool acceptsInput() const { return true; }
   [[nodiscard]] bool hoverChangesAppearance() const { return true; }
   [[nodiscard]] bool onClick(float, float) {
-    if (asked)
+    if (asked && answers)
       asked->ask(one);
     return true;
   }
 
-  void again(app::requests *sink, app::request asking, scene::Colour colour) {
+  void again(app::requests *sink, app::request asking, scene::Colour colour,
+             bool answers = true) {
     asked = sink;
     one = std::move(asking);
+    this->answers = answers;
     fPlate.setColour(colour);
   }
 

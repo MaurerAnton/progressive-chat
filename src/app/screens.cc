@@ -24,6 +24,7 @@ import pchat.tools;
 import pchat.app.requests;
 import pchat.app.sample;
 import pchat.logic.composer;
+import pchat.logic.compacted;
 import pchat.logic.lists;
 
 namespace scene = skiff::scene;
@@ -131,6 +132,13 @@ public:
             [&](const delete_answer &asking) { cut_away(asking.said); },
             [&](const set_query &asking) { query_ = asking.text; },
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
+            // Given short from now on: what is said in it is no shorter for
+            // it, only what a wire is given of it.
+            [&](const compact_context &asking) {
+              for (conversation &one : root_.conversations)
+                if (one.id == asking.chat) one.given_short = true;
+              thinking_menu_ = false;
+            },
             [&](const open_settings &) {
               settings_ = true;
               thinking_menu_ = false;
@@ -270,9 +278,18 @@ public:
     for (const request &one : asked_.drain())
       take(one);
     read_what_arrived();
-    scene_.root().again(look_, root_, shown_, how_, query_, dark_, settings_,
-                        design_, system_, more_, drawer_, thinking_menu_,
-                        width_, height_, &asked_);
+    // Whether what a wire is given of this conversation can be given shorter:
+    // what every answer but the last thought, and nothing where it has been
+    // asked to be given short of it already.
+    const bool to_compact =
+        root_.opened &&
+        std::ranges::none_of(root_.conversations, [&](const conversation &one) {
+          return one.id == *root_.opened && one.given_short;
+        }) &&
+        logic::anything_to_compact_of(root_.messages, *root_.opened);
+    scene_.root().again(look_, root_, shown_, how_, query_, to_compact, dark_,
+                        settings_, design_, system_, more_, drawer_,
+                        thinking_menu_, width_, height_, &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -335,13 +352,21 @@ private:
     const provider::endpoint at{.base = opened_.base,
                                 .model = ending_of(chat),
                                 .told = told_of(chat)};
-    // Not const: a view over messages asked of more than once is read more
-    // than once, and reading it again is not a thing a const view of it says
-    // yes to.
-    auto turns = root_.messages |
-                       std::views::filter([&chat](const message &one) {
-                         return one.chat == chat;
-                       });
+    // Whether this conversation has been asked to be given short: said of it
+    // once by the three dots' own row, and of no other.
+    const bool kept_back = [&] {
+      const auto asked = std::ranges::find(root_.conversations, chat,
+                                          [](const conversation &one) {
+                                            return one.id;
+                                          });
+      return asked != std::end(root_.conversations) && asked->given_short;
+    }();
+    // This conversation's own messages, as a wire is to be given them: whole,
+    // or with what every answer but the last thought kept back where it has
+    // been asked to be given short.
+    std::vector<message> turns =
+        kept_back ? logic::compacted_of(root_.messages, chat).said
+                    : logic::said_in(root_.messages, chat);
     // What is ours to answer goes in the asking, so a model knows it may stop
     // and ask; and it is kept here, because answering those calls later is
     // this program's and nobody else's.

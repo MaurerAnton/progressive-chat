@@ -63,7 +63,7 @@ context_ring(float used, scene::Colour track, scene::Colour filled) {
 // nothing.
 inline constexpr float thinking_menu_width = 232.0f;
 inline constexpr float thinking_menu_row = 34.0f;
-inline constexpr float thinking_menu_rows = 3.0f;
+inline constexpr float thinking_menu_rows = 4.0f;
 
 struct thinking_menu : scene::Node {
   nodes::Box<> fPlate{0u};
@@ -75,6 +75,9 @@ struct thinking_menu : scene::Node {
   nodes::Text fHardNow{"", 13.0f, 0u};
   ask_box fAdvancedPlate{};
   nodes::Text fAdvancedName{"Advanced", 13.0f, 0u};
+  ask_box fCompactPlate{};
+  nodes::Text fCompactName{"Compact context", 13.0f, 0u};
+  nodes::Text fCompactNow{"", 13.0f, 0u};
 
   thinking_menu() {
     this->apply({.anchor = scene::anchor::kTopRight,
@@ -92,16 +95,19 @@ struct thinking_menu : scene::Node {
     const float wide = thinking_menu_width - 16.0f;
     fThinkingPlate.apply(row_spec(8.0f, wide));
     fHardPlate.apply(row_spec(8.0f + thinking_menu_row, wide));
-    fAdvancedPlate.apply(row_spec(8.0f + 2.0f * thinking_menu_row, wide));
+    fCompactPlate.apply(row_spec(8.0f + 2.0f * thinking_menu_row, wide));
+    fAdvancedPlate.apply(row_spec(8.0f + 3.0f * thinking_menu_row, wide));
     fThinkingName.apply(name_spec(8.0f));
     fThinkingNow.apply(value_spec(8.0f));
     fHardName.apply(name_spec(8.0f + thinking_menu_row));
     fHardNow.apply(value_spec(8.0f + thinking_menu_row));
-    fAdvancedName.apply(name_spec(8.0f + 2.0f * thinking_menu_row));
+    fCompactName.apply(name_spec(8.0f + 2.0f * thinking_menu_row));
+    fCompactNow.apply(value_spec(8.0f + 2.0f * thinking_menu_row));
+    fAdvancedName.apply(name_spec(8.0f + 3.0f * thinking_menu_row));
   }
 
   void again(app::requests *sink, const paints &look, const asking &how,
-             bool open) {
+             const conversation &chat, bool to_compact, bool open) {
     this->setVisible(open);
     if (!open)
       return;
@@ -118,6 +124,14 @@ struct thinking_menu : scene::Node {
     fHardName.setColour(look.text);
     fHardNow.setText(std::string(said_how(how.how_hard)));
     fHardNow.setColour(look.dim);
+    // Given short of what every answer but the last thought: one way only,
+    // and grey where there is nothing left to keep back -- a conversation of
+    // nothing but questions has no thinking in it to give less of.
+    fCompactPlate.again(sink, app::compact_context{chat.id},
+                        to_compact ? look.raised : look.card, to_compact);
+    fCompactName.setColour(to_compact ? look.text : look.faint);
+    fCompactNow.setText(chat.given_short ? "given short" : "");
+    fCompactNow.setColour(look.dim);
     fAdvancedPlate.again(sink, app::open_settings{}, look.raised);
     fAdvancedName.setColour(look.text);
   }
@@ -130,6 +144,9 @@ struct thinking_menu : scene::Node {
     f(fHardPlate);
     f(fHardName);
     f(fHardNow);
+    f(fCompactPlate);
+    f(fCompactName);
+    f(fCompactNow);
     f(fAdvancedPlate);
     f(fAdvancedName);
   }
@@ -257,7 +274,7 @@ struct composer : scene::Node {
   }
 
   void again(const paints &look, const conversation &chat, const asking &how,
-             app::requests *asked, bool menu_open) {
+             bool to_compact, app::requests *asked, bool menu_open) {
     fSink->asked = asked;
     fSink->chat = chat.id;
     fCard.setColour(look.card);
@@ -277,7 +294,7 @@ struct composer : scene::Node {
     // The dots, and the menu they keep open or shut.
     fDots.again(asked, app::toggle_thinking{}, look.search_bar);
     fDotsMark.setColour(look.text);
-    fMenu.again(asked, look, how, menu_open);
+    fMenu.again(asked, look, how, chat, to_compact, menu_open);
   }
 
   void clear() { fField.setText(""); }

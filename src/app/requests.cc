@@ -73,6 +73,13 @@ struct share_conversation {
 // and one to put it away again.
 // What every answerer in a conversation is told: opened to be read, written
 // into the conversation as it is typed, and put away again.
+// A long conversation asked to be given short: what every answer but the
+// last thought is kept back out of what a wire is given from now on
+// (pchat.logic.compacted). One way only -- asking twice keeps nothing more
+// back than asking once did.
+struct compact_context {
+  conversation_id chat;
+};
 struct open_system_prompt {
   conversation_id chat;
 };
