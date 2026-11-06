@@ -49,3 +49,5 @@ SAID(config, how_hard_set_in_what_is_asked_leaves_the_rest_alone) {
   EXPECT_TRUE(said.thinking);
   EXPECT_FALSE(one.how_hard == effort::most);
 }
+
+int main() { return pchat::tests::run(); }
