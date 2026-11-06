@@ -22,9 +22,7 @@ executor in `finally`.
 
 | App source | Role in this stand |
 | --- | --- |
-| `data/ConversationExportSnapshotReader.kt` | Compiled verbatim. |
 | `data/local/ChatDao.kt`, its six parents, `ChatDaoRuntimeRecovery.kt`, entities and model deps | Compiled verbatim; MiniRoom executes their declared SQL over schema 36. |
-| `data/local/ChatDatabase.kt` | Replaced by `platform/StandChatDatabase.kt`: the Android Room composition root and migration chain are a platform boundary, but the stand opens the same schema-36 SQLite file and exposes `chatDao()`, a reader connection, and `close()`. |
 | `androidx.room.useReaderConnection` / `Transactor` | Replaced by `platform/RoomReader.kt`; `withTransaction` runs a real JDBC commit/rollback. |
 | `android.content.Context`, `android.os.Process` | Replaced by `platform/Android.kt` / `platform/AndroidProcess.kt`; only the database path and a thread-priority hint. |
 
@@ -66,8 +64,6 @@ every step and table-key inventory with the frozen traces.
 ## Commands
 
 ```sh
-JAVA_HOME=... KOTLINC=... KOTLINX_JARS=... ./run_golden.sh
-JAVA_HOME=... KOTLINC=... KOTLINX_JARS=... ./run_golden.sh --freeze
 ```
 
 The Kotlin driver uses a temporary file-backed SQLite database, exactly as the production reader

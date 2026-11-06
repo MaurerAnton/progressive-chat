@@ -9,9 +9,9 @@
 namespace agora::core::android_json {
 
 /**
- * Ports of android.util.JsonReader / android.util.JsonWriter (AOSP frameworks/base), vendored
- * verbatim by the `native-conversation-graph-source` golden stand (vendor/android-util-json) —
- * the stand's frozen traces pin this port against that exact Android code.
+ * Ports of android.util.JsonReader / android.util.JsonWriter (AOSP frameworks/base), carried
+ * verbatim by the `native-conversation-graph-source` golden stand (its vendor copy left with the
+ * Java side) — the stand's frozen traces pin this port against that exact Android code.
  *
  * Contract notes (measured, not assumed):
  *  - The reader is always strict (lenient = false): unquoted names/literals, comments and '='

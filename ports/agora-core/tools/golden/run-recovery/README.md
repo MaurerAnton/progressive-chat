@@ -30,12 +30,7 @@ generated on every run, so the stand cannot silently drift onto a stale copy.
 ## Run
 
 ```bash
-export JAVA_HOME=...
 export PATH="$JAVA_HOME/bin:$PATH"
-export KOTLINC=/path/to/kotlinc
-export KOTLINX_JARS=/path/to/kotlinx-serialization-core-jvm.jar:/path/to/kotlinx-serialization-json-jvm.jar
-./run_golden.sh            # verify scenarios against golden/
-./run_golden.sh --freeze   # regenerate traces after changing scenarios or the Kotlin source
 ```
 
 The C++ side is checked by `core/tests/run_recovery_parity_test.cpp` (test

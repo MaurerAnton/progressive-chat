@@ -223,9 +223,47 @@ add_library(pchat_core)
 target_sources(pchat_core PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
   FILES src/core.cc src/config.cc src/theme.cc src/theme_palette.cc
         src/logic/lists.cc src/logic/search.cc src/logic/drafts.cc
-        src/logic/composer.cc src/logic/formatting.cc src/logic/doc.cc)
+        src/logic/composer.cc src/logic/formatting.cc src/logic/doc.cc
+          src/tokens.cc)
 target_compile_features(pchat_core PUBLIC cxx_std_26)
 target_compile_options(pchat_core PUBLIC ${pchat_std_flags})
+# The o200k vocabulary, into the binary itself: a page has no files beside its
+# program, a phone's .so has no assets it can be asked for, and a desktop should
+# not carry a path -- so the .tiktoken text becomes one translation unit of
+# bytes that every build shares. Written only when the vocabulary is newer than
+# what stands for it, so a configure that changed nothing does not re-emit ten
+# megabytes.
+set(pchat_vocab_text
+   "${CMAKE_CURRENT_SOURCE_DIR}/ports/agora-core/fixtures/tokenizers/o200k_base.tiktoken")
+set(pchat_vocab_source "${CMAKE_CURRENT_BINARY_DIR}/generated/pchat/o200k_vocabulary.cpp")
+if(NOT EXISTS "${pchat_vocab_source}" OR "${pchat_vocab_text}" IS_NEWER_THAN "${pchat_vocab_source}")
+  file(READ "${pchat_vocab_text}" pchat_vocab_hex HEX)
+  # HEX is one unbroken string of two-digit bytes, so it is cut into those pairs
+  # and each is given its 0x: a run without the prefix is one number far larger
+  # than a byte, and with it every pair is a byte literal.
+  string(REGEX REPLACE "(..)" "0x\\1," pchat_vocab_bytes "${pchat_vocab_hex}")
+  file(WRITE "${pchat_vocab_source}"
+    "// Written by the build from ports/agora-core/fixtures/tokenizers/o200k_base.tiktoken.\n"
+    "// The vocabulary this program counts with, carried as bytes so that no platform needs\n"
+    "// a file beside the program to answer what a message is worth.\n"
+    "namespace {\n"
+    "const unsigned char vocabulary[] = {${pchat_vocab_bytes}};\n"
+    "}  // namespace\n"
+    "namespace pchat {\n"
+    "const char* o200k_bytes() { return reinterpret_cast<const char*>(vocabulary); }\n"
+    "unsigned long long o200k_size() { return sizeof(vocabulary); }\n"
+    "}  // namespace\n")
+endif()
+
+# The counters themselves are a classic translation unit: reached through one
+# header that imports nothing, so agora's headers stay out of module units.
+target_sources(pchat_core PRIVATE src/tokens_worth.cpp "${pchat_vocab_source}")
+# Agora's text counters, and everything they read behind them, linked into the
+# model the screens carry: the first thing this program takes from the ported
+# tree instead of leaving it to ctest alone. Public, because the libraries that
+# compose over pchat_core read the port directly too -- the anthropic folder's
+# classic units and the counters' own unit both name agora's headers.
+target_link_libraries(pchat_core PUBLIC agora_core_lib)
 # The design, as a string the build wrote: said to whoever reads this model,
 # which is every screen and every test of one.
 target_include_directories(pchat_core PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/generated")
@@ -239,6 +277,9 @@ target_sources(pchat_tools PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
 target_link_libraries(pchat_tools PUBLIC pchat_core pchat_json pchat_provider)
 
 add_library(pchat_provider)
+# What the providers bring of their own: folders under src/provider/, each one
+# saying what it adds here (cmake/providers.cmake).
+include(cmake/providers.cmake)
 target_sources(pchat_provider PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
   FILES src/provider.cc src/provider/stream.cc src/provider/run.cc
         src/provider/loop.cc)
@@ -382,9 +423,11 @@ if(PCHAT_TESTS)
   add_subdirectory(test)
   # The port's own test binary joins the same ask: one `pchat-tests` build
   # gives ctest everything this program says by test.
-  if(TARGET agora_core_tests)
-    add_dependencies(pchat-tests agora_core_tests)
-  endif()
+  foreach(port_test agora_core_tests agora_portable_crypto_test)
+    if(TARGET ${port_test})
+      add_dependencies(pchat-tests ${port_test})
+    endif()
+  endforeach()
 endif()
 
 # One std module in the whole build. Where two copies of it -- or of any

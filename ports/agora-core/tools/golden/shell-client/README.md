@@ -9,9 +9,6 @@ message table.
 
 | Source | Notes |
 | --- | --- |
-| `app/src/main/java/com/newoether/agora/util/ShellClient.kt` | **verbatim** — no edits |
-| `app/src/main/java/com/newoether/agora/util/ShellCrypto.kt` | **verbatim** (real crypto: X25519, HKDF, AES-256-GCM, HMAC) |
-| `app/src/main/java/com/newoether/agora/util/ConchHandshake.kt` | **verbatim** (`@Serializable`, compiled with the kotlinx plugin) |
 
 ## Platform doubles (`platform/`)
 
@@ -30,7 +27,6 @@ message table.
      "invalid"` opts out to pin the auth-failure message); non-2xx and plain bodies pass
      through verbatim so HTTP-error text stays deterministic.
 2. **`DebugLog.kt`** — silent no-op (the real object wraps `android.util.Log`).
-3. **`Base64.java`** — vendored `android.util.Base64`, identical to the shell-crypto stand's.
 
 Fixed stand identity: one X25519 keypair is embedded as constants (`SERVER_PUBLIC_KEY` in the
 driver, the matching PKCS#8 in the double), so handshake `public_key`, `decodePublicKey` and
@@ -60,13 +56,4 @@ payloads for the plain-text endpoints — stays fully pinned.
 ## Running
 
 ```sh
-JAVA_HOME=/path/to/jdk17 \
-KOTLINC=/path/to/kotlinc/bin/kotlinc \
-KOTLINX_JARS=/path/kotlinx-serialization-core-jvm.jar:/path/kotlinx-serialization-json-jvm.jar \
-./run_golden.sh            # verify against golden/
-./run_golden.sh --freeze   # regenerate golden/ from the Kotlin reference
 ```
-
-The kotlinx-coroutines jar is located next to the serialization jars (override with
-`KOTLINX_COROUTINES_JAR`); the serialization compiler plugin is required for
-`ConchHandshake.@Serializable`; `platform/Base64.java` is compiled with `javac` first.

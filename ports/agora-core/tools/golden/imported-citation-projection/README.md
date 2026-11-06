@@ -16,9 +16,7 @@ shared with the `citations` stand.
 | --- | --- |
 | `scenarios/*.json` | 51 cases across the three ops (markers, anchors, references, budget, fuzz) |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `ImportedCitationProjectionTraceDump.kt` | Driver: runs one op per scenario against the record renderer |
 | `agora_scenarios imported-citation-projection` | Deterministic scenario generator (real U+E200/U+E201/U+E202 envelopes) |
-| `run_golden.sh` | Compiles, freezes (`--freeze`) or verifies the traces |
 
 ## What is pinned
 
@@ -67,9 +65,5 @@ shared with the `citations` stand.
 ## Running
 
 ```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=/home/user/agora-toolchain/jars/kotlinx-serialization-core-jvm-1.11.0.jar:/home/user/agora-toolchain/jars/kotlinx-serialization-json-jvm-1.11.0.jar \
-./run_golden.sh            # verify
 # add --freeze to regenerate golden/
 ```

@@ -8,16 +8,12 @@ observed Flow, and the transactional state+topology snapshot.
 
 | Source | Why |
 | --- | --- |
-| `data/local/ChatProviderContextDao.kt` | the module under test — a plain interface with one `@Transaction` default-method body, so **no extraction is needed** |
-| `data/local/MessageContextTopology.kt` | `MessageContextTopology`, `ConversationProviderContextState`, `ProviderContextTopologySnapshot` and the execution summary row |
 | `model/ChatMessage.kt` and the model cluster (`AttachmentMeta`, `MessageSource`, `TokenUsage`, `ModelId`, `ContextBudget`, `Citation`, `MessagePersistenceGuard`, `RuntimeIdentity`, `Constants`) | the `MessageStatus`/`Participant` enum types behind the projection |
 
 ## The platform boundary
 
 | Path | Purpose |
 | --- | --- |
-| `platform/MiniRoom.kt` | reflective executor: `@Query` SQL against real SQLite, named-parameter binding, `@Transaction` nesting, and a cold single-emission Flow for observed queries |
-| `platform/Room.kt`, `platform/RoomDatabase.kt` | annotation shapes and the transaction surface |
 | `platform/schema.sql` | the Room-generated DDL: the full 15-column `conversations`, 26-column `messages` with both foreign keys and three indices, and the `runs` reference table. `new_chat_persist` and `embeddings` are not reachable from this DAO and are omitted. |
 
 `observeMessageContextTopology` returns `Flow<List<MessageContextTopology>>`. Room's Flow
@@ -72,12 +68,3 @@ list, `null`, or `{error, message}`) followed by `tables`, serialized exactly li
 
 ## Regenerating
 
-```bash
-export JAVA_HOME=/path/to/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/path/to/kotlinc \
-KOTLINX_JARS=kotlinx-serialization-core.jar:kotlinx-serialization-json.jar:kotlinx-coroutines-core.jar:sqlite-jdbc.jar \
-  ./run_golden.sh          # regenerate scenarios and verify
-KOTLINC=... KOTLINX_JARS=... ./run_golden.sh --freeze   # regenerate the frozen traces
-```
-
-`run_golden.sh` wipes the stand's git-ignored `build/` before each run, so runs are idempotent.

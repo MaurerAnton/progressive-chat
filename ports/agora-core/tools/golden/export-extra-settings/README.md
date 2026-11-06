@@ -12,10 +12,8 @@ Parity pin for `data/ExportExtraSettings.kt::restoreLegacyFromJsonObject`, the r
 | --- | --- |
 | `scenarios/*.json` | 164 legacy-object cases with the replace/secrets/allowed-id arguments and seeded alias/model flows |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `ExportExtraSettingsTraceDump.kt` | Driver: runs the reader and prints the recorded call log |
 | `platform/` | DataStore preferences keys, crypto/debug shims, recording `SettingsManager` double |
 | `agora_scenarios export-extra-settings <stand>` | Deterministic scenario generator |
-| `run_golden.sh` | Compiles, freezes (`--freeze`) or verifies the traces |
 
 ## What is pinned
 
@@ -55,10 +53,5 @@ Parity pin for `data/ExportExtraSettings.kt::restoreLegacyFromJsonObject`, the r
 ## Running
 
 ```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=/home/user/agora-toolchain/jars/kotlinx-serialization-core-jvm-1.11.0.jar:/home/user/agora-toolchain/jars/kotlinx-serialization-json-jvm-1.11.0.jar \
-COROUTINES_JAR=/home/user/agora-toolchain/kotlinc-2.3.21/lib/kotlinx-coroutines-core-jvm.jar \
-./run_golden.sh            # verify
 # add --freeze to regenerate golden/
 ```

@@ -13,12 +13,8 @@ extraction and the storage preflight. The archive source and its collaborators c
 | `scenarios/*.json` | One case per file, 36 op sequences |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
 | `fixtures/*.zip` | The archives both ports read (24 committed, byte-exact) |
-| `NativeBackupArchiveTraceDump.kt` | The stand driver (calls the real archive) |
 | `agora_scenarios native-backup-archive <stand>` | Builds fixtures + scenarios deterministically |
 | `agora_extract graph-interface` | Lifts `NativeGraphEntrySource` verbatim from `NativeConversationGraphSource.kt` |
-| `platform/Uri.kt`, `platform/AndroidContext.kt`, `platform/ParcelFileDescriptor.kt` | The Android open-path surface |
-| `platform/SettingsManager.kt`, `Preferences.kt`, `SecretCrypto.kt`, `DebugLog.kt` | The DataStore storage double needed so `SettingsContracts.kt` compiles (same files as the secrets stand) |
-| `run_golden.sh` | Generates fixtures/scenarios, compiles, freezes or verifies the traces |
 
 ## What is pinned
 
@@ -116,12 +112,8 @@ masked as `<dir>` because the C++ test runs from a different working directory.
 ## Regenerating
 
 ```bash
-KOTLINC=/path/to/kotlinc \
-KOTLINX_JARS=core.jar:json.jar:coroutines.jar:/path/commons-compress-1.27.1.jar:/path/commons-io-2.16.1.jar \
-./run_golden.sh            # verify
 # add --freeze to regenerate golden/
 ```
 
-`run_golden.sh` rebuilds `fixtures/` and `scenarios/` from `agora_scenarios native-backup-archive <stand>` on every run
-(deterministically), lifts the interface, compiles the app sources, and runs each scenario in its
-own working directory under `build/` (git-ignored).
+`agora_scenarios native-backup-archive <stand>` rebuilds `fixtures/` and `scenarios/` on every run
+(deterministically).

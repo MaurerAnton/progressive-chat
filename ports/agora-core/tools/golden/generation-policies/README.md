@@ -15,10 +15,8 @@ to the default visibility so the driver can call them; no logic is changed. `Cha
 | --- | --- |
 | `scenarios/*.json` | 11 cases: the policy matrix, the templates, the automatic sources, the compactor, fuzz |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `GenerationPoliciesTraceDump.kt` | Driver: runs every policy of the two files |
 | `agora_extract widen` | Lifts the two policy files with a widened visibility |
 | `agora_scenarios generation-policies` | Deterministic scenario generator |
-| `run_golden.sh` | Extracts, compiles, freezes (`--freeze`) or verifies the traces |
 
 ## What is pinned
 

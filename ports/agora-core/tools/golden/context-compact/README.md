@@ -10,20 +10,14 @@ projections).
 
 | Source | Why |
 | --- | --- |
-| `data/local/ChatContextCompactDao.kt` | the module under test — a plain interface rather than a `@Dao`, every member public, so **no extraction is needed for it** |
-| `data/local/RunEntity.kt`, `model/RuntimeIdentity.kt` | the run row both transactions validate against |
 | `model/ChatMessage.kt` and its model dependencies | `MessageStatus`, `Participant` |
-| `util/Constants.kt` | `COMPACT_MSG_PREFIX` |
 | ``agora_extract message-entity`` output | `MessageEntity` lifted byte for byte from `ChatEntities.kt` |
 
 ## The platform boundary
 
 | Path | Purpose |
 | --- | --- |
-| `platform/MiniRoom.kt` | reflective executor: `@Query` SQL against real SQLite, `@Insert` (ABORT), enum columns by `Enum.valueOf`, `MessageConverters`' JSON list encoding with the legacy `\|\|\|` fallback, `Unit`-returning members coercing the row count the way Room's generated code does |
-| `platform/Room.kt`, `platform/RoomDatabase.kt` | annotation shapes and the `withTransaction` nesting contract |
 | `platform/schema.sql` | the Room-generated DDL: all 26 `MessageEntity` columns with both foreign keys and three indices, the Migration16To17 `runs` table, the `embeddings` orphan surface, and the documented `conversations` subset plus `lastUpdated`/`dataChangedAt` |
-| `platform/StandChat.kt`, `platform/StandChatDatabase.kt` | the conversation surface the transactions read, and the database holder for the two `@Transaction` bodies |
 
 ## Two documented boundaries in the traces
 
@@ -42,10 +36,8 @@ projections).
 | --- | --- |
 | `scenarios/*.json` | 14 scenarios, 67 steps |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `ContextCompactTraceDump.kt` | Driver: seeds SQLite, runs every interface member, dumps the tables |
 | ``agora_extract message-entity`` | Lifts `MessageEntity` out of `ChatEntities.kt` |
 | `agora_scenarios context-compact <stand>` | Deterministic scenario generator |
-| `run_golden.sh` | Extracts, compiles, freezes (`--freeze`) or verifies the traces |
 
 Every one of the 21 interface members is an operation, so no query goes unpinned.
 
@@ -103,11 +95,6 @@ One JSON document per scenario: `steps` (each `{op, result}` — entity renders,
 ## Regenerating
 
 ```bash
-export JAVA_HOME=/path/to/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar:coroutines.jar:sqlite-jdbc.jar \
-  ./run_golden.sh          # verify
-KOTLINC=... KOTLINX_JARS=... ./run_golden.sh --freeze   # regenerate
 ../../../build/agora_scenarios context-compact .   # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's git-ignored `build/` before each run, so runs are idempotent.

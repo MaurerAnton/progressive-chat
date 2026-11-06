@@ -6,6 +6,7 @@ export module pchat.logic.composer;
 
 import std;
 import pchat.core;
+import pchat.tokens;
 
 export namespace pchat::logic {
 
@@ -56,6 +57,9 @@ struct sent_message {
                .sent = when,
                .state = delivery::sending,
                .replies_to = std::move(asking.replies_to)};
+    // What the reader asked for, worth what Agora's counter says it is worth,
+    // counted where it is written rather than at some later projection.
+    said.tokens = static_cast<std::uint32_t>(pchat::tokens::of(said.text));
   if (said.text.empty() && asking.attachments.empty()) said.text = std::string{};
   return {.said = std::move(said), .cleared = composer_state{}};
 }

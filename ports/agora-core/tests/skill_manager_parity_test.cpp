@@ -127,7 +127,7 @@ std::string run_scenario(const std::filesystem::path& scenario_path,
     line({"mode", esc(mode)});
 
     // The driver builds one private working directory per scenario; wipe it so re-runs are
-    // idempotent, exactly like run_golden.sh does for the Kotlin side.
+    // idempotent, exactly as the stand's own verification did.
     const std::filesystem::path files_dir = temp_root / ("scenario_" + name);
     std::filesystem::remove_all(files_dir);
     std::filesystem::create_directories(files_dir);

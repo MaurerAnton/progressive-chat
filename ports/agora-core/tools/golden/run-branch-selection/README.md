@@ -32,10 +32,7 @@ The driver builds every Run as a terminal `COMPLETED` entity, which satisfies th
 | --- | --- |
 | `scenarios/*.json` | One case per file, 27 frozen cases |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `RunBranchSelectionTraceDump.kt` | The stand driver |
 | `agora_extract run-entity` | Lifts `RunEntity` out of `RunEntity.kt` verbatim |
-| `PlatformStubs.kt` | Stand-local Room `@PrimaryKey` marker |
-| `run_golden.sh` | Compiles and regenerates or verifies the traces |
 | `agora_scenarios run-branch-selection` | Generates the scenarios (deterministic; rerun after editing) |
 
 ## What is pinned
@@ -93,10 +90,6 @@ spelled `n` cannot collide. Escaping: `\` `|` `;` `=` `\n` `\r` `\t` →
 ## Regenerating
 
 ```bash
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios run-branch-selection core/tools/golden/run-branch-selection                                                                                  # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's git-ignored `build/` (including the extracted `RunEntity.kt`)
-before each run, so runs are idempotent.

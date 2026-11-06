@@ -41,9 +41,7 @@ split), the break conditions and the termination summary.
 | --- | --- |
 | `scenarios/*.json` | One transcript per file, 69 frozen edge cases across four modes |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `OllamaTraceDump.kt` | The stand driver (see "How the driver works") |
 | ``agora_extract ollama-models`` | Verbatim extraction of the wire models and loop helpers |
-| `run_golden.sh` | Extracts, compiles and regenerates or verifies the traces |
 | `agora_scenarios ollama <stand>` | Generates the scenarios (deterministic; rerun after editing) |
 | `files/` | Attachment fixtures for the base64 registry |
 | `stubs/` | Leaf stubs for Android-only types the reference sources touch |
@@ -117,8 +115,6 @@ malformed stand-in ids carry the compact form).
 ## Regenerating
 
 ```
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 ../../../build/agora_scenarios ollama .   # rewrite scenarios
 ```
 

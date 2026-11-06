@@ -7,18 +7,12 @@ surface inherited by the sole `ChatDao`. All fourteen members are read-only `@Qu
 
 | Source | Why |
 | --- | --- |
-| `data/local/ChatSearchDao.kt` | the module under test — a plain interface with public members, so **no extraction is needed** |
-| `data/local/ChatEntities.kt` | all four entities plus `MessageConverters` and `IndexableMessage`; compiles whole, no lifting |
-| `data/local/EmbeddingSearchRow.kt` | the semantic-scoring projection |
-| `data/local/RunEntity.kt`, `model/RuntimeIdentity.kt` | the run row the `messages.runId` foreign key references |
 | `model/ChatMessage.kt` and its model dependencies | `MessageStatus`, `Participant`, the message model cluster |
 
 ## The platform boundary
 
 | Path | Purpose |
 | --- | --- |
-| `platform/MiniRoom.kt` | reflective executor: `@Query` SQL against real SQLite, named-parameter binding, collection expansion exactly like Room's `appendPlaceholders` (empty list → `IN (NULL)`), enum columns by `Enum.valueOf`, `MessageConverters`' JSON list encoding with the legacy `\|\|\|` fallback |
-| `platform/Room.kt`, `platform/RoomDatabase.kt` | annotation shapes (including `@TypeConverter`/`@ColumnInfo`) and the database surface |
 | `platform/schema.sql` | the Room-generated DDL: all 15 `ChatEntity` columns with the `taskId` index, all 26 `MessageEntity` columns with both foreign keys and three indices, the `runs` reference table, and the 7-column `embeddings` table with its two indices |
 
 ## What is pinned
@@ -85,12 +79,3 @@ like `Json.encodeToString`.
 
 ## Regenerating
 
-```bash
-export JAVA_HOME=/path/to/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/path/to/kotlinc \
-KOTLINX_JARS=kotlinx-serialization-core.jar:kotlinx-serialization-json.jar:kotlinx-coroutines-core.jar:sqlite-jdbc.jar \
-  ./run_golden.sh          # regenerate scenarios and verify
-KOTLINC=... KOTLINX_JARS=... ./run_golden.sh --freeze   # regenerate the frozen traces
-```
-
-`run_golden.sh` wipes the stand's git-ignored `build/` before each run, so runs are idempotent.
