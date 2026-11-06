@@ -264,7 +264,7 @@ SAID(provider, a_tool_written_in_the_answer_is_a_call_and_not_text) {
 // never asked because it thinks whenever it answers.
 SAID(provider, thinking_is_asked_for_as_each_family_names_it) {
   const std::vector<provider::turn> no_turns;
-  const provider::wanted most{.thinking = true, .how_hard = config::effort::most};
+  const provider::wanted most{.thinking = true, .how_hard = effort::most};
   const provider::endpoint openai{.base = "https://api.openai.com/v1", .model = "o4-mini"};
   const provider::endpoint relay{.base = "https://openrouter.ai/api/v1", .model = "o4-mini"};
   const provider::endpoint deep{.base = "https://api.deepseek.com/v1", .model = "deepseek-r1"};
@@ -276,6 +276,7 @@ SAID(provider, thinking_is_asked_for_as_each_family_names_it) {
 }
 
 SAID(provider, thinking_turned_off_is_asked_for_nowhere) {
+  const std::vector<provider::turn> no_turns;
   const provider::wanted none{.thinking = false};
   const provider::endpoint openai{.base = "https://api.openai.com/v1", .model = "o4-mini"};
   EXPECT_TRUE(provider::body_of(openai, no_turns, none).find("reasoning") == std::string::npos);
