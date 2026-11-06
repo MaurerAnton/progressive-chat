@@ -238,7 +238,10 @@ set(pchat_vocab_text
 set(pchat_vocab_source "${CMAKE_CURRENT_BINARY_DIR}/generated/pchat/o200k_vocabulary.cpp")
 if(NOT EXISTS "${pchat_vocab_source}" OR "${pchat_vocab_text}" IS_NEWER_THAN "${pchat_vocab_source}")
   file(READ "${pchat_vocab_text}" pchat_vocab_hex HEX)
-  string(REPLACE ";" "," pchat_vocab_bytes "${pchat_vocab_hex}")
+  # HEX is a semicolon-separated list of two-digit bytes; without the 0x a byte
+  # like 2d is a decimal number with a letter in it, which no compiler reads.
+  string(REPLACE ";" ",0x" pchat_vocab_bytes "${pchat_vocab_hex}")
+  set(pchat_vocab_bytes "0x${pchat_vocab_bytes}")
   file(WRITE "${pchat_vocab_source}"
     "// Written by the build from ports/agora-core/fixtures/tokenizers/o200k_base.tiktoken.\n"
     "// The vocabulary this program counts with, carried as bytes so that no platform needs\n"
