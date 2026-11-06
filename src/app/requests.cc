@@ -49,10 +49,6 @@ struct delete_answer {
   conversation_id chat;
   message_id said;
 };
-struct edit_draft {
-  conversation_id chat;
-  std::string text;
-};
 struct set_query {
   std::string text;
 };
@@ -132,7 +128,7 @@ struct set_answerer {
 // handled where it is read and a new one cannot be forgotten.
 using request = spl::variant<open_conversation, send_message, new_chat,
                              copy_answer, regenerate_answer, fork_answer,
-                             share_answer, delete_answer, edit_draft, set_query,
+                             share_answer, delete_answer, set_query,
                              toggle_drawer, open_settings, close_settings,
                              fork_conversation,
                              share_conversation, open_system_prompt,

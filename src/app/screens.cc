@@ -123,7 +123,6 @@ public:
             // it to.
             [&](const share_answer &asking) { this->give(text_of(asking.said)); },
             [&](const delete_answer &asking) { cut_away(asking.said); },
-            [&](const edit_draft &) {},
             [&](const set_query &asking) { query_ = asking.text; },
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
             [&](const open_settings &) { settings_ = true; },
