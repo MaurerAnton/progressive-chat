@@ -224,6 +224,7 @@ target_sources(pchat_core PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
   FILES src/core.cc src/config.cc src/theme.cc src/theme_palette.cc
         src/logic/lists.cc src/logic/search.cc src/logic/drafts.cc
         src/logic/composer.cc src/logic/formatting.cc src/logic/doc.cc
+        src/logic/compacted.cc
           src/tokens.cc)
 target_compile_features(pchat_core PUBLIC cxx_std_26)
 target_compile_options(pchat_core PUBLIC ${pchat_std_flags})
