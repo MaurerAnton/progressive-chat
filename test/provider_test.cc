@@ -132,6 +132,36 @@ SAID(provider, what_the_model_keeps_is_turns_on_a_wire) {
   EXPECT_EQ(turns[1].thought, std::string("> looked\n"));
 }
 
+SAID(provider, a_file_that_is_words_is_given_to_the_wire_with_the_message) {
+  message said{.id = message_id{"1"}, .text = "What does this say", .outgoing = true};
+  said.kept.push_back(attachment{
+      .name = "notes.txt", .kind = "text/plain",
+      .bytes = {std::byte{'a'}, std::byte{'b'}, std::byte{'c'}}});
+  const provider::turn turn = provider::turns_of(
+      std::vector<message>{said}).front();
+  EXPECT_EQ(turn.text,
+            std::string("What does this say\n\nWhat notes.txt says:\nabc"));
+}
+
+SAID(provider, a_file_that_is_not_words_is_kept_and_given_to_nothing) {
+  message said{.id = message_id{"1"}, .text = "Look here", .outgoing = true};
+  said.kept.push_back(attachment{.name = "photo.png",
+                                 .kind = "image/png",
+                                 .bytes = {std::byte{0x89}, std::byte{'P'}}});
+  const provider::turn turn = provider::turns_of(
+      std::vector<message>{said}).front();
+  EXPECT_EQ(turn.text, std::string("Look here"));
+}
+
+SAID(provider, a_file_says_its_kind_where_its_kind_says_nothing) {
+  message said{.id = message_id{"1"}, .text = "Read it", .outgoing = true};
+  said.kept.push_back(attachment{
+      .name = "main.cc", .bytes = {std::byte{'/'}, std::byte{'/'}}});
+  const provider::turn turn = provider::turns_of(
+      std::vector<message>{said}).front();
+  EXPECT_EQ(turn.text, std::string("Read it"));
+}
+
 SAID(provider, a_stream_is_read_whole) {
   provider::stream one;
   one.feed(one_stream);

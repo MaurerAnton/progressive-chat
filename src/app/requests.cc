@@ -129,6 +129,16 @@ struct set_generation {
 // what the next answer is asked with (design-doc.md, "The foot"). It is this
 // card's own, and stands over nothing else in the window.
 struct toggle_thinking {};
+// The paperclip beside the field, opened or shut: the four things a reader
+// may choose between to say with the next message (design-doc.md, "The
+// editor's row"). It is the card's own, and stands over nothing else.
+struct open_attach {};
+// One of the four asked for: the machine this runs on is asked for files of
+// that kind, and what it answers with is taken back out of it
+// (pchat.platform.chosen). Nothing here chooses anything itself.
+struct pick_files {
+  chooses what = chooses::files;
+};
 // Thinking before an answer, and how hard it is to think: the first two of
 // the things a three-dot menu says (design-doc.md, "The editor's row"), read
 // into what every wire is asked for from then on.
@@ -165,6 +175,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                               set_generation, set_thinking, set_effort, set_tool,
                              toggle_thinking,
                              compact_context, set_web_search,
+                             open_attach, pick_files,
                               set_answerer, copy_text>;
 
 class requests {

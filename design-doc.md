@@ -100,7 +100,12 @@ in the panel is a plus:
   and nowhere else.
 * **A plus at the editor's left, before the model's name**, attaches something
   to what you are writing. Pressed, it says four things: **photo or media from
-  the camera**, **photos from the gallery**, **videos**, **files**.
+  the camera**, **photos from the gallery**, **videos**, **files**. What is
+  chosen is kept with the next message and named under it in the room, named
+  once more above the card until it is sent, and sent with it: a file that is
+  words is given to the wire within the turn, after the words written beside
+  it; a picture and a moving picture are kept and given to nothing yet, for
+  giving one is its own asking and no wire here answers it.
 * **The model's name** stands next, as **the model itself is called** and,
   after it in brackets, **which provider it is asked through**:
   `DeepSeek V4.1 Flash (ds)`. The id a wire is given — `deepseek-v4-1-flash` —

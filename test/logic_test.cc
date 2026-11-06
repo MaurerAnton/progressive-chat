@@ -62,6 +62,22 @@ SAID(logic, sending_makes_one_message_and_an_empty_field) {
   EXPECT_FALSE(logic::can_send(logic::composer_state{.text = "  \n"}));
 }
 
+SAID(logic, what_was_chosen_is_said_with_the_message_and_kept_with_it) {
+  const logic::sent_message said = logic::send(
+      logic::sending_request{conversation_id{"general"}, "hello",
+                             {attachment{.name = "notes.txt",
+                                         .kind = "text/plain",
+                                         .bytes = {std::byte{'a'}}}},
+                             std::nullopt},
+      "Reader", 7);
+  EXPECT_EQ(said.said.kept.size(), 1u);
+  EXPECT_EQ(said.said.kept.front().name, std::string("notes.txt"));
+  // What is chosen can be sent on its own: nothing written beside it, and
+  // still one message made of what was said.
+  EXPECT_TRUE(logic::can_send(logic::composer_state{
+      .text = "", .attachments = {attachment{.name = "photo.png"}}}));
+}
+
 SAID(logic, marks_make_runs_of_style) {
   const std::string said = "**bold** and `code`";
   const std::vector<logic::run> runs = logic::runs_of(said);

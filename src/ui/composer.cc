@@ -13,6 +13,7 @@ import skiff.widgets.textarea;
 import pchat.core;
 import pchat.config;
 import pchat.app.requests;
+import pchat.platform.chosen;
 import :theme;
 import :base;
 import :icons;
@@ -197,6 +198,106 @@ private:
   }
 };
 
+// The four things a paperclip chooses between, and the menu it opens above
+// the card to say them: what a camera takes now, what the machine keeps of
+// pictures taken before, what it keeps of moving ones, and every other file
+// it has. One press each, and each of them asking for one of the four.
+inline constexpr float attach_menu_width = 176.0f;
+inline constexpr float attach_menu_row = 34.0f;
+inline constexpr float attach_menu_rows = 4.0f;
+
+struct attach_menu : scene::Node {
+  nodes::Box<> fPlate{0u};
+  ask_box fCameraPlate{};
+  nodes::Text fCameraName{"Camera", 13.0f, 0u};
+  ask_box fPicturesPlate{};
+  nodes::Text fPicturesName{"Gallery", 13.0f, 0u};
+  ask_box fMovingPlate{};
+  nodes::Text fMovingName{"Videos", 13.0f, 0u};
+  ask_box fFilesPlate{};
+  nodes::Text fFilesName{"Files", 13.0f, 0u};
+
+  attach_menu() {
+    this->apply({.anchor = scene::anchor::kTopLeft,
+                 .origin = scene::anchor::kBottomLeft,
+                 .x = 8.0f,
+                 .y = -12.0f,
+                 .relativeSize = scene::axes::kNone,
+                 .width = attach_menu_width,
+                 .height = attach_menu_rows * attach_menu_row + 12.0f,
+                 .cornerRadius = card_radius,
+                 .visible = false});
+    fPlate.apply({.fill = true});
+    const float wide = attach_menu_width - 16.0f;
+    fCameraPlate.apply(row_spec(8.0f, wide));
+    fPicturesPlate.apply(row_spec(8.0f + attach_menu_row, wide));
+    fMovingPlate.apply(row_spec(8.0f + 2.0f * attach_menu_row, wide));
+    fFilesPlate.apply(row_spec(8.0f + 3.0f * attach_menu_row, wide));
+    fCameraName.apply(name_spec(8.0f));
+    fPicturesName.apply(name_spec(8.0f + attach_menu_row));
+    fMovingName.apply(name_spec(8.0f + 2.0f * attach_menu_row));
+    fFilesName.apply(name_spec(8.0f + 3.0f * attach_menu_row));
+  }
+
+  void again(app::requests *sink, const paints &look, bool open) {
+    this->setVisible(open);
+    if (!open)
+      return;
+    fPlate.setColour(look.card);
+    // Where this machine cannot answer one of the four, that row stands grey
+    // and asks for nothing: what no desk can take a picture of is not said to
+    // answer in its place (src/platform/chosen.cc, `can`).
+    bool can[4] = {false, false, false, false};
+    for (const chooses one : {chooses::camera, chooses::pictures,
+                              chooses::moving, chooses::files})
+      can[static_cast<int>(one)] = platform::choosing::can(one);
+    fCameraPlate.again(sink, app::pick_files{chooses::camera},
+                       can[0] ? look.raised : look.card, can[0]);
+    fCameraName.setColour(can[0] ? look.text : look.faint);
+    fPicturesPlate.again(sink, app::pick_files{chooses::pictures},
+                         can[1] ? look.raised : look.card, can[1]);
+    fPicturesName.setColour(can[1] ? look.text : look.faint);
+    fMovingPlate.again(sink, app::pick_files{chooses::moving},
+                       can[2] ? look.raised : look.card, can[2]);
+    fMovingName.setColour(can[2] ? look.text : look.faint);
+    fFilesPlate.again(sink, app::pick_files{chooses::files},
+                      can[3] ? look.raised : look.card, can[3]);
+    fFilesName.setColour(can[3] ? look.text : look.faint);
+  }
+
+  void forEachChild(auto &&f) {
+    f(fPlate);
+    f(fCameraPlate);
+    f(fCameraName);
+    f(fPicturesPlate);
+    f(fPicturesName);
+    f(fMovingPlate);
+    f(fMovingName);
+    f(fFilesPlate);
+    f(fFilesName);
+  }
+
+private:
+  [[nodiscard]] static scene::Spec row_spec(float y, float wide) {
+    return {.anchor = scene::anchor::kTopLeft,
+            .origin = scene::anchor::kTopLeft,
+            .x = 8.0f,
+            .y = y,
+            .relativeSize = scene::axes::kNone,
+            .width = wide,
+            .height = attach_menu_row - 4.0f,
+            .cornerRadius = 10.0f};
+  }
+  // What a row is called.
+  [[nodiscard]] static scene::Spec name_spec(float y) {
+    return {.anchor = scene::anchor::kTopLeft,
+            .origin = scene::anchor::kCentreLeft,
+            .x = 20.0f,
+            .y = y + 15.0f,
+            .autoSize = scene::axes::kBoth};
+  }
+};
+
 struct composer : scene::Node {
   nodes::Box<> fCard{0u};
   // What answers here, and how much of its window this chat has taken: said
@@ -210,7 +311,14 @@ struct composer : scene::Node {
   std::shared_ptr<message_sink> fSink = std::make_shared<message_sink>();
   widgets::TextArea<message_given> fField{widgets::Theme{}, "Message",
                                           message_given{fSink}};
-  nodes::Icon fClip{shape::clip(), 0u};
+  // A plus at the editor's left, before the model's name, which is where the
+  // four things it chooses between are said (design-doc.md, "The editor's
+  // row"); the menu it opens above the card; and, above everything, what has
+  // been chosen and is waiting to be said with the next message.
+  ask_box fPlusPlate{};
+  nodes::Icon fAttach{shape::plus(), 0u};
+  attach_menu fAttachMenu{};
+  nodes::Text fHeld{"", 12.0f, 0u};
   nodes::Icon fFace{shape::smile(), 0u};
   nodes::Box<> fSendPlate{0u};
   nodes::Icon fSendMark{shape::send(), 0u};
@@ -228,7 +336,7 @@ struct composer : scene::Node {
     fCard.apply({.fill = true, .cornerRadius = card_radius});
     fModel.apply({.anchor = scene::anchor::kTopLeft,
                   .origin = scene::anchor::kCentreLeft,
-                  .x = 18.0f,
+                  .x = 44.0f,
                   .y = 22.0f,
                   .autoSize = scene::axes::kBoth});
     // The circle, and three dots after it: the two of them are what the
@@ -263,6 +371,20 @@ struct composer : scene::Node {
          .margin = scene::Margin{0.0f, edge + send_size + 62.0f, 0.0f, 16.0f},
          .cornerRadius = 16.0f,
          .padding = scene::Margin::horizontal(16.0f)});
+    fPlusPlate.apply({.anchor = scene::anchor::kTopLeft,
+                      .origin = scene::anchor::kCentre,
+                      .x = 26.0f,
+                      .y = 22.0f,
+                      .relativeSize = scene::axes::kNone,
+                      .width = 30.0f,
+                      .height = 30.0f,
+                      .cornerRadius = 15.0f});
+    fAttach.apply({.width = 20.0f,
+                   .height = 20.0f,
+                   .anchor = scene::anchor::kTopLeft,
+                   .origin = scene::anchor::kCentre,
+                   .x = 26.0f,
+                   .y = 22.0f});
     fClip.apply({.width = 22.0f,
                  .height = 22.0f,
                  .anchor = scene::anchor::kTopRight,
@@ -282,6 +404,13 @@ struct composer : scene::Node {
                       .origin = scene::anchor::kTopRight,
                       .x = -edge,
                       .y = 45.0f});
+    // What has been chosen, said over the card and above it, right against
+    // its right edge: named, and nothing said of it but its name.
+    fHeld.apply({.anchor = scene::anchor::kBottomRight,
+                 .origin = scene::anchor::kBottomRight,
+                 .x = -(edge + 4.0f),
+                 .y = -(composer_height + 2.0f * edge + 6.0f),
+                 .autoSize = scene::axes::kBoth});
     fSendMark.apply({.width = 22.0f,
                      .height = 22.0f,
                      .anchor = scene::anchor::kTopRight,
@@ -291,7 +420,8 @@ struct composer : scene::Node {
   }
 
   void again(const paints &look, const conversation &chat, const asking &how,
-             bool to_compact, app::requests *asked, bool menu_open) {
+             bool to_compact, bool can_choose, std::span<const attachment> held,
+             app::requests *asked, bool menu_open, bool attach_open) {
     fSink->asked = asked;
     fSink->chat = chat.id;
     fCard.setColour(look.card);
@@ -308,6 +438,28 @@ struct composer : scene::Node {
     fModel.setColour(look.primary);
     fGauge.setShape(context_ring(used, look.outline, look.primary));
     fGauge.setColour(look.primary);
+    // Where this machine can choose nothing, the plus is not drawn at all:
+    // what cannot be pressed is not stood there to be pressed.
+    fPlusPlate.setVisible(can_choose);
+    fAttach.setVisible(can_choose);
+    if (can_choose) {
+      fPlusPlate.again(asked, app::open_attach{}, look.search_bar);
+      fAttach.setColour(look.faint);
+    }
+    // The four things it chooses between, open above the card where it was
+    // pressed and nowhere else: shut with it too, wherever nothing chooses.
+    fAttachMenu.again(asked, look, can_choose && attach_open);
+    // What is waiting to be said with the next message: every name of it, or
+    // nothing at all where nothing waits.
+    fHeld.setVisible(!held.empty());
+    std::string names;
+    for (const attachment &one : held) {
+      if (!names.empty())
+        names += ", ";
+      names += one.name;
+    }
+    fHeld.setText(names);
+    fHeld.setColour(look.primary);
     // The dots, and the menu they keep open or shut.
     fDots.again(asked, app::toggle_thinking{}, look.search_bar);
     fDotsMark.setColour(look.text);
@@ -324,7 +476,10 @@ struct composer : scene::Node {
     f(fDotsMark);
     f(fMenu);
     f(fField);
-    f(fClip);
+    f(fPlusPlate);
+    f(fAttach);
+    f(fAttachMenu);
+    f(fHeld);
     f(fFace);
     f(fSendPlate);
     f(fSendMark);

@@ -92,6 +92,8 @@ src/provider/run.cc      one answer whole: why it is over, the message it leaves
 src/provider/loop.cc     one question asked again with what its tools answered
 src/tools.cc             what this program answers itself, and nothing else
 src/platform/carry.cc    what hands a body over, per platform: a page's fetch
+src/platform/chosen.cc   what asks this machine for a file, and takes it back
+                         out of it whole: a page's own input, today
 src/ui.cc, src/ui/*.cc   the window: every screen, drawn with skiff
 ```
 

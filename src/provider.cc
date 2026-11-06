@@ -115,6 +115,41 @@ headers_of(const endpoint &one) {
 
 // ---- the turns of a conversation -----------------------------------------
 
+// Whether what was chosen is words: what the machine said the file's kind is
+// says so, or the name it called it does where the machine told us nothing.
+[[nodiscard]] inline bool says_words(const attachment &one) {
+  if (one.kind.starts_with("text/"))
+    return true;
+  return one.name.ends_with(".txt") || one.name.ends_with(".md") ||
+         one.name.ends_with(".csv") || one.name.ends_with(".json") ||
+         one.name.ends_with(".log") || one.name.ends_with(".yml") ||
+         one.name.ends_with(".yaml");
+}
+
+// How much of one file is worth giving: the whole of it up to this many
+// bytes, and only this much of it where there is more, because what is asked
+// of a wire is paid for by the word.
+inline constexpr std::size_t file_words_at_most = 256 * 1024;
+
+// What one message says to a wire: its own words, and after them what each
+// file chosen for it says where the file is words -- named as it was chosen,
+// and said whole. What is not words -- a picture, a moving picture -- is kept
+// with the message and given to nothing yet: giving a file that says nothing
+// is its own asking, and no wire here answers it.
+[[nodiscard]] inline std::string said_to_a_wire(const message &one) {
+  if (one.kept.empty())
+    return one.text;
+  std::string said = one.text;
+  for (const attachment &file : one.kept) {
+    if (!says_words(file))
+      continue;
+    said += "\n\nWhat " + file.name + " says:\n";
+    said.append(reinterpret_cast<const char *>(file.bytes.data()),
+                std::min(file.bytes.size(), file_words_at_most));
+  }
+  return said;
+}
+
 // What the model keeps of one conversation, as turns a wire is given: what
 // the reader wrote asked, and what the model answered, in the order it was
 // said and nothing of what the screens know about either. Any range that
@@ -126,7 +161,7 @@ template <std::ranges::forward_range Said>
   return std::ranges::to<std::vector<turn>>(
       said | std::views::transform([](const message &one) {
         return turn{.who = one.outgoing ? role::user : role::assistant,
-                    .text = one.text,
+                    .text = said_to_a_wire(one),
                     .thought = one.before ? one.before->said : std::string()};
       }));
 }

@@ -19,6 +19,7 @@ import pchat.ui;
 import pchat.provider;
 import pchat.provider.run;
 import pchat.platform.carry;
+import pchat.platform.chosen;
 import pchat.provider.loop;
 import pchat.tools;
 import pchat.app.requests;
@@ -65,9 +66,13 @@ public:
               // message is sent, and so the three dots are put away with
               // it rather than left open over what is coming.
               thinking_menu_ = false;
+              // What was chosen since, said with the message it was chosen
+              // for and with nothing else: a picture of what is in front of
+              // the camera goes with the words written beside it or without
+              // any, and never into the chat after it.
               const logic::sent_message said = logic::send(
-                  logic::sending_request{
-                      asking.chat, asking.text, {}, std::nullopt},
+                  logic::sending_request{asking.chat, asking.text,
+                                         held_of(asking.chat), std::nullopt},
                   "Reader", static_cast<moment>(said_count_++));
               root_.messages.push_back(said.said);
               recount(asking.chat);
@@ -250,6 +255,14 @@ public:
             // asking every answer made from now on is written with, and so
             // into every body sent for one.
             [&](const toggle_thinking &) { thinking_menu_ = !thinking_menu_; },
+            // The paperclip opened or shut, and one of the four asked for:
+            // where this machine chooses nothing, no paperclip is drawn to
+            // press, so nothing here is asked by a row that answers nothing.
+            [&](const open_attach &) { attach_menu_ = !attach_menu_; },
+            [&](const pick_files &asking) {
+              attach_menu_ = false;
+              chosen_.ask(asking.what);
+            },
             [&](const set_thinking &asking) { how_ = set_of(how_, asking.on); },
             [&](const set_effort &asking) { how_ = set_of(how_, asking.how); },
             // A tool switched: one of the three this program owns, and what
@@ -284,6 +297,17 @@ public:
     for (const request &one : asked_.drain())
       take(one);
     read_what_arrived();
+    // What was chosen since the last frame, kept for the conversation it was
+    // chosen in and for no other: said with the next message said in it.
+    for (attachment &one : chosen_.take()) {
+      if (!root_.opened)
+        continue;
+      if (held_for_ != *root_.opened) {
+        held_.clear();
+        held_for_ = *root_.opened;
+      }
+      held_.push_back(std::move(one));
+    }
     // Whether what a wire is given of this conversation can be given shorter:
     // what every answer but the last thought, and nothing where it has been
     // asked to be given short of it already.
@@ -293,9 +317,10 @@ public:
           return one.id == *root_.opened && one.given_short;
         }) &&
         logic::anything_to_compact_of(root_.messages, *root_.opened);
-    scene_.root().again(look_, root_, shown_, how_, query_, to_compact, dark_,
-                        settings_, design_, system_, more_, drawer_,
-                        thinking_menu_, width_, height_, &asked_);
+    scene_.root().again(look_, root_, shown_, how_, query_, to_compact,
+                        chosen_.any(), held_, dark_, settings_, design_,
+                        system_, more_, drawer_, thinking_menu_, attach_menu_,
+                        width_, height_, &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -345,6 +370,14 @@ private:
     moment began;
   };
   std::optional<answer_coming> answering_;
+
+  // What was chosen for this conversation and not said yet: given away whole
+  // to the one message that asks for it, and to nothing said after it.
+  [[nodiscard]] std::vector<attachment> held_of(const conversation_id &chat) {
+    if (held_for_ != chat)
+      return {};
+    return std::exchange(held_, {});
+  }
 
   // Asked of a model, where anything here can carry the asking. Today nothing
   // can anywhere but a page -- that is what `carrying::any` says -- and where
@@ -622,6 +655,12 @@ private:
   // and to nothing else, because it is the composer's own menu and not a
   // page.
   bool thinking_menu_ = false;
+  bool attach_menu_ = false;
+  // What this machine chooses files with, and what it has chosen for the
+  // conversation it is being written in since the last message was sent.
+  platform::choosing chosen_;
+  std::vector<attachment> held_;
+  conversation_id held_for_;
   moment said_count_ = 1;
   std::size_t chat_count_ = 0;
 

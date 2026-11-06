@@ -67,10 +67,11 @@ struct app_window : scene::Node {
   // Everything drawn again from the model, for this size of window.
   void again(const paints &look, const chats_root &root, const looks &shown,
              const asking &how, const std::string &query, bool to_compact,
-             bool dark, bool settings_open,
+             bool can_choose, std::span<const attachment> held, bool dark,
+             bool settings_open,
              bool design_open, bool prompt_open, bool more_open,
-             bool drawer_open, bool thinking_open, float width,
-             float height,
+             bool drawer_open, bool thinking_open, bool attach_open,
+             float width, float height,
              app::requests *asked) {
     // The conversation the window has open, as it is named: none of them,
     // where none is open.
@@ -184,7 +185,8 @@ struct app_window : scene::Node {
                      .height = composer_height + 2.0f * edge,
                      .visible = in_chat});
     if (open_chat)
-      fComposer.again(look, *open_chat, how, to_compact, asked, thinking_open);
+      fComposer.again(look, *open_chat, how, to_compact, can_choose, held,
+                      asked, thinking_open, attach_open);
     // The settings page, over everything, when it is opened.
     if (settings_open)
       fSettings.again(asked, look, shown, how, answering, dark, width,

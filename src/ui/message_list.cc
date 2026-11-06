@@ -64,6 +64,9 @@ inline constexpr std::size_t foot_count = 6;
 // to, and no wider than three quarters of the room.
 struct bubble : nodes::Stack {
   nodes::Text fBody{"", 15.0f, 0u};
+  // What was said with this message: one line of the names of the files that
+  // were chosen for it, or nothing at all where nothing was.
+  nodes::Text fKept{"", 12.0f, 0u};
   nodes::Text fTime{"", 11.0f, 0u};
 
   bubble() {
@@ -78,6 +81,7 @@ struct bubble : nodes::Stack {
                                           bubble_pad_y, bubble_pad_x}});
     fStack = {.direction = nodes::direction::vertical{}, .spacingY = 2.0f};
     fBody.apply({.autoSize = scene::axes::kBoth});
+    fKept.apply({.autoSize = scene::axes::kBoth, .maxWidth = 240.0f});
     fTime.apply(
         {.autoSize = scene::axes::kBoth, .alignSelf = scene::align::kEnd});
   }
@@ -85,11 +89,12 @@ struct bubble : nodes::Stack {
   void blank() {
     this->setVisible(false);
     fBody.setText("");
+    fKept.setText("");
     fTime.setText("");
   }
 
   void again(const paints &look, std::string_view said, std::string_view when,
-             float widest) {
+             float widest, std::span<const attachment> kept = {}) {
     this->setVisible(true);
     // Two ways at once that this one is the reader's: it stands on the right,
     // and the corner of it on that side, at its foot, is squarer than the
@@ -106,12 +111,27 @@ struct bubble : nodes::Stack {
     fBody.setFontSize(look.size);
     fBody.apply({.autoSize = scene::axes::kBoth,
                  .maxWidth = widest - 2.0f * bubble_pad_x});
+    // What was said with it, under its words: every name of it in one line,
+    // and no line at all where it was said with nothing.
+    std::string names;
+    for (const attachment &one : kept) {
+      if (!names.empty())
+        names += ", ";
+      names += one.name;
+    }
+    fKept.setVisible(!kept.empty());
+    fKept.setText(names);
+    fKept.setColour(look.on_sent & 0xd0ffffffu);
+    fKept.setFontSize(look.size - 2.0f);
+    fKept.apply({.autoSize = scene::axes::kBoth,
+                 .maxWidth = widest - 2.0f * bubble_pad_x});
     fTime.setText(std::string(when));
     fTime.setColour(look.on_sent & 0xb0ffffffu);
   }
 
   void forEachChild(auto &&f) {
     f(fBody);
+    f(fKept);
     f(fTime);
   }
 };
@@ -320,7 +340,7 @@ struct reader_row : nodes::Stack {
         {.fillX = true,
          .autoSize = scene::axes::kY,
          .margin = scene::Margin{head ? run_gap : 0.0f, 0.0f, 0.0f, 0.0f}});
-    fBubble.again(look, said.text, clock_of(said.sent), widest);
+    fBubble.again(look, said.text, clock_of(said.sent), widest, said.kept);
   }
 
   void forEachChild(auto &&f) { f(fBubble); }

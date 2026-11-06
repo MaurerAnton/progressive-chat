@@ -6,6 +6,7 @@ export module pchat.logic.composer;
 
 import std;
 import pchat.core;
+import pchat.core;
 import pchat.tokens;
 
 export namespace pchat::logic {
@@ -14,7 +15,11 @@ export namespace pchat::logic {
 // and whether it has been opened out to the whole window.
 struct composer_state {
   std::string text;
-  std::vector<std::string> attachments;
+  // What the reader chose to say with the next message, kept beside what was
+  // written: named, said to be of some kind, and whole (pchat.core,
+  // `attachment`). Enough to send on its own -- what is chosen can be said
+  // without a word written beside it.
+  std::vector<attachment> attachments;
   std::optional<message_id> replies_to;
   bool expanded = false;
   friend bool operator==(const composer_state&, const composer_state&) = default;
@@ -33,7 +38,7 @@ struct composer_state {
 struct sending_request {
   conversation_id chat;
   std::string text;
-  std::vector<std::string> attachments;
+  std::vector<attachment> attachments;
   std::optional<message_id> replies_to;
 };
 
@@ -56,7 +61,8 @@ struct sent_message {
                .text = std::move(asking.text),
                .sent = when,
                .state = delivery::sending,
-               .replies_to = std::move(asking.replies_to)};
+               .replies_to = std::move(asking.replies_to),
+               .kept = std::move(asking.attachments)};
     // What the reader asked for, worth what Agora's counter says it is worth,
     // counted where it is written rather than at some later projection.
     said.tokens = static_cast<std::uint32_t>(pchat::tokens::of(said.text));
