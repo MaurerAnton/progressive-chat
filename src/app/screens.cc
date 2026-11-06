@@ -225,6 +225,11 @@ public:
             // pressed for, kept inside the lines it is said to have
             // (pchat.config, `asking`).
             [&](const set_generation &asking) { how(asking.field, asking.value); },
+            // Thinking switched, and how hard it is to think: carried into the
+            // asking every answer made from now on is written with, and so
+            // into every body sent for one.
+            [&](const set_thinking &asking) { how_ = set_of(how_, asking.on); },
+            [&](const set_effort &asking) { how_ = set_of(how_, asking.how); },
             // A tool switched: one of the three this program owns, and what
             // it is switched to.
             [&](const set_tool &asking) {
