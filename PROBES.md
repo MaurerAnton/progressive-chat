@@ -146,11 +146,18 @@ the tree, and the shortest way to write a new one is to read one of them.
 Said here because a probe's answer is only worth its minutes once, and asking
 again should be a choice:
 
-* A page read at 1280 by 900, isolated in a worker as a host would have it,
-  starts, and says the whole of the design.
-* One read at 390 by 844 has never started for anybody. Which of the three
-  things that differ about it -- how wide the room is, whether the browser
-  says it is a phone, whether the worker that isolates the client is kept --
-  is what stops it, is being asked apart at the time this is written.
+* A page read at 1280 by 900 starts, and says the whole of the design.
+* **What stops a page is not how wide it is, but whether it is isolated.**
+  One read at 390 by 844 has never started, and the width was blamed for it
+  for a whole day. Asked apart now -- how wide the room is, whether the
+  browser says it is a phone, and whether the worker that isolates the client
+  is kept -- the same page starts at 390 as at 1280 whenever the worker is
+  kept, and starts at no width at all when it is blocked. The client is
+  linked with threads, and threads are a page's only with the headers that
+  worker answers with; what the tester's own `painted-narrow` asks for is
+  therefore a page that cannot start, whichever room it is read in. This is
+  said again in the readme, of a host that only serves files.
 * Nothing of the page is ever read by guessing where something stands: what
-  is to be pressed is looked for by what it says.
+  is to be pressed is looked for by what it says -- though several things say
+  the same words, and which of them a press belongs to is found by pressing
+  them in turn until the page answers.
