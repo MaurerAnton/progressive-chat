@@ -51,7 +51,7 @@ SAID(tokens, the_carried_vocabulary_prices_what_the_reference_prices) {
   if (!file.good()) return;
   file.seekg(0, std::ios::end);
   const auto bytes = static_cast<std::streamoff>(file.tellg());
-  EXPECT_GT(bytes, std::streamoff{0});
+  EXPECT_LT(std::streamoff{0}, bytes);
   if (bytes <= 0) return;
   std::string text(static_cast<std::size_t>(bytes), '\0');
   file.seekg(0, std::ios::beg);
@@ -98,7 +98,7 @@ SAID(tokens, the_carried_vocabulary_prices_what_the_reference_prices) {
   }
   // The reference is twenty-eight pairs today; that it found any at all is the
   // thing worth saying, and every pair found was checked against the counter.
-  EXPECT_GT(checked, std::size_t{0});
+  EXPECT_LT(std::size_t{0}, checked);
 }
 
 int main() { return pchat::tests::run(); }
