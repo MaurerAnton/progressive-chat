@@ -111,6 +111,10 @@ struct set_generation {
   asking_what field = asking_what::temperature;
   double value = 0.0;
 };
+// The three dots beside the answerer's circle, opened or closed: the menu of
+// what the next answer is asked with (design-doc.md, "The foot"). It is this
+// card's own, and stands over nothing else in the window.
+struct toggle_thinking {};
 // Thinking before an answer, and how hard it is to think: the first two of
 // the things a three-dot menu says (design-doc.md, "The editor's row"), read
 // into what every wire is asked for from then on.
@@ -145,6 +149,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              toggle_more, open_design, close_design,
                              pick_seed, set_amoled, set_font_scale, pick_theme,
                               set_generation, set_thinking, set_effort, set_tool,
+                             toggle_thinking,
                               set_answerer, copy_text>;
 
 class requests {
