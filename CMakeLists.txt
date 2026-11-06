@@ -275,6 +275,9 @@ target_sources(pchat_tools PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
 target_link_libraries(pchat_tools PUBLIC pchat_core pchat_json pchat_provider)
 
 add_library(pchat_provider)
+# What the providers bring of their own: folders under src/provider/, each one
+# saying what it adds here (cmake/providers.cmake).
+include(cmake/providers.cmake)
 target_sources(pchat_provider PUBLIC FILE_SET CXX_MODULES BASE_DIRS src
   FILES src/provider.cc src/provider/stream.cc src/provider/run.cc
         src/provider/loop.cc)
