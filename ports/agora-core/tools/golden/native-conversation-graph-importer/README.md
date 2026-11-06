@@ -53,4 +53,3 @@ source).
 ```sh
 ```
 
-`javac` must be on `PATH` (it compiles the vendored Android JSON sources).

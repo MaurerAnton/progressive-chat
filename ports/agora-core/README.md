@@ -18,7 +18,6 @@ core/
 ├── src/                        implementations + generated Unicode tables
 ├── tests/                      host test binary (ctest), fixtures from the app tree
 └── tools/
-    ├── UnicodeTableGen.java    emits src/unicode_tables.generated.hpp from the JVM's tables
     ├── dump_pieces.cpp         C++ half of the parity stand
     └── golden/                 corpus, golden counts, Kotlin dumper, parity script
 ```
@@ -33,8 +32,8 @@ ctest --test-dir core-build --output-on-failure
 
 The binaries are `core-build/tests/agora_core_tests`, the parity tool `core-build/agora_core_dump`,
 the submission receivers `core-build/agora_server` (modes: `rating`, `crash`, `patch-nginx` -
-they replace the Python scripts documented under `server/`), and the development tools
-`core-build/agora_icon` and `core-build/agora_utf8_host_test`. The tests read fixtures straight
+they replace the Python scripts documented under `server/`), and the development tool
+`core-build/agora_icon`. The tests read fixtures straight
 from the app tree, so run the commands from the repository root.
 
 ## How parity is held
@@ -155,8 +154,7 @@ parity tests in `core/tests/` — a drifting port is a failing build, not a surp
   toolchain.
 - Numeric behaviour is copied, not reinterpreted: same rounding, same clamping, same fallbacks,
   same "skip malformed" rules. When in doubt, read the Kotlin file before writing C++.
-- `src/unicode_tables.generated.hpp` is generated — regenerate with
-  `javac -d /tmp core/tools/UnicodeTableGen.java && java -cp /tmp UnicodeTableGen core/src/unicode_tables.generated.hpp`
-  rather than editing by hand.
+- `src/unicode_tables.generated.hpp` is generated data — emitted once from the JVM's own
+  tables, read here like the golden traces, and not edited by hand.
 - New module = headers in `include/agora/core/`, sources in `src/`, tests that compare against
   the Kotlin original on real data.

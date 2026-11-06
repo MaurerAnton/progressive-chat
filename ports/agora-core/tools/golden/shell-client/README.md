@@ -27,7 +27,6 @@ message table.
      "invalid"` opts out to pin the auth-failure message); non-2xx and plain bodies pass
      through verbatim so HTTP-error text stays deterministic.
 2. **`DebugLog.kt`** — silent no-op (the real object wraps `android.util.Log`).
-3. **`Base64.java`** — vendored `android.util.Base64`, identical to the shell-crypto stand's.
 
 Fixed stand identity: one X25519 keypair is embedded as constants (`SERVER_PUBLIC_KEY` in the
 driver, the matching PKCS#8 in the double), so handshake `public_key`, `decodePublicKey` and
@@ -58,7 +57,3 @@ payloads for the plain-text endpoints — stays fully pinned.
 
 ```sh
 ```
-
-The kotlinx-coroutines jar is located next to the serialization jars (override with
-`KOTLINX_COROUTINES_JAR`); the serialization compiler plugin is required for
-`ConchHandshake.@Serializable`; `platform/Base64.java` is compiled with `javac` first.

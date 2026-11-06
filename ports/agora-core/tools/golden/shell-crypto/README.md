@@ -14,7 +14,6 @@ every trace byte for byte **after the same non-determinism mask** is applied to 
 | `scenarios/*.json` | One case per file, 27 frozen scenarios |
 | `golden/*.trace` | Frozen canonical output, one per scenario (already masked) |
 | `agora_scenarios shell-crypto` | Generates the scenarios (deterministic; rerun after editing) |
-| `platform/Base64.java` | The substituted `android.util.Base64` surface (vendored) |
 | `agora_scenarios mask-trace <file>` | Masks non-deterministic trace fields **with their length** on both sides |
 
 ## What is pinned
@@ -75,8 +74,8 @@ is why the mask distinguishes them).
 
 ## Scope and boundaries
 
-* `ShellCrypto.kt` compiles verbatim. The only substituted platform type is
-  `android.util.Base64` (`platform/Base64.java`), which delegates to `java.util.Base64`.
+* `ShellCrypto.kt` compiles verbatim. The only substituted platform type was
+  `android.util.Base64`, which delegates to `java.util.Base64`.
   **Boundary**: real Android rejects malformed input with android's own descriptions, the vendored
   stand type raises `java.util.Base64`'s `Illegal base64 character <hex>` — the traces pin the
   stand type's text, and the C++ port reproduces it (`base64_decode` in `crypto_primitives.cpp`).

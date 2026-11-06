@@ -162,7 +162,7 @@ std::string illegal_char_error(char c) {
 }  // namespace
 
 Base64Decode base64_decode(std::string_view input, bool url_safe) {
-    // platform/Base64.java: URL_SAFE maps -_ to +/ first, then appends the missing padding,
+    // URL_SAFE maps -_ to +/ first, then appends the missing padding,
     // so java.util.Base64.Decoder always scans a whole number of four-character quanta.
     std::string mapped(input);
     if (url_safe) {

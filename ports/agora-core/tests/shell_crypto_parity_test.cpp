@@ -156,7 +156,7 @@ std::string b64url(const crypto::PublicKeyRaw& raw) {
                                /*url_safe=*/true, /*padding=*/false);
 }
 
-// java.util.Base64 URL decoder (as vendored by platform/Base64.java): accepts padded and
+// java.util.Base64 URL decoder: accepts padded and
 // unpadded input, maps -/ back to +/ and rejects characters outside the alphabet.
 std::vector<std::uint8_t> url_decode(const std::string& input, const std::string& scenario) {
     const prim::Base64Decode decoded = prim::base64_decode(input, /*url_safe=*/true);

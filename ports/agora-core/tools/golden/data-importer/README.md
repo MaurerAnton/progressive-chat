@@ -16,7 +16,8 @@ ChatDao/entity cluster. Four boundaries are substituted:
 
 1. `android.util.JsonReader/JsonWriter/JsonScope/MalformedJsonException` +
    `StringPool` — vendored verbatim from AOSP by the
-   `native-conversation-graph-source` stand, compiled with `javac`;
+   `native-conversation-graph-source` stand, compiled with `javac` then (both now gone
+   with the Java side);
 2. `DataExporter.ExportCategory` — lifted byte-for-byte by
    `agora_extract export-category` (it is the decision-map key; the export root
    is not pulled in);

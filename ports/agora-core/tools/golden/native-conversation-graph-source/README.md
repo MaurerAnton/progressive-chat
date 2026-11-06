@@ -18,9 +18,10 @@ through.
 1. **`android.util.JsonReader` / `JsonWriter` / `JsonToken` / `JsonScope` /
    `MalformedJsonException` + `com.android.internal.util.StringPool`** — vendored **verbatim**
    from `android.googlesource.com` (`platform/frameworks/base`, `core/java/android/util/…`,
-   fetched from `refs/heads/main`) in `vendor/android-util-json/`. The single documented
-   build-time edit (`agora_scenarios prepare-vendor`) drops the `@android.ravenwood.annotation…` lines,
-   which only exist for Android's internal test harness. `javac` compiles them into the stand
+   fetched from `refs/heads/main`) once in `vendor/android-util-json/`, now gone with the Java
+   side. The single documented
+   build-time edit (`agora_scenarios prepare-vendor` back then) dropped the `@android.ravenwood.annotation…` lines,
+   which only exist for Android's internal test harness. `javac` compiled them into the stand
    classpath, so the streaming parse, the strict-mode acceptance rules, the `line N column M`
    error arithmetic and the `Double.toString` emission the spool re-serialisation depends on
    are Android's own code, not a reimplementation.
@@ -59,4 +60,3 @@ strings (accepted, re-escaped on write).
 ```sh
 ```
 
-`javac` (any modern JDK) must be on `PATH`; it compiles the vendored Android sources only.
