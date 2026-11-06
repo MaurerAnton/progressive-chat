@@ -11,9 +11,7 @@ trace is frozen under `golden/`; the C++ port (`agora::core::conch::parse_conch_
 | --- | --- |
 | `scenarios/*.json` | One case per file, 42 frozen edge cases |
 | `golden/*.trace` | Frozen canonical output, one per scenario |
-| `ConchSseTraceDump.kt` | The stand driver (feeds the parser raw SSE lines) |
 | `agora_extract shell-prefix` | Lifts `shellUtf8Prefix` + its byte budget out of `ShellClient.kt` |
-| `run_golden.sh` | Extracts, compiles and regenerates or verifies the traces |
 | `agora_scenarios conch-sse` | Generates the scenarios (deterministic; rerun after editing) |
 
 ## What is pinned
@@ -89,11 +87,6 @@ Escaping: `\` `|` `;` `\n` `\r` `\t` → `\\` `\p` `\s` `\n` `\r` `\t`.
 ## Regenerating
 
 ```bash
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-JAVA_HOME=/path/to/jdk17 KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios conch-sse core/tools/golden/conch-sse                                                                                  # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's `build/` (its git-ignored scratch, including the extracted
-`ShellPrefix.kt`) before each run, so runs are idempotent. As with the other stands, kotlinc ≤ 1.9
-cannot read the class file version of newer JDKs, hence the explicit `JAVA_HOME`.

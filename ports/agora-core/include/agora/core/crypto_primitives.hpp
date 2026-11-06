@@ -59,8 +59,8 @@ struct Base64Decode {
 };
 
 /**
- * Decoder with java.util.Base64.Decoder semantics (the vendored platform/Base64.java first
- * maps -_ to +/ for URL_SAFE input, appends the missing padding, then decodes): characters
+ * Decoder with java.util.Base64.Decoder semantics (URL_SAFE first maps -_ to +/,
+ * then appends the missing padding, then decodes): characters
  * outside the alphabet fail with "Illegal base64 character <hex>" and malformed padding fails
  * with "Illegal base64 character 3d".
  */

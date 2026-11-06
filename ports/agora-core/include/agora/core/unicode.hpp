@@ -8,7 +8,7 @@ namespace agora::core::unicode {
 
 // Classification bits, one byte per codepoint. The tables are generated from the JVM's own
 // Unicode data so that this port classifies characters exactly like the Kotlin implementation
-// it replaces (see core/tools/UnicodeTableGen.java).
+// it replaces (emitted once by the generator that stood in core/tools/, now gone).
 enum Flag : std::uint8_t {
     kLetter = 1 << 0,        // \p{L}: Lu Ll Lt Lm Lo
     kNumber = 1 << 1,        // \p{N}: Nd Nl No

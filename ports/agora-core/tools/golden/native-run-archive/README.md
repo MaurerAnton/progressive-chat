@@ -14,11 +14,7 @@ carry no runtime behaviour the policy can observe.
 | --- | --- |
 | `scenarios/*.json` | 32 terminalize/ownership/order cases |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `NativeRunArchiveTraceDump.kt` | Driver: runs the policy, prints every observable field |
-| `platform/RoomAnnotations.kt` | Stand-local Room annotation declarations |
-| `platform/ChatEntity.kt` | Minimal `chats` table referenced by RunEntity's foreign key |
 | `agora_scenarios native-run-archive` | Deterministic scenario generator |
-| `run_golden.sh` | Compiles, freezes (`--freeze`) or verifies the traces |
 
 ## What is pinned
 
@@ -73,10 +69,6 @@ and `out`. Every Run field is printed, so a port that mutates the wrong column i
 ## Regenerating
 
 ```bash
-export JAVA_HOME=/path/to/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh          # verify
-KOTLINC=/path/to/kotlinc KOTLINX_JARS=core.jar:json.jar ./run_golden.sh --freeze # regenerate
 core/build/agora_scenarios native-run-archive core/tools/golden/native-run-archive                                                         # rewrite scenarios
 ```
 
-`run_golden.sh` wipes the stand's git-ignored `build/` before each run, so runs are idempotent.

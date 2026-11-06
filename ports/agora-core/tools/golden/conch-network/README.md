@@ -7,16 +7,11 @@ Parity pin for the shell transport policy in `util/ConchNetwork.kt` and the boun
 
 | Source | Why |
 | --- | --- |
-| `app/.../util/ConchNetwork.kt` | the module under test: client policy, GET/POST request construction, per-call timeout, response classification and body limit selection |
-| `app/.../api/BoundedWireRead.kt` | the text/line transport bounds and their exact failure messages |
 
 ## Substituted platform halves
 
 | Substitute | Contract |
 | --- | --- |
-| `platform/okhttp3/OkHttp.kt` | the subset of OkHttp 5 that `ConchNetwork.kt` touches: `Request.Builder.header` replaces case-insensitively, `Headers.get` returns the last matching value, `Response.isSuccessful` is 200..299, `Call.timeout()` records the per-call timeout. It records the request instead of opening a socket. |
-| `platform/okio/Okio.kt` | `BufferedSource` over scripted bytes, including `request(n)`, `readUtf8`, `exhausted`, `readUtf8LineStrict` and `buffer.size`. `ByteSource.declaredSize` may exceed the materialised bytes so an over-limit rejection is pinned without allocating 40 MiB. |
-| `platform/HttpClient.kt` | `com.newoether.agora.api.HttpClient.client` — the provider-wide base client. The real object owns provider timeouts, proxy selection and diagnostics; only its use as the base for `ConchNetwork`'s builder matters here. |
 
 Sockets, TLS, redirects, proxy selection, connection reuse and the actual OkHttp call stay on the
 platform side. The core port owns the policy and consumes a `Transport`/`WireSource`; the app
@@ -45,6 +40,4 @@ decodes them like okio's `readUtf8` (the traces use valid UTF-8 bodies).
 ## Usage
 
 ```sh
-KOTLINX_JARS=... ./run_golden.sh            # verify against the frozen traces
-KOTLINX_JARS=... ./run_golden.sh --freeze   # regenerate golden/
 ```

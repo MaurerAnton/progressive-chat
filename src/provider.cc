@@ -7,6 +7,9 @@
 // them is the platform's to do, later, and a test's -- so every part of it can
 // be said without a network, which is the only way a protocol is worth
 // writing at all.
+module;
+#include "provider/anthropic/wire.h"
+
 export module pchat.provider;
 
 import std;
@@ -83,9 +86,18 @@ struct endpoint {
 // Two wires wear OpenAI's shape: the chat one everyone answers and the
 // responses one only some do. Which is which is said by how the base ends,
 // the same way their own docs put it.
-enum class wire { chat, responses };
+// Two wires wear OpenAI's shape: the chat one everyone answers and the
+// responses one only some do -- which of those two is said by how the base
+// ends, the same way their own docs put it. A third shape is Anthropic's own,
+// and no base ending says where that one is asked: the family does, named by
+// the answerer the model is.
+enum class wire { chat, responses, anthropic };
 
 [[nodiscard]] inline wire wire_of(const endpoint &one) {
+  // Who is asked speaks before the base's ending does: Anthropic's family
+  // keeps its own wire wherever its base stands, suffixes and all.
+  if (family_of(one.model) == "anthropic")
+    return wire::anthropic;
   const std::string_view base(one.base);
   if (base.ends_with("/v1beta") || base.ends_with("/responses"))
     return wire::responses;
@@ -93,7 +105,15 @@ enum class wire { chat, responses };
 }
 
 [[nodiscard]] inline std::string_view path_of(wire one) {
-  return one == wire::chat ? "/chat/completions" : "/responses";
+  switch (one) {
+  case wire::chat:
+    return "/chat/completions";
+  case wire::responses:
+    return "/responses";
+  case wire::anthropic:
+    return "/messages";
+  }
+  return "/chat/completions";
 }
 
 [[nodiscard]] inline std::string url_of(const endpoint &one) {
@@ -108,6 +128,14 @@ enum class wire { chat, responses };
 headers_of(const endpoint &one) {
   std::vector<std::pair<std::string, std::string>> out{
       {"Content-Type", "application/json"}};
+  if (wire_of(one) == wire::anthropic) {
+    // Where its own wire asks for the key, and its own date beside it: a wire
+    // that has a version says so, and this one does.
+    if (!one.key.empty())
+      out.emplace_back("x-api-key", one.key);
+    out.emplace_back("anthropic-version", "2023-06-01");
+    return out;
+  }
   if (!one.key.empty())
     out.emplace_back("Authorization", "Bearer " + one.key);
   return out;
@@ -187,6 +215,93 @@ struct wanted {
                 .frequency_penalty = how.often};
 }
 
+// What an anthropic wire wants said to it: the same things in its own words --
+// the turns as content blocks, what it is told as a field named `system`, and
+// the choices written in the order its own writer writes them (port
+// anthropic_request.cpp, write_request_body). What this shape has no field for
+// is not said: thinking arrives with budgets only where the asking carries them
+// through the preparation this tree does not do yet, and the penalties a chat
+// wire takes are not Anthropic's.
+template <std::ranges::forward_range Turns>
+  requires std::same_as<std::ranges::range_value_t<Turns>, turn>
+[[nodiscard]] inline std::string anthropic_body_of(const endpoint &one, Turns &&turns,
+                                                   const wanted &wants = {}) {
+  json::writing out;
+  out.thing();
+  out.name("model").text(one.model);
+  out.name("messages").list();
+  std::string system;
+  for (const turn &said : turns) {
+    if (said.who == role::system) {
+      if (!system.empty())
+        system += "\n\n";
+      system += said.text;
+      continue;
+    }
+    out.thing().name("role").text(said_by(said.who)).name("content").list();
+    if (said.who == role::tool && !said.own.empty()) {
+      // One answered call, as the wire reads it back: against the call it
+      // answers, and nothing else in this message.
+      out.thing()
+          .name("type").text("tool_result")
+          .name("tool_use_id").text(said.own)
+          .name("content").text(said.text)
+          .shut();
+    } else if (!said.calls.empty()) {
+      // What it answered, then every call it stopped to ask for, each block
+      // its own: the wire keeps text and tool_use side by side.
+      if (!said.text.empty())
+        out.thing().name("type").text("text").name("text").text(said.text).shut();
+      for (const tool_call &call : said.calls)
+        out.thing()
+            .name("type").text("tool_use")
+            .name("id").text(call.id)
+            .name("name").text(call.name)
+            .name("input").raw(call.arguments.empty() ? "{}" : call.arguments)
+            .shut();
+    } else {
+      out.thing().name("type").text("text").name("text").text(said.text).shut();
+    }
+    out.shut();
+    out.shut();
+  }
+  out.shut();
+  if (!system.empty())
+    out.name("system").text(system);
+  // The ceiling the model family allows, and the asking's own count under it:
+  // Anthropic reads max_tokens on every body, so one is always said.
+  const long long ceiling = pchat_anthropic_ceiling(one.model.c_str());
+  const std::int64_t room =
+      wants.max_tokens ? std::min<std::int64_t>(*wants.max_tokens, ceiling) : ceiling;
+  out.name("max_tokens").number(room);
+  out.name("stream").truth(wants.stream);
+  if (wants.temperature)
+    out.name("temperature").number(*wants.temperature);
+  if (wants.top_p)
+    out.name("top_p").number(*wants.top_p);
+  if (!wants.tools.empty()) {
+    out.name("tools").list();
+    for (const offered &one_tool : wants.tools) {
+      out.thing();
+      out.name("name").text(one_tool.name);
+      out.name("description").text(one_tool.told);
+      out.name("input_schema").thing().name("type").text("object");
+      out.name("properties").thing();
+      for (const auto &[takes, said] : one_tool.taken)
+        out.name(takes).thing().name("type").text("string").name("description").text(said).shut();
+      out.shut();
+      out.name("required").list();
+      for (const auto &[takes, said] : one_tool.taken)
+        out.text(takes);
+      out.shut();
+      out.shut().shut();
+    }
+    out.shut();
+  }
+  out.shut();
+  return out.take();
+}
+
 // What a chat wire wants said to it: the model, that it is asked to stream,
 // the turns, and that it says what it cost at the end of the stream and not
 // only in the answer no stream gives.
@@ -194,6 +309,10 @@ template <std::ranges::forward_range Turns>
   requires std::same_as<std::ranges::range_value_t<Turns>, turn>
 [[nodiscard]] std::string body_of(const endpoint &one, Turns &&turns,
                                   const wanted &wants = {}) {
+  // The first shape is this one; where the family asks for Anthropic's own
+  // words instead, they are what go out.
+  if (wire_of(one) == wire::anthropic)
+    return anthropic_body_of(one, turns, wants);
   json::writing out;
   out.thing();
   out.name("model").text(one.model);

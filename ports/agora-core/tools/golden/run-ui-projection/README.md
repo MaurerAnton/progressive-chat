@@ -12,9 +12,7 @@ compile-only Compose/markdown annotations use the `citations` stand's documented
 | --- | --- |
 | `scenarios/*.json` | 26 cases: boundaries, branches, protocol rows, run groups, selection, fuzz |
 | `golden/*.trace` | Frozen Kotlin output, one per scenario |
-| `RunUiProjectionTraceDump.kt` | Driver: resolves the boundaries and renders the presentation map |
 | `agora_scenarios run-ui-projection` | Deterministic scenario generator |
-| `run_golden.sh` | Compiles, freezes (`--freeze`) or verifies the traces |
 
 ## What is pinned
 
@@ -47,9 +45,5 @@ compile-only Compose/markdown annotations use the `citations` stand's documented
 ## Running
 
 ```bash
-export JAVA_HOME=/home/user/jdk17; export PATH=$JAVA_HOME/bin:$PATH
-KOTLINC=/home/user/agora-toolchain/kotlinc-2.3.21/bin/kotlinc \
-KOTLINX_JARS=/home/user/agora-toolchain/jars/kotlinx-serialization-core-jvm-1.11.0.jar:/home/user/agora-toolchain/jars/kotlinx-serialization-json-jvm-1.11.0.jar \
-./run_golden.sh            # verify
 # add --freeze to regenerate golden/
 ```
