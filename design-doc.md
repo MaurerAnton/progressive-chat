@@ -127,8 +127,15 @@ model did before it answered: **how long it took**, **how many tool calls it
 made**, and — folded inside that line — **its thinking, as greentext**: what it
 wrote while it was not yet answering, in one green of its own, which is the
 colour it keeps when the fold is opened. Folded, it is one line under which
-nothing is read; unfolded, the greentext stands under it, and the answer below
-it moves down by what it came to.
+nothing is read; unfolded, the greentext stands under it, and **every call it
+stopped to ask for** stands under that, one line each — the tool it asked, what
+it asked of it, and what it was given back, those three being what the count
+above them was counting — and the answer below it moves down by what they came
+to.
+
+A call nothing was given back with says nothing of what it was given: nothing
+here runs a tool, and what the sample gives them is written like any other of
+its words.
 
 ### Under it
 
@@ -240,9 +247,11 @@ name, waiting for the thing behind it.
   held in a shape.
 * It does not put the time of an answer beside every line of it: only yours
   keep a time, and it is kept inside them.
-* It does not open what it folds. The line above an answer -- how long it
-  took, how many calls it made -- is written as one line and stays one: the
-  thinking under it and the calls it counts are not read anywhere yet.
+* It does not open what it folds at every press (2026-11-06: a press inside
+  the room is not answered by everything standing in it yet -- see TODO.md).
+  The line above an answer -- how long it took, how many calls it made -- is
+  one line; what it folds is read: its thinking, and one line to each of the
+  calls it counts.
 * It does not yet count anything for real. Until the program's own back end is
   here, what fills the room is sample: the numbers said above are written in it
   like any other words, and nothing measures them.

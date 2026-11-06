@@ -93,13 +93,28 @@ struct conversation {
   friend bool operator==(const conversation &, const conversation &) = default;
 };
 
+// One tool it stopped to ask for on the way to an answer: what it asked for --
+// the tool's own name, and what it asked of it -- and, where something came
+// back, what it was given. Nothing here asks for one, and nothing here answers
+// for one: what came back is said when something gives it back.
+struct tool_call {
+  std::string name;
+  std::string asked;
+  std::string given;
+  friend bool operator==(const tool_call &, const tool_call &) = default;
+};
+
 // What came before an answer, where one thought before it spoke: how long
-// it was thinking, how many tool calls it made on the way, and what it
-// wrote to itself while it was (its greentext).
+// it was thinking, what it wrote to itself while it was (its greentext), and
+// every tool it stopped to ask for, in the order it asked -- those being what
+// the calls it is said to have made are a count of.
 struct thought {
   std::int64_t took_ms = 0;
-  std::uint32_t tool_calls = 0;
   std::string said;
+  std::vector<tool_call> calls;
+  // How many tools it stopped to ask for: as many as it keeps a call of, and
+  // not a number kept beside them that could disagree with them.
+  [[nodiscard]] std::size_t tool_calls() const noexcept { return calls.size(); }
   friend bool operator==(const thought &, const thought &) = default;
 };
 

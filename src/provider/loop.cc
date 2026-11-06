@@ -53,7 +53,11 @@ public:
       said_.append("\n");
     said_.append(one.said());
     thinking_.append(one.thought());
-    calls_ += one.tool_calls();
+    // What it asked for over every round, whole and in the order it asked:
+    // a count of them is kept nowhere, for every call of every round is
+    // what the count would have counted.
+    for (const tool_call &call : one.called())
+      calls_.push_back(call);
     cost_ = usage{.in = cost_.in + one.cost().in,
                   .out = cost_.out + one.cost().out};
     ended_ = one.ended();
@@ -98,7 +102,9 @@ public:
   [[nodiscard]] std::string_view said() const { return said_; }
   [[nodiscard]] std::string_view thought() const { return thinking_; }
   [[nodiscard]] usage cost() const { return cost_; }
-  [[nodiscard]] std::size_t tool_calls() const { return calls_; }
+  // How many tools it asked for over every round: as many calls as were
+  // kept of them.
+  [[nodiscard]] std::size_t tool_calls() const { return calls_.size(); }
   [[nodiscard]] const std::optional<std::string> &trouble() const {
     return trouble_;
   }
@@ -133,7 +139,8 @@ private:
   std::string said_;
   std::string said_now_;
   std::string thinking_;
-  std::size_t calls_ = 0;
+  // Every tool every round stopped to ask for, whole.
+  std::vector<tool_call> calls_;
   usage cost_;
   std::vector<tool_call> asked_;
   provider::over ended_ = provider::over::none;

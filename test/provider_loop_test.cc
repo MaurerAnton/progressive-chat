@@ -118,7 +118,11 @@ SAID(provider_loop, what_a_tool_answered_goes_back_into_the_asking) {
   EXPECT_EQ(said.state, delivery::sent);
   // What both rounds cost, together.
   EXPECT_EQ(said.tokens, 33u);
-  EXPECT_EQ(said.before->tool_calls, 1u);
+  // The call every round asked for, kept whole: asked for in two rounds and
+  // said once, for it is one call and not two of them counted twice.
+  EXPECT_EQ(said.before->tool_calls(), 1u);
+  EXPECT_EQ(said.before->calls,
+            std::vector<tool_call>{{.name = "weather", .asked = "{}"}});
 }
 
 SAID(provider_loop, a_call_the_wire_gave_no_name_to_is_named_here) {

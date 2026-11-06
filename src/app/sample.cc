@@ -60,9 +60,19 @@ export namespace pchat::app {
        "minutes, one pan, and nothing "
        "of it was bought today.",
        1'763'000'200'000, delivery::seen, std::nullopt,
-       thought{4'200, 3,
-               "no recipe of its own known; three reads of the pantry, then "
-               "written"},
+       thought{
+           4'200,
+           "no recipe of its own known; three reads of the pantry, then "
+           "written",
+           {{.name = "pantry_read",
+             .asked = "what is in the kitchen",
+             .given = "two eggs, a lemon, half a loaf, too much butter"},
+            {.name = "recipe_search",
+             .asked = "egg, lemon, butter, toast",
+             .given = "nothing that would call itself its own"},
+            {.name = "timer_set",
+             .asked = "four minutes",
+             .given = "counting"}}},
        1'240},
       {message_id{"3"}, conversation_id{"kitchen"}, "Reader", true,
        "And if I would rather have it sweet?", 1'763'000'300'000,
@@ -73,8 +83,11 @@ export namespace pchat::app {
        "stirred over a low heat until it thickens and let to cool. Spread on "
        "the same toast.",
        1'763'000'400'000, delivery::sent, std::nullopt,
-       thought{1'900, 1,
-               "the same four things asked again, the sweet way round"},
+       thought{1'900,
+               "the same four things asked again, the sweet way round",
+               {{.name = "pantry_read",
+                 .asked = "what of it is sweet",
+                 .given = "one spoon of honey, and the rest of the lemon"}}},
        680},
       {message_id{"5"}, conversation_id{"sieve"}, "Reader", true,
        "Write me a sieve of Eratosthenes in C++ that takes its bound at run "
@@ -92,10 +105,29 @@ export namespace pchat::app {
        "either keep `bound` below "
        "that or write `p <= bound / p`.",
        1'763'000'200'000, delivery::seen, std::nullopt,
-       thought{8'700, 6,
-               "the bound written down before the loop; the overflow thought "
-               "about twice, once past "
-               "four billion; one small test compiled and run"},
+       thought{
+           8'700,
+           "the bound written down before the loop; the overflow thought "
+           "about twice, once past "
+           "four billion; one small test compiled and run",
+           {{.name = "std_lookup",
+             .asked = "vector<bool>",
+             .given = "one bit to an element, packed"},
+            {.name = "cpp_reference",
+             .asked = "vector<bool> reference type",
+             .given = "a proxy, and not a bool of its own"},
+            {.name = "overflow_check",
+             .asked = "p * p, where p is four billion",
+             .given = "past every 64-bit integer there is"},
+            {.name = "compiler_run",
+             .asked = "the sieve written above, up to 100",
+             .given = "every prime under a hundred, in order"},
+            {.name = "benchmark",
+             .asked = "the sieve up to ten million",
+             .given = "48 ms, and 320 kB of bits"},
+            {.name = "formatter",
+             .asked = "the block it is about to say",
+             .given = "eighty columns, and nothing moved out of them"}}},
        2'310},
       {message_id{"7"}, conversation_id{"notices"}, "", false,
        "Nothing of this is answered yet: what fills this is the sample, until "

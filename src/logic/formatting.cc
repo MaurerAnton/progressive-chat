@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // pchat.logic.formatting -- A message's text as the runs it is drawn in:
 // bold, italic, code, a link. Read once here, and the screen draws runs and
-// never looks at a star again.
+// never looks at a star again. And how long a thought took, and what one
+// tool call says of itself on its line: said once here, rather than where it
+// is drawn, because the same two are said in more than one place.
 export module pchat.logic.formatting;
 
 import std;
+import pchat.core;
 
 export namespace pchat::logic {
 
@@ -23,6 +26,29 @@ struct run {
   std::string_view target;   // where a link goes
   friend bool operator==(const run&, const run&) = default;
 };
+
+// How long a thought took, as it is said under an answer: its seconds where
+// it took more than one, its milliseconds where it did not.
+[[nodiscard]] inline std::string took_of(std::int64_t took_ms) {
+  if (took_ms >= 1'000) {
+    const std::int64_t tenths = (took_ms / 100) % 10;
+    return std::to_string(took_ms / 1'000) + "." + std::to_string(tenths) +
+           " s";
+  }
+  return std::to_string(took_ms) + " ms";
+}
+
+// What one call it stopped to ask for says of itself: the tool it asked, what
+// it asked of it, and what it was given back where anything was given -- the
+// three of them being what the count beside them counted.
+[[nodiscard]] inline std::string call_of(const tool_call &one) {
+  std::string said = one.name;
+  if (!one.asked.empty())
+    said.append(" · ").append(one.asked);
+  if (!one.given.empty())
+    said.append(" → ").append(one.given);
+  return said;
+}
 
 namespace formatting_detail {
 

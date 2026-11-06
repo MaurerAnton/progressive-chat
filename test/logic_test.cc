@@ -131,3 +131,24 @@ SAID(doc, the_design_this_build_was_made_with_is_read_whole) {
   EXPECT_TRUE(titled);
   EXPECT_TRUE(listed);
 }
+
+SAID(logic, how_long_a_thought_took_is_said_in_seconds_or_milliseconds) {
+  EXPECT_EQ(logic::took_of(4'200), std::string("4.2 s"));
+  EXPECT_EQ(logic::took_of(1'900), std::string("1.9 s"));
+  EXPECT_EQ(logic::took_of(900), std::string("900 ms"));
+}
+
+SAID(logic, a_call_is_said_as_its_name_what_it_asked_and_what_it_was_given) {
+  // What it asked, and what came back: those three, and nothing else on the
+  // line it is given.
+  EXPECT_EQ(logic::call_of({.name = "pantry_read",
+                            .asked = "what is in the kitchen",
+                            .given = "two eggs, a lemon"}),
+            std::string("pantry_read · what is in the kitchen → two eggs, a "
+                        "lemon"));
+  // Nothing given: nothing here runs one, and a call nothing was given back
+  // with says nothing of it.
+  EXPECT_EQ(logic::call_of({.name = "timer_set", .asked = "four minutes"}),
+            std::string("timer_set · four minutes"));
+  EXPECT_EQ(logic::call_of({.name = "stopped"}), std::string("stopped"));
+}

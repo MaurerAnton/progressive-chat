@@ -162,7 +162,12 @@ SAID(provider_run, the_answer_as_the_model_keeps_it) {
   EXPECT_EQ(said.tokens, 19u);
   EXPECT_TRUE(said.before.has_value());
   EXPECT_EQ(said.before->took_ms, 900);
-  EXPECT_EQ(said.before->tool_calls, 1u);
+  // The call itself, and not only that there was one: what it asked, and the
+  // name it was asked by. Nothing was given back with it -- nothing here runs
+  // one, and a call given nothing says nothing of what it was given.
+  EXPECT_EQ(said.before->tool_calls(), 1u);
+  EXPECT_EQ(said.before->calls,
+            std::vector<tool_call>{{.name = "weather", .asked = "{}"}});
   EXPECT_EQ(said.before->said,
             std::string("first the weather\n> weather({})\n"));
 }

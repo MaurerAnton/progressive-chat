@@ -19,6 +19,7 @@ import std;
 import skiff.scene;
 import skiff.nodes;
 import pchat.core;
+import pchat.logic.formatting;
 import pchat.logic.lists;
 import pchat.app.requests;
 import :theme;
@@ -47,16 +48,11 @@ inline constexpr std::size_t foot_count = 6;
 
 // ---- what the numbers read as --------------------------------------------
 
-// How long a thought took, as it is said under it: its seconds where it took
-// more than one, its milliseconds where it did not.
-[[nodiscard]] inline std::string took_of(std::int64_t took_ms) {
-  if (took_ms >= 1'000) {
-    const std::int64_t tenths = (took_ms / 100) % 10;
-    return std::to_string(took_ms / 1'000) + "." + std::to_string(tenths) +
-           " s";
-  }
-  return std::to_string(took_ms) + " ms";
-}
+// How long a thought took, and what one tool call says of itself: said in
+// logic, and not said again here, for the same two are said in more than one
+// place in this file.
+using logic::took_of;
+using logic::call_of;
 // ---- the reader's bubble --------------------------------------------------
 
 // A bubble: its own colour and corners behind two lines -- what was said, and
@@ -234,10 +230,16 @@ struct foot_row : nodes::Stack {
 
 // Folded above an answer: how long it was thinking, how many tool calls it
 // made, and -- once it is pressed open -- what it wrote to itself while it
-// was, in green, the way a thread writes it.
+// was, in green, the way a thread writes it, and every tool it stopped to ask
+// for under it, one line each: what it asked for, and what it was given back,
+// those being what the calls it says it made are a count of.
 struct history_fold : nodes::Stack {
   nodes::Text fSummary{"", 12.0f, 0u};
   nodes::Text fThought{"", 12.0f, 0u};
+  // One line to a call, and as many of them as there are calls: kept beside
+  // the fold and used again for another answer's, rather than made for every
+  // frame of every answer there is.
+  std::vector<std::unique_ptr<nodes::Text>> fCalls;
   bool fOpen = false;
 
   history_fold() {
@@ -257,12 +259,24 @@ struct history_fold : nodes::Stack {
     return true;
   }
 
+  // The line the call at `place` is said on, kept from one answer to the
+  // next: nothing of it is made again where one is already there.
+  [[nodiscard]] nodes::Text &call_at(std::size_t place) {
+    while (fCalls.size() <= place)
+      fCalls.push_back(std::make_unique<nodes::Text>("", 12.0f, 0u));
+    return *fCalls[place];
+  }
+
   void blank() {
     this->setVisible(false);
     fSummary.setText("");
     fThought.setText("");
     fOpen = false;
     fThought.setVisible(false);
+    for (auto &one : fCalls) {
+      one->setText("");
+      one->setVisible(false);
+    }
   }
 
   void again(const paints &look, const thought &before, float widest) {
@@ -271,8 +285,8 @@ struct history_fold : nodes::Stack {
                  .maxWidth = widest,
                  .background = fOpen ? look.field : look.field & 0x80ffffffu});
     fSummary.setText("Thought for " + took_of(before.took_ms) + " · " +
-                     std::to_string(before.tool_calls) +
-                     (before.tool_calls == 1 ? " tool call" : " tool calls"));
+                     std::to_string(before.tool_calls()) +
+                     (before.tool_calls() == 1 ? " tool call" : " tool calls"));
     fSummary.setColour(look.dim);
     fSummary.apply(
         {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
@@ -283,11 +297,32 @@ struct history_fold : nodes::Stack {
     fThought.setVisible(fOpen && !before.said.empty());
     fThought.apply(
         {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
+    // Every call it stopped to ask for, one line each: what it asked for,
+    // and what it was given where anything came back.
+    for (std::size_t place = 0; place < before.calls.size(); ++place) {
+      nodes::Text &line = this->call_at(place);
+      line.setText(call_of(before.calls[place]));
+      line.setColour(look.dim);
+      line.setMonospace(true);
+      // Shown while it is pressed open, and nothing of them said by a fold
+      // that is shut.
+      line.setVisible(fOpen);
+      line.apply({.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
+    }
+    // What is left of them, from an answer that asked for more than this one
+    // did: said no more, and taken no room in the fold either.
+    for (std::size_t place = before.calls.size(); place < fCalls.size();
+         ++place) {
+      fCalls[place]->setText("");
+      fCalls[place]->setVisible(false);
+    }
   }
 
   void forEachChild(auto &&f) {
     f(fSummary);
     f(fThought);
+    for (auto &one : fCalls)
+      f(*one);
   }
 };
 
@@ -377,7 +412,7 @@ struct answer_row : nodes::Stack {
       info += std::string(model) + " · ";
     info +=
         std::string(said.before ? took_of(said.before->took_ms) + " · " : "") +
-        std::to_string(said.before ? said.before->tool_calls : 0u) +
+        std::to_string(said.before ? said.before->tool_calls() : 0u) +
         " tool calls · " + tokens_said(said.tokens) + " tokens · " +
         clock_of(said.sent);
     fInfo.setText(info);

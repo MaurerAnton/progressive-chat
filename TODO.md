@@ -77,10 +77,12 @@ build and the next.
       and what is to answer them -- where a file is read and where a context
       is compacted -- is not written yet (`src/ui/composer.cc`; the design
       says which under *The editor's row*).
-- [ ] The thinking a fold opens does not say the tool calls the line above it
-      counted: `history_fold` says only what the model wrote to itself, and
-      nothing yet keeps each call it made -- what it asked for and what came
-      back -- for the fold to say one line at a time.
+- [x] The thinking a fold opens does not say the tool calls the line above it
+      counted -- done 2026-11-06: `thought` keeps every call whole (the tool,
+      what it asked of it, what it was given) and counts as many as it keeps,
+      so nothing of the count is said beside the calls it counted; the fold
+      says one line of each, and `logic::call_of` says it once. Whether a
+      press opens it at all is the item above.
 - [x] **Search does nothing yet** -- done 2026-11-06: what is typed in the
       drawer's field is asked for at every edit of it and not only when Enter
       is pressed, and what it keeps is every conversation named after it or

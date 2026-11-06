@@ -53,8 +53,8 @@ struct put_in {
 // of it came -- said once here so that it is said the same way twice.
 [[nodiscard]] inline message answer_of(const put_in &into, std::string_view said,
                                        std::string_view thinking,
-                                       std::size_t asking, usage cost,
-                                       bool failed) {
+                                       std::span<const tool_call> asked_for,
+                                       usage cost, bool failed) {
   message out{.id = into.id,
               .chat = into.chat,
               .author = into.author,
@@ -63,12 +63,19 @@ struct put_in {
               .sent = into.sent,
               .state = failed ? delivery::failed : delivery::sent};
   out.tokens = static_cast<std::uint32_t>(cost.in + cost.out);
+  // What it stopped to ask for, kept whole and not as a number: the tool's
+  // name and what it asked of it, in the order it asked.
+  std::vector<::pchat::tool_call> calls;
+  calls.reserve(asked_for.size());
+  for (const tool_call &one : asked_for)
+    calls.push_back({.name = one.name, .asked = one.arguments});
   // Said in full: `thought` is what an answer thought, and not the same word
   // as the type what it thought is kept in.
-  if (!thinking.empty() || into.took_ms != 0 || asking != 0)
-    out.before = ::pchat::thought{.took_ms = into.took_ms,
-                                  .tool_calls = static_cast<std::uint32_t>(asking),
-                                  .said = std::string(thinking)};
+  if (!thinking.empty() || into.took_ms != 0 || !asked_for.empty())
+    out.before =
+        ::pchat::thought{.took_ms = into.took_ms,
+                         .said = std::string(thinking),
+                         .calls = std::move(calls)};
   return out;
 }
 
@@ -159,7 +166,7 @@ public:
   // and nothing here is put into a conversation: where it goes is asked
   // elsewhere.
   [[nodiscard]] message answer_of(const put_in &into) const {
-    return provider::answer_of(into, said(), thought(), tool_calls(), cost(),
+    return provider::answer_of(into, said(), thought(), called(), cost(),
                                ended_ == over::failed);
   }
 
