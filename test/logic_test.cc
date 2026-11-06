@@ -9,6 +9,7 @@ import pchat.core;
 import pchat.logic.lists;
 import pchat.logic.search;
 import pchat.logic.composer;
+import pchat.logic.compacted;
 import pchat.logic.formatting;
 import pchat.logic.doc;
 
@@ -130,4 +131,108 @@ SAID(doc, the_design_this_build_was_made_with_is_read_whole) {
   }
   EXPECT_TRUE(titled);
   EXPECT_TRUE(listed);
+}
+
+SAID(logic, one_conversation_is_read_out_of_all_of_them) {
+  const message in_general{.id = message_id{"m-1"},
+                           .chat = conversation_id{"general"},
+                           .author = "Reader",
+                           .outgoing = true,
+                           .text = "asked",
+                           .sent = 1};
+  const message in_random{.id = message_id{"m-9"},
+                          .chat = conversation_id{"random"},
+                          .author = "Reader",
+                          .outgoing = true,
+                          .text = "asked elsewhere",
+                          .sent = 2};
+  const std::vector<message> all{in_general, in_random};
+  const std::vector<message> said =
+      logic::said_in(all, conversation_id{"general"});
+  EXPECT_EQ(said.size(), 1u);
+  EXPECT_EQ(said.front().id.value, std::string("m-1"));
+  EXPECT_TRUE(logic::said_in(all, conversation_id{"nowhere"}).empty());
+}
+
+SAID(logic, a_compacted_conversation_gives_what_every_answer_thought_away) {
+  // Two answers thought before them; the second of them is the last thing
+  // said in the conversation, and so it is the one whose thinking is given
+  // still -- what it thought is what is being answered about.
+  const std::vector<message> all{
+      {.id = message_id{"m-1"},
+       .chat = conversation_id{"general"},
+       .author = "Reader",
+       .outgoing = true,
+       .text = "asked once",
+       .sent = 1},
+      {.id = message_id{"m-2"},
+       .chat = conversation_id{"general"},
+       .author = "kimi",
+       .text = "answered once",
+       .sent = 2,
+       .before = thought{.said = "thought all the way through it"}},
+      {.id = message_id{"m-3"},
+       .chat = conversation_id{"general"},
+       .author = "Reader",
+       .outgoing = true,
+       .text = "asked twice",
+       .sent = 3},
+      {.id = message_id{"m-4"},
+       .chat = conversation_id{"general"},
+       .author = "kimi",
+       .text = "answered twice",
+       .sent = 4,
+       .before = thought{.said = "thought again"}}};
+  const logic::compacted given =
+      logic::compacted_of(all, conversation_id{"general"});
+  EXPECT_EQ(given.said.size(), 4u);
+  // One answer lost what it thought, and it says so.
+  EXPECT_EQ(given.answers, 1u);
+  EXPECT_TRUE(given.said[1].before->said.empty());
+  // Nothing else did: no thinking in the questions, and the last answer
+  // keeps every word it wrote to itself. What took it time and how many
+  // calls it made are said of it still -- only the words are given away.
+  EXPECT_FALSE(given.said[0].before.has_value());
+  EXPECT_FALSE(given.said[2].before.has_value());
+  EXPECT_EQ(given.said[3].before->said, std::string("thought again"));
+  EXPECT_TRUE(logic::anything_to_compact_of(all, conversation_id{"general"}));
+}
+
+SAID(logic, nothing_is_compacted_where_there_is_nothing_thought) {
+  // One message said, and then another: neither thought anything before it,
+  // and there is nothing a wire is asked twice for.
+  const std::vector<message> one{
+      {.id = message_id{"m-1"},
+       .chat = conversation_id{"general"},
+       .author = "Reader",
+       .outgoing = true,
+       .text = "asked",
+       .sent = 1},
+      {.id = message_id{"m-2"},
+       .chat = conversation_id{"general"},
+       .author = "kimi",
+       .text = "answered",
+       .sent = 2}};
+  EXPECT_FALSE(
+      logic::anything_to_compact_of(one, conversation_id{"general"}));
+  EXPECT_EQ(logic::compacted_of(one, conversation_id{"general"}).answers, 0u);
+  // One message said on its own: nothing before it and nothing after it.
+  const std::vector<message> alone{one.front()};
+  EXPECT_FALSE(
+      logic::anything_to_compact_of(alone, conversation_id{"general"}));
+  // The only answer that thought is the last thing said: nothing to keep
+  // back, for nothing is given more than once yet.
+  const std::vector<message> last_thought{
+      one.front(),
+      {.id = message_id{"m-2"},
+       .chat = conversation_id{"general"},
+       .author = "kimi",
+       .text = "answered",
+       .sent = 2,
+       .before = thought{.said = "thought about this one"}}};
+  EXPECT_FALSE(
+      logic::anything_to_compact_of(last_thought, conversation_id{"general"}));
+  EXPECT_EQ(
+      logic::compacted_of(last_thought, conversation_id{"general"}).answers,
+      0u);
 }
