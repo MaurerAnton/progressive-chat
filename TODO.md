@@ -57,15 +57,17 @@ build and the next.
       clipboard now (`scene::setClipboardText`), which no probe has read
       back yet -- a page kept in a browser is asked for its clipboard by
       permission and nobody has asked.
-- [ ] Three of the eight settings groups still stand named and empty:
-      Multimodal, Network, and Memory & Data. What is drawn today under the
-      others is Appearance (the theme, its type and its dark), what answers
-      in the conversation that is open (Services, Models), Generation
-      (Responses), the three tools this program owns (Tools), and what this
-      build is (About). The three left want things this program has no part
-      of yet -- a picture asked about, a proxy asked through, a memory kept
-      between conversations -- and drawing a row for something nothing does
-      is how a stub is made.
+- [ ] Two of the eight settings groups still stand named and empty:
+      Multimodal and Network. Memory & Data, which stood with them, says
+      what the window is holding now: everything said in the conversation
+      that is open, and every conversation, each taken away by a press on
+      it and said with how much there is of it. The two left want things
+      this program has no part of yet -- a picture asked about, and a proxy
+      asked through -- and drawing a row for something nothing does is how
+      a stub is made. What Memory says could not have been drawn either
+      while nothing was written anywhere but in the window: what is taken
+      away here is taken away for good, and nothing was ever kept anywhere
+      else to take it out of.
 - [ ] What a model wrote to itself, folded above its answer, has never been
       pressed open and read: `history_fold` keeps it (`src/ui/message_list.cc`)
       and no probe has said whether a press opens it.
