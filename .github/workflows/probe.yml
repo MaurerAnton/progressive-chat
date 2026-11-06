@@ -4,6 +4,14 @@ name: probe
 # Only ever asked for by hand: what the deployed page paints is not what a
 # push changes, and a browser takes its minutes here for nothing if every
 # push pays them.
+#
+# Asked for on any ref, though, and not only on main: the second job below
+# builds the page the ref itself makes and asks it everything the deployed
+# one is asked, so that what has not been deployed yet -- every pull
+# request, in other words -- is answered about what it paints rather than
+# about what its code seems to say. Which pull request that is, is said by
+# the request itself: [probe] in its title asks for it, and a title without
+# it leaves every push paying nothing for a browser nobody asked to see it.
 on:
   workflow_dispatch:
     inputs:
@@ -15,12 +23,114 @@ on:
         description: 'A probe script, in place of the one in the tree'
         required: false
         default: ''
+  # What asks for the page of the push itself to be probed is the request's
+  # own title, said below: nothing is paid for here until a pull request asks.
+  pull_request:
 
 permissions:
   contents: read
 
 jobs:
+  pushed:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.title, '[probe]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/desktop-setup
+      - uses: ./.github/actions/web-setup
+      # The same three steps the web workflow builds the deployed page with,
+      # said again here: what is asked about below is this ref's own page and
+      # not a page somebody put somewhere (../web.yml).
+      - name: Where the standard library's modules are
+        run: |
+          set -euo pipefail
+          json="$(em++ -print-file-name=libc++.modules.json 2>/dev/null || true)"
+          if [ ! -f "$json" ]; then
+            json="$(find "$HOME/.cache/pchat-emsdk/upstream/emscripten/cache/sysroot" \
+              -name 'libc++.modules.json' -print -quit 2>/dev/null || true)"
+          fi
+          if [ ! -f "$json" ]; then
+            echo "::error::no libc++.modules.json came with this SDK"
+            exit 1
+          fi
+          echo "found $json"
+          echo "PCHAT_MODULES_JSON=$json" >> "$GITHUB_ENV"
+      - name: Configure
+        run: |
+          emcmake cmake -S . -B build-web -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_CXX_FLAGS_DEBUG="-Os -g0" \
+            -DCMAKE_C_FLAGS_DEBUG="-Os -g0" \
+            -DCMAKE_C_FLAGS="-pthread -msimd128" \
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++ -fexceptions -pthread -msimd128" \
+            -DCMAKE_CXX_STDLIB_MODULES_JSON="$PCHAT_MODULES_JSON" \
+            -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS="$HOME/.cache/pchat-emsdk/upstream/bin/clang-scan-deps" \
+            -DPCHAT_TESTS=OFF
+      - name: Build
+        run: cmake --build build-web --target progressive-chat -- -k 0
+      - name: Serve it, as a host serves a page
+        run: |
+          set -euo pipefail
+          cd build-web/web
+          # Left standing behind every step after this one: the same runner,
+          # and the same process tree, is what all of them are said to.
+          nohup python3 -m http.server 8123 --bind 127.0.0.1 > served.log 2>&1 &
+          for try in $(seq 1 30); do
+            curl -sf -o /dev/null http://127.0.0.1:8123/index.html && break
+            sleep 1
+          done
+          curl -sf -o /dev/null -w 'the page answers with %{http_code}\n' \
+            http://127.0.0.1:8123/index.html
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: A browser that can be driven
+        run: |
+          npm init -y
+          # Said of a version and not "the newest": a playwright is put out
+          # before the core it is said on top of, and a probe that cannot be
+          # installed is no probe at all -- this one is moved on by hand when
+          # the next is settled.
+          npm install playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - name: What to say to the page, when it is said by hand
+        if: ${{ github.event.inputs.script != '' }}
+        run: printf '%s' "${{ github.event.inputs.script }}" > said_by_hand.mjs
+      # Three probes, asked in this order: a whole script written out here,
+      # one this very tree keeps of its own say (tools/probe_by_hand.mjs),
+      # and the tester's -- the last of them asked of everything else.
+      - name: Which probe is asked
+        run: |
+          set -euo pipefail
+          if [ -f said_by_hand.mjs ]; then
+            probe=said_by_hand.mjs
+          elif [ -f tools/probe_by_hand.mjs ]; then
+            probe=tools/probe_by_hand.mjs
+          else
+            probe=tools/probe_painted.mjs
+          fi
+          echo "asked of the page: $probe"
+          echo "PCHAT_PROBE=$probe" >> "$GITHUB_ENV"
+      - name: Shoot the page this ref built
+        env:
+          # What the probe asks, in place of the page everybody else sees:
+          # this ref's own, off the host it was served onto above.
+          PCHAT_PAGE: http://127.0.0.1:8123/index.html
+        run: node "$PCHAT_PROBE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: painted-here
+          # Every shot of the page, whatever the probe that made it named
+          # them: a probe driven by hand names them as it likes.
+          path: |
+            *.png
+          if-no-files-found: error
+
   painted:
+    # What everybody already sees, and nothing to do with a push: a change is
+    # not what this page is made of until it has landed.
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
