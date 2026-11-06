@@ -66,7 +66,8 @@ struct app_window : scene::Node {
 
   // Everything drawn again from the model, for this size of window.
   void again(const paints &look, const chats_root &root, const looks &shown,
-             const std::string &query, bool dark, bool settings_open,
+             const asking &how, const std::string &query, bool dark,
+             bool settings_open,
              bool design_open, bool prompt_open, bool more_open,
              bool drawer_open, float width,
              float height,
