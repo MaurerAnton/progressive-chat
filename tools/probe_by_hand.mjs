@@ -142,13 +142,16 @@ for (const [name, x, y, wants] of places) {
 }
 
 // The fold above the first answer: pressed open, what it wrote to itself is
-// read back whole, and pressed again it is folded away again.
+// read back whole, and pressed again it is folded away again. Said as it is
+// read and not only whether it was, for what the page says when nothing was
+// expected is the only way a next question about it can be asked.
 const greentext = 'three reads of the pantry';
 if (await press(page, 'Thought for')) {
   const open = await read(page);
   console.log(
     `the fold pressed open: ` +
       `${open.includes(greentext) ? 'what it thought is said' : 'what it thought is still not said'}`);
+  console.log(`said with the fold open: ${open.slice(0, 900)}`);
   await page.screenshot({ path: 'pressed-fold.png' });
   await press(page, 'Thought for');
   const shut = await read(page);
