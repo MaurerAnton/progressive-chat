@@ -139,6 +139,11 @@ struct open_attach {};
 struct pick_files {
   chooses what = chooses::files;
 };
+// One of the files waiting to be said with the next message, taken back out
+// of it: which one, as it stands in the line above the card.
+struct drop_file {
+  std::size_t which = 0;
+};
 // Thinking before an answer, and how hard it is to think: the first two of
 // the things a three-dot menu says (design-doc.md, "The editor's row"), read
 // into what every wire is asked for from then on.
@@ -175,7 +180,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                               set_generation, set_thinking, set_effort, set_tool,
                              toggle_thinking,
                              compact_context, set_web_search,
-                             open_attach, pick_files,
+                             open_attach, pick_files, drop_file,
                               set_answerer, copy_text>;
 
 class requests {

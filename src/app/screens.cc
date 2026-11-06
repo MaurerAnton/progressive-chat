@@ -263,6 +263,13 @@ public:
               attach_menu_ = false;
               chosen_.ask(asking.what);
             },
+            // Taken back out before it is said: what the pill above the card
+            // that named it was pressed for.
+            [&](const drop_file &asking) {
+              if (asking.which < held_.size())
+                held_.erase(held_.begin() + static_cast<std::ptrdiff_t>(
+                                                asking.which));
+            },
             [&](const set_thinking &asking) { how_ = set_of(how_, asking.on); },
             [&](const set_effort &asking) { how_ = set_of(how_, asking.how); },
             // A tool switched: one of the three this program owns, and what

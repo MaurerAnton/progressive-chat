@@ -298,6 +298,86 @@ private:
   }
 };
 
+// One file waiting to be said with the next message, said by its name and
+// pressed to take it back out of them: what is wrongly chosen is not sent for
+// want of somewhere to put it back.
+inline constexpr float held_row_width = 168.0f;
+inline constexpr float held_row_height = 26.0f;
+inline constexpr std::size_t held_at_most = 4;
+
+struct held_row : scene::Node {
+  ask_box fPlate{};
+  nodes::Text fName{"", 12.0f, 0u};
+
+  held_row() {
+    this->apply({.relativeSize = scene::axes::kNone,
+                 .width = held_row_width,
+                 .height = held_row_height,
+                 .cornerRadius = held_row_height / 2.0f});
+    fPlate.apply({.fill = true});
+    fName.apply({.anchor = scene::anchor::kCentreLeft,
+                 .origin = scene::anchor::kCentreLeft,
+                 .x = 12.0f,
+                 .autoSize = scene::axes::kBoth,
+                 .maxWidth = held_row_width - 24.0f});
+  }
+
+  void again(app::requests *sink, const paints &look, std::size_t which,
+             std::string_view name) {
+    this->setVisible(true);
+    fPlate.again(sink, app::drop_file{which}, look.card);
+    fName.setText(std::string(name));
+    fName.setColour(look.text);
+  }
+
+  void blank() {
+    this->setVisible(false);
+    fName.setText("");
+  }
+
+  void forEachChild(auto &&f) {
+    f(fPlate);
+    f(fName);
+  }
+};
+
+// Every file waiting to be said with the next message, one pill above another
+// over the card and above it: four of them said at a time, however many wait
+// behind them, for taking one out opens the room the next one is said in.
+struct held_files : scene::Node {
+  std::vector<std::unique_ptr<held_row>> fRows;
+
+  void again(app::requests *sink, const paints &look,
+             std::span<const attachment> held) {
+    const std::size_t shown = std::min(held.size(), held_at_most);
+    for (std::size_t at = 0; at < shown; ++at)
+      row_at(at).again(sink, look, at, held[at].name);
+    // What is left of them where fewer wait than waited here before.
+    for (std::size_t at = shown; at < fRows.size(); ++at)
+      fRows[at]->blank();
+  }
+
+  void forEachChild(auto &&f) {
+    for (auto &row : fRows)
+      f(*row);
+  }
+
+private:
+  [[nodiscard]] held_row &row_at(std::size_t place) {
+    while (fRows.size() <= place)
+      fRows.push_back(std::make_unique<held_row>());
+    held_row &row = *fRows[place];
+    row.apply({.anchor = scene::anchor::kTopLeft,
+               .relativeSize = scene::axes::kNone,
+               .width = held_row_width,
+               .height = held_row_height,
+               .x = 8.0f,
+               .y = -(6.0f + static_cast<float>(place) *
+                                 (held_row_height + 4.0f))});
+    return row;
+  }
+};
+
 struct composer : scene::Node {
   nodes::Box<> fCard{0u};
   // What answers here, and how much of its window this chat has taken: said
@@ -318,7 +398,12 @@ struct composer : scene::Node {
   ask_box fPlusPlate{};
   nodes::Icon fAttach{shape::plus(), 0u};
   attach_menu fAttachMenu{};
-  nodes::Text fHeld{"", 12.0f, 0u};
+  held_files fHeld{};
+  // A clip beside the face, pressed for the same four things the plus is:
+  // the one the design asks for on the left, and the one every machine's own
+  // keyboard row has kept on the right.
+  ask_box fClipPlate{};
+  nodes::Icon fClip{shape::clip(), 0u};
   nodes::Icon fFace{shape::smile(), 0u};
   nodes::Box<> fSendPlate{0u};
   nodes::Icon fSendMark{shape::send(), 0u};
@@ -385,6 +470,14 @@ struct composer : scene::Node {
                    .origin = scene::anchor::kCentre,
                    .x = 26.0f,
                    .y = 22.0f});
+    fClipPlate.apply({.anchor = scene::anchor::kTopRight,
+                      .origin = scene::anchor::kCentre,
+                      .x = -(edge + send_size + 44.0f),
+                      .y = 68.0f,
+                      .relativeSize = scene::axes::kNone,
+                      .width = 28.0f,
+                      .height = 28.0f,
+                      .cornerRadius = 14.0f});
     fClip.apply({.width = 22.0f,
                  .height = 22.0f,
                  .anchor = scene::anchor::kTopRight,
@@ -404,13 +497,6 @@ struct composer : scene::Node {
                       .origin = scene::anchor::kTopRight,
                       .x = -edge,
                       .y = 45.0f});
-    // What has been chosen, said over the card and above it, right against
-    // its right edge: named, and nothing said of it but its name.
-    fHeld.apply({.anchor = scene::anchor::kBottomRight,
-                 .origin = scene::anchor::kBottomRight,
-                 .x = -(edge + 4.0f),
-                 .y = -(composer_height + 2.0f * edge + 6.0f),
-                 .autoSize = scene::axes::kBoth});
     fSendMark.apply({.width = 22.0f,
                      .height = 22.0f,
                      .anchor = scene::anchor::kTopRight,
@@ -425,6 +511,11 @@ struct composer : scene::Node {
     fSink->asked = asked;
     fSink->chat = chat.id;
     fCard.setColour(look.card);
+    // Where this machine hands nothing over, neither of the two is drawn: a
+    // clip that cannot attach is a stub.
+    fClipPlate.setVisible(can_choose);
+    fClip.setVisible(can_choose);
+    fClipPlate.again(asked, app::open_attach{}, look.card);
     fClip.setColour(look.faint);
     fFace.setColour(look.faint);
     fSendPlate.setColour(look.primary);
@@ -449,17 +540,11 @@ struct composer : scene::Node {
     // The four things it chooses between, open above the card where it was
     // pressed and nowhere else: shut with it too, wherever nothing chooses.
     fAttachMenu.again(asked, look, can_choose && attach_open);
-    // What is waiting to be said with the next message: every name of it, or
-    // nothing at all where nothing waits.
-    fHeld.setVisible(!held.empty());
-    std::string names;
-    for (const attachment &one : held) {
-      if (!names.empty())
-        names += ", ";
-      names += one.name;
-    }
-    fHeld.setText(names);
-    fHeld.setColour(look.primary);
+    // What is waiting to be said with the next message: one pill a file, or
+    // nothing at all where nothing waits. Said for nothing while the four
+    // they are chosen from stand open over them.
+    fHeld.again(asked, look, can_choose && !attach_open ? held :
+                                 std::span<const attachment>{});
     // The dots, and the menu they keep open or shut.
     fDots.again(asked, app::toggle_thinking{}, look.search_bar);
     fDotsMark.setColour(look.text);
@@ -480,6 +565,8 @@ struct composer : scene::Node {
     f(fAttach);
     f(fAttachMenu);
     f(fHeld);
+    f(fClipPlate);
+    f(fClip);
     f(fFace);
     f(fSendPlate);
     f(fSendMark);
