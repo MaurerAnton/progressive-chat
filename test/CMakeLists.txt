@@ -20,7 +20,7 @@ function(pchat_test name libraries)
     FILE_SET CXX_MODULES BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} FILES ${name}_test.cc)
   target_compile_features(pchat-${name}-test PRIVATE cxx_std_26)
   target_compile_options(pchat-${name}-test PRIVATE ${pchat_std_flags})
-  target_link_libraries(pchat-${name}-test PRIVATE ${libraries})
+  target_link_libraries(pchat-${name}-test PRIVATE ${libraries} ${ARGN})
   add_test(NAME pchat-${name}-test COMMAND pchat-${name}-test)
   add_dependencies(pchat-tests pchat-${name}-test)
 endfunction()
@@ -33,4 +33,8 @@ pchat_test(provider pchat_provider)
 pchat_test(provider_run pchat_provider)
 pchat_test(provider_loop pchat_provider)
 pchat_test(tools pchat_tools)
-pchat_test(tokens pchat_core)
+pchat_test(tokens pchat_core pchat_json)
+# The reference every entry of the carried vocabulary is measured against: read
+# by the tokens test once the carried vocabulary has been fed in.
+target_compile_definitions(pchat-tokens-test PRIVATE
+  PCHAT_O200K_REF="${PROJECT_SOURCE_DIR}/ports/agora-core/fixtures/tokenizers/o200k_ref.json")

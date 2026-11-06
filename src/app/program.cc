@@ -19,6 +19,7 @@ import skiff.model;
 import skiff.platform.events;
 import pchat.app.screens;
 import pchat.app.faces;
+import pchat.tokens;
 
 export namespace pchat::app {
 
@@ -32,6 +33,11 @@ struct no_root {};
 struct no_reactions {};
 
 struct program {
+  // What a message is worth is counted through the vocabulary this build
+  // carries rather than through the heuristic under it -- said once here, when
+  // the program is made, and not asked of every count that follows.
+  program() { tokens::vocabulary(tokens::o200k()); }
+
   screens view;
   skiff::model::Model<no_root, no_reactions> bound_;
   unsigned frames_ = 0u;
