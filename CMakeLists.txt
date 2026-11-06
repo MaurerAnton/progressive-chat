@@ -390,9 +390,11 @@ if(PCHAT_TESTS)
   add_subdirectory(test)
   # The port's own test binary joins the same ask: one `pchat-tests` build
   # gives ctest everything this program says by test.
-  if(TARGET agora_core_tests)
-    add_dependencies(pchat-tests agora_core_tests)
-  endif()
+  foreach(port_test agora_core_tests agora_portable_crypto_test)
+    if(TARGET ${port_test})
+      add_dependencies(pchat-tests ${port_test})
+    endif()
+  endforeach()
 endif()
 
 # One std module in the whole build. Where two copies of it -- or of any
