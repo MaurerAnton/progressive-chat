@@ -110,10 +110,13 @@ in the panel is a plus:
   beside it says the same count in words again: what one conversation has used
   of one window is said once on the screen and not once for every model that
   answers in it.
-* **Three dots after the circle** open one menu, and in it: **thinking**,
-  switched on and off, with **how hard it is asked to think** said beside it
-  (`max`); **web search**, switched on and off; **compact context**, which is a
-  grey press and nothing else while the chat is empty; and **Advanced**.
+* **Three dots after the circle** open one menu above the card, and in it:
+  **thinking**, switched on and off, with what it stands at said beside it;
+  **how hard it thinks**, one press round the four it keeps to and back again
+  at the least of them; and **Advanced**, which is the large settings. Two of
+  the menu's four are not drawn yet: **web search** and **compact context**,
+  neither of them answered by anything here, and neither of them drawn as a
+  row that would do nothing.
 * **Advanced** opens the **large settings**: the **context window size**, the
   **temperature**, the **maximum output tokens**, the **top p**, the
   **frequency penalty** and the **presence penalty** — the same five the

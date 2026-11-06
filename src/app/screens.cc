@@ -125,7 +125,10 @@ public:
             [&](const delete_answer &asking) { cut_away(asking.said); },
             [&](const set_query &asking) { query_ = asking.text; },
             [&](const toggle_drawer &) { drawer_ = !drawer_; },
-            [&](const open_settings &) { settings_ = true; },
+            [&](const open_settings &) {
+              settings_ = true;
+              thinking_menu_ = false;
+            },
             [&](const close_settings &) { settings_ = false; },
             [&](const fork_conversation &asking) {
               conversation *said = nullptr;
@@ -225,6 +228,7 @@ public:
             // Thinking switched, and how hard it is to think: carried into the
             // asking every answer made from now on is written with, and so
             // into every body sent for one.
+            [&](const toggle_thinking &) { thinking_menu_ = !thinking_menu_; },
             [&](const set_thinking &asking) { how_ = set_of(how_, asking.on); },
             [&](const set_effort &asking) { how_ = set_of(how_, asking.how); },
             // A tool switched: one of the three this program owns, and what
@@ -259,8 +263,8 @@ public:
       take(one);
     read_what_arrived();
     scene_.root().again(look_, root_, shown_, how_, query_, dark_, settings_,
-                        design_, system_, more_, drawer_, width_, height_,
-                        &asked_);
+                        design_, system_, more_, drawer_, thinking_menu_,
+                        width_, height_, &asked_);
   }
 
   [[nodiscard]] chats_root &root() noexcept { return root_; }
@@ -542,6 +546,10 @@ private:
   // Whether what stands behind the three dots is out: put away again by one
   // press of anything it holds, or of the dots themselves.
   bool more_ = false;
+  // Whether the three dots beside the circle are open: said to the window
+  // and to nothing else, because it is the composer's own menu and not a
+  // page.
+  bool thinking_menu_ = false;
   moment said_count_ = 1;
   std::size_t chat_count_ = 0;
 
