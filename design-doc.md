@@ -181,13 +181,18 @@ this program has to be able to say yes or no to, and to what degree.
 
 **About**
 
-* **About** — what this program is, and where it lives on the net. *Whether it
+* **About** — what this build is: its number and the commit it was made of,
+  the licence it is let out under, and where its source is kept. Every line of
+  it is given whole to the machine's clipboard by a press on it. *Whether it
   also asks the holder to rate it is not decided: nothing of it is drawn, and
   it may never be needed.*
 
-Of all this, what is drawn today is **Appearance** alone — the theme, its
-scheme, its type and its dark. The other seven groups stand empty, each with
-its name, waiting for the thing behind it.
+Of all this, what is drawn today is **Appearance** — the theme, its scheme,
+its type and its dark; the five things an answer is asked with, under
+**Generation**; which answerers answer in the chat that is open, under
+**Models**; the three tools this program owns, under **Tools**; and what this
+build is, under **About**. The other three groups stand empty, each with its
+name, waiting for the thing behind it.
 
 ## What this design does not do
 

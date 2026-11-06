@@ -60,7 +60,7 @@ inline constexpr std::array<seed_choice, max_seeds> seeds_offered{{
 // What one of them draws under the item it stands under, where it draws
 // anything: one of these five, and never two of them, because no two of
 // them are what one place in the page is made of.
-enum class group_rows { none, appearance, generation, tools, answerers };
+enum class group_rows { none, appearance, generation, tools, answerers, about };
 
 struct settings_group {
   std::string_view name;
@@ -96,7 +96,7 @@ inline constexpr std::array<settings_group, max_settings_groups> settings_groups
      max_settings_items, group_rows::none},
     {"Appearance & Language", {{"Appearance", "Language"}}, 2u, 0u,
      group_rows::appearance},
-    {"About", {{"About"}}, 1u, max_settings_items, group_rows::none},
+    {"About", {{"About"}}, 1u, 0u, group_rows::about},
 }};
 // How much room the page leaves over and under its card, and how wide the
 // card ever is: a page wider than this would ask its rows to stretch over
@@ -109,6 +109,10 @@ inline constexpr float settings_row_height = 48.0f;
 inline constexpr float settings_row_stride = 52.0f;
 inline constexpr float settings_group_stride = 30.0f;
 inline constexpr float settings_group_gap = 20.0f;
+
+// What About says, and how much of it: every line of it is told, and given
+// away whole by a press.
+inline constexpr std::size_t max_about_rows = 3u;
 
 // A switch, as a row: what it is called, and the pill that says which way it
 // is put -- lit when it is on.
@@ -288,6 +292,61 @@ struct knob_row : scene::Node {
 // what scrolls is these and not the card they are said in -- a page that
 // grows past its room has to be scrolled where the words run out, as the
 // column of messages is, and not pushed down into nothing.
+// A line of About: what it is called, and what is said of it, either of
+// them given whole to the machine's clipboard by a press -- nothing in this
+// group is anything but told.
+struct about_row : scene::Node {
+  ask_box fPlate{};
+  nodes::Text fName{"", 15.0f, 0u};
+  nodes::Text fSaid{"", 12.0f, 0u};
+
+  about_row() {
+    this->apply({.anchor = scene::anchor::kTopLeft,
+                 .height = settings_row_height,
+                 .cornerRadius = 14.0f});
+    fName.apply({.anchor = scene::anchor::kCentreLeft,
+                 .origin = scene::anchor::kCentreLeft,
+                 .x = 16.0f,
+                 .autoSize = scene::axes::kBoth});
+    fSaid.apply({.anchor = scene::anchor::kCentreLeft,
+                 .origin = scene::anchor::kCentreLeft,
+                 .x = 190.0f,
+                 .autoSize = scene::axes::kBoth});
+  }
+
+  [[nodiscard]] bool acceptsInput() const { return true; }
+  [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+  [[nodiscard]] bool onClick(float, float) {
+    if (asked)
+      asked->ask(app::copy_text{.text = given});
+    return true;
+  }
+
+  void blank() { this->setVisible(false); }
+
+  void again(app::requests *sink, const scene::Spec &spec, const paints &look,
+             std::string_view name, std::string_view said) {
+    asked = sink;
+    given = std::string(said);
+    fPlate.again(sink, app::copy_text{.text = given}, 0u);
+    this->apply(spec);
+    this->setVisible(true);
+    fName.setText(std::string(name));
+    fName.setColour(look.text);
+    fSaid.setText(std::string(said));
+    fSaid.setColour(look.dim);
+  }
+
+  void forEachChild(auto &&f) {
+    f(fPlate);
+    f(fName);
+    f(fSaid);
+  }
+
+  app::requests *asked = nullptr;
+  std::string given;
+};
+
 struct settings_rows : scene::Node {
   nodes::Text fHeading{"Settings", 26.0f, 0u, true};
   // One line to a text, kept on the heap and not as a member: sixty of them,
@@ -318,14 +377,13 @@ struct settings_rows : scene::Node {
   // The answerers, drawn: a switch to each of them, whether it answers in
   // the conversation the window has open or not.
   std::array<switch_row, answerers_offered.size()> fAnswerers;
+  // About, drawn: what this build is, what it is under, and where its
+  // source is kept.
+  std::array<about_row, max_about_rows> fAbout;
   // What the design is called when it is offered: pressed, the whole of it
   // is said in the room, where it can be read against what is drawn.
   ask_box fReadPlate{};
   nodes::Text fRead{"Read the design", 15.0f, 0u};
-  // What this build is: not a number that a hundred other builds share, but
-  // the number and the commit they were made of.
-  nodes::Text fVersion{"", 12.0f, 0u};
-
   settings_rows() {
     fHeading.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
@@ -358,13 +416,11 @@ struct settings_rows : scene::Node {
       one.setVisible(false);
     for (switch_row &one : fAnswerers)
       one.setVisible(false);
+    for (about_row &one : fAbout)
+      one.blank();
     fBlack.fName.setText("Pure black");
     fLarge.fName.setText("Larger type");
     fLight.fName.setText("Light colours");
-    fVersion.setText(std::string("progressive-chat ") + PCHAT_VERSION_SAID);
-    fVersion.apply({.anchor = scene::anchor::kTopLeft,
-                    .x = 20.0f,
-                    .autoSize = scene::axes::kBoth});
   }
 
   // The answerers offered (pchat.config), as a row each: which of them
@@ -394,6 +450,34 @@ struct settings_rows : scene::Node {
     return at;
   }
 
+  // About, drawn: what this build is made of, what it is let out under, and
+  // where what it is made of is kept -- each of them given away whole.
+  [[nodiscard]] float say_about(app::requests *asked, const paints &look,
+                                float row_width, float base) {
+    float at = base;
+    const std::array<std::pair<std::string_view, std::string>, max_about_rows>
+        lines{{{"What this is",
+                std::string("progressive-chat ") + PCHAT_VERSION_SAID},
+               {"It is let out under", "GNU General Public License v3"},
+               {"Its source is kept at",
+                "github.com/progressive-chat/progressive-chat"}}};
+    for (std::size_t one = 0u; one < lines.size(); ++one) {
+      fAbout[one].again(
+          asked,
+          {.anchor = scene::anchor::kTopLeft,
+           .x = 16.0f,
+           .y = at,
+           .relativeSize = scene::axes::kNone,
+           .width = row_width,
+           .height = settings_row_height,
+           .cornerRadius = 14.0f,
+           .visible = true},
+          look, lines[one].first, std::string_view(lines[one].second));
+      at += settings_row_stride;
+    }
+    return at;
+  }
+
   // One group's rows, said by which they are: every one of them kept by the
   // group that says it, and said here so that the page's layout has nothing
   // to know of which is which.
@@ -414,6 +498,8 @@ struct settings_rows : scene::Node {
       return say_tools(asked, look, how, row_width, base);
     case group_rows::answerers:
       return say_answerers(asked, look, answerers, row_width, base);
+    case group_rows::about:
+      return say_about(asked, look, row_width, base);
     }
     return base;
   }
@@ -610,7 +696,6 @@ struct settings_rows : scene::Node {
     }
     // At the end of a switch is said what this build is, where it names one
     // thing and this is the only one it can name.
-    fVersion.setColour(look.dim);
     // How tall, then: as far as the layout reached, and the room left under
     // it. This is what scrolls, and it scrolls no further than the last thing
     // said in it. Its own top is the top of that: a column this tall is put
@@ -628,7 +713,6 @@ struct settings_rows : scene::Node {
 
   void forEachChild(auto &&f) {
     f(fHeading);
-    f(fVersion);
     for (group_name &one : *fGroups)
       f(one.name);
     for (auto &group : *fItems)
@@ -648,6 +732,8 @@ struct settings_rows : scene::Node {
       f(one);
     f(fReadPlate);
     f(fRead);
+    for (about_row &one : fAbout)
+      f(one);
   }
 };
 
@@ -663,6 +749,9 @@ struct settings_screen : scene::Node {
   ask_box fClosePlate{};
   nodes::Icon fCloseMark{shape::close(), 0u};
   nodes::ScrollContainer<settings_rows> fRows{settings_rows{}};
+  // Whether the page was open: what is read in it is read from its first
+  // line each time it is opened again.
+  bool fShown = false;
 
   settings_screen() {
     this->apply({.fill = true});
@@ -674,12 +763,23 @@ struct settings_screen : scene::Node {
     this->setVisible(false);
   }
 
-  void hide() { this->setVisible(false); }
+  void hide() {
+    this->setVisible(false);
+    fShown = false;
+  }
 
   void again(app::requests *asked, const paints &look, const looks &shown,
              const asking &how, std::span<const std::string> answerers,
              bool dark, float width, float height) {
     this->setVisible(true);
+    // Opened anew, it is read from its beginning. Left alone it stood at
+    // its end: the column is taller than the room, and while it was still
+    // being made -- short, before its rows were said -- the view followed
+    // what end there was, and stayed where that had put it.
+    if (!fShown) {
+      fShown = true;
+      fRows.scrollToStart();
+    }
     const float breadth = std::min(width, settings_card_widest);
     fClosePlate.again(asked, app::close_settings{}, look.raised);
     fCloseMark.setColour(look.text);

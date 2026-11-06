@@ -56,6 +56,11 @@ struct edit_draft {
 struct set_query {
   std::string text;
 };
+// What one line of the page gives away: pressed, what it says is given to
+// the machine's own clipboard, whole.
+struct copy_text {
+  std::string text;
+};
 struct toggle_drawer {};
 struct open_settings {};
 struct close_settings {};
@@ -138,7 +143,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              toggle_more, open_design, close_design,
                              pick_seed, set_amoled, set_font_scale, pick_theme,
                               set_generation, set_tool,
-                              set_answerer>;
+                              set_answerer, copy_text>;
 
 class requests {
 public:

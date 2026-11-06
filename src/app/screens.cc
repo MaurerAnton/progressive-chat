@@ -89,6 +89,8 @@ public:
             },
             // Taken whole, so that it can be put down somewhere else.
             [&](const copy_answer &asking) { this->give(text_of(asking.said)); },
+            // One line of the settings page: what it says is given whole.
+            [&](const copy_text &asking) { this->give(asking.text); },
             // Asked again: this answer taken away, and every one after it, so
             // that the question above it is open to be answered again.
             [&](const regenerate_answer &asking) { cut_away(asking.said); },
