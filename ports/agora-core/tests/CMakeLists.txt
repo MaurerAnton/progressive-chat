@@ -132,7 +132,8 @@ target_link_libraries(agora_core_tests PRIVATE agora_core_lib Threads::Threads S
 add_executable(agora_portable_crypto_test
     crypto_primitives_test.cpp
     test_main.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../src/crypto_primitives.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/crypto_primitives.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/sha256.cpp)
 target_compile_definitions(agora_portable_crypto_test
     PRIVATE AGORA_CORE_FORCE_PORTABLE_U128=1)
 target_include_directories(agora_portable_crypto_test
