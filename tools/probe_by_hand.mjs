@@ -177,14 +177,16 @@ for (const [name, x, y, wants] of places) {
 }
 
 // The fold above the first answer: pressed open, what it wrote to itself is
-// read back whole, and pressed again it is folded away again. Said as it is
-// read and not only whether it was, for what the page says when nothing was
-// expected is the only way a next question about it can be asked.
-const before = await read(page);
+// read back whole, and pressed again it is folded away again.
+//
+// Read out of the mirror and not of the page as one text: what the scene has
+// put away keeps its words in the mirror, so a page read as one text says
+// them whether they are showing or not, and a fold would look open before
+// anything was pressed at it.
 const greentext = 'three reads of the pantry';
-// What came out of nothing: the words the page has that it did not have a
-// moment ago, and said apart, for what a fold opens is somewhere in six
-// thousand characters of design.
+const shown_text = async (page) => (await lines(page)).map((one) => one.said).join(' ');
+// What came out of nothing: the words the page shows that it did not show a
+// moment ago.
 const came_of = (was, now) => {
   let at = 0;
   while (at < was.length && at < now.length && was[at] === now[at]) at++;
@@ -194,8 +196,9 @@ const came_of = (was, now) => {
     to++;
   return now.slice(at, now.length - to);
 };
+const before = await shown_text(page);
 const opened = await press_until(page, 'Thought for', async () => {
-  const open = await read(page);
+  const open = await shown_text(page);
   const came = came_of(before, open);
   if (came.length <= 8) return null;
   console.log(`came out of pressing the fold: ${came.slice(0, 1200)}`);
@@ -204,12 +207,12 @@ const opened = await press_until(page, 'Thought for', async () => {
 if (opened) {
   console.log(
     `the fold pressed open at ${opened.at.x},${opened.at.y}: ` +
-      `${opened.after.includes(greentext) ? 'what it thought is said' : 'it is open, and other than that it said something else'}`);
+      `${opened.after.includes(greentext) ? 'what it thought is said' : 'it is open, and what it said was other than expected'}`);
   await page.screenshot({ path: 'pressed-fold.png' });
   await page.mouse.click(opened.at.x, opened.at.y);
   await page.waitForTimeout(900);
-  const shut = await read(page);
-  console.log(`the fold pressed again: ${shut.length < opened.after.length ? 'folded away again' : 'still open'}`);
+  const shut = await shown_text(page);
+  console.log(`the fold pressed again: ${came_of(opened.after, shut).length === 0 && shut.length < opened.after.length ? 'folded away again' : 'still open'}`);
 } else {
   console.log('the fold pressed open: no press anywhere opened it');
 }
