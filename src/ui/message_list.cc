@@ -242,7 +242,12 @@ struct history_fold : nodes::Stack {
   // pressed open under what it wrote to itself. Six, because that is how
   // many a fold has ever had to carry at once; a seventh says how many more
   // there were rather than grow past the room.
-  std::array<nodes::Text, 6> fCalls;
+  std::array<nodes::Text, 6> fCalls{nodes::Text{"", 12.0f, 0u},
+                                    nodes::Text{"", 12.0f, 0u},
+                                    nodes::Text{"", 12.0f, 0u},
+                                    nodes::Text{"", 12.0f, 0u},
+                                    nodes::Text{"", 12.0f, 0u},
+                                    nodes::Text{"", 12.0f, 0u}};
   bool fOpen = false;
 
   history_fold() {
