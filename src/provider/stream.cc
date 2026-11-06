@@ -81,6 +81,10 @@ private:
   // in JSON.
   void frame_said(std::string_view data) {
     if (data == "[DONE]") {
+      // Nothing more is coming, so whatever the lexer was still holding on
+      // to -- a tag cut in two, or a thought it never saw closed -- is said
+      // as what it was part of and nothing is lost at the edge of a stream.
+      content_ended();
       // Where a wire says it is done without saying why it stopped first --
       // it happens -- it stopped because it said it was done.
       if (!ended_) {
@@ -117,10 +121,8 @@ private:
       return; // the frame after the answer, that only says what it cost
     const json::value *delta = json::said(choice, "delta");
     if (delta) {
-      if (const std::string_view piece = text_in(delta, "content"); !piece.empty()) {
-        text_.append(piece);
-        said_.push_back(event{.what = event::kind::text, .said = std::string(piece)});
-      }
+      if (const std::string_view piece = text_in(delta, "content"); !piece.empty())
+        content_said(piece);
       // Thinking comes under a name of its own on every wire that has it, and
       // under another on the others.
       std::string_view piece = text_in(delta, "reasoning_content");
@@ -136,12 +138,289 @@ private:
         tools_said(asked);
     }
     if (const std::string_view why = text_in(choice, "finish_reason"); !why.empty()) {
+      content_ended();
       finish_ = std::string(why);
       if (why == "tool_calls")
         tools_done();
       ended_ = true;
       said_.push_back(event{.what = event::kind::ended, .finish = finish_});
     }
+  }
+
+  // What a model wrote thinking, where its wire has no field of its own for
+  // it: a tag round it -- <think>, <thinking>, <reasoning>, <analysis>,
+  // <thought>, or the channels a local template writes -- or, where it began
+  // thinking without opening one at all, everything up to the first tag that
+  // closes one. Kept apart from the answer, as every wire that does have a
+  // field for it keeps it apart.
+  //
+  // Nothing is said until it is known which side of the tag it falls on: a
+  // piece may end in the first half of a tag, and "let me thi" is not thinking
+  // and neither is it the whole of "<think>" until the rest of it comes. What
+  // may yet grow into a tag is held back here and said when the next piece
+  // settles it, or when the stream ends.
+  struct tag_pair {
+    std::string_view open;
+    std::string_view shut;
+  };
+  static constexpr std::array<tag_pair, 5> tagged{{tag_pair{"<think>", "</think>"},
+                                                  tag_pair{"<thinking>", "</thinking>"},
+                                                  tag_pair{"<reasoning>", "</reasoning>"},
+                                                  tag_pair{"<analysis>", "</analysis>"},
+                                                  tag_pair{"<thought>", "</thought>"}}};
+  // The channels a local template writes thinking into: opened by name, closed
+  // by whichever of these a model says instead of going on thinking.
+  static constexpr std::array<std::string_view, 3> channels{
+      "<|channel|>thought<|message|>", "<|channel|>reasoning<|message|>",
+      "<|channel|>analysis<|message|>"};
+  static constexpr std::array<std::string_view, 3> channels_shut{
+      "<|end|>", "<|channel|>final<|message|>",
+      "<|start|>assistant<|channel|>final<|message|>"};
+  // Every tag that shuts thinking, whichever of them opened it: looked for on
+  // its own too, because a model that begins thinking without saying so still
+  // says when it stops.
+  static constexpr std::array<std::string_view, 9> shuts{
+      "</think>", "</thinking>", "</reasoning>", "</analysis>", "</thought>",
+      "<|end|>", "<|channel|>final<|message|>",
+      "<|start|>assistant<|channel|>final<|message|>", "<channel|>"};
+
+  // "Ab" is "ab" and "AB" alike: every tag here is written in small letters
+  // by every model that writes them, and not by all of them in only those.
+  [[nodiscard]] static char small(char one) {
+    return one >= 'A' && one <= 'Z' ? static_cast<char>(one - 'A' + 'a') : one;
+  }
+  [[nodiscard]] static bool small_same(std::string_view one,
+                                      std::string_view two) {
+    if (one.size() != two.size())
+      return false;
+    for (std::size_t at = 0; at < one.size(); ++at)
+      if (small(one[at]) != small(two[at]))
+        return false;
+    return true;
+  }
+
+  // Where in this text one of these tags stands whole, earliest first.
+  [[nodiscard]] static std::optional<std::pair<std::size_t, std::string_view>>
+  whole_tag_in(std::string_view text, std::span<const std::string_view> tags) {
+    std::optional<std::pair<std::size_t, std::string_view>> found;
+    for (std::string_view tag : tags) {
+      for (std::size_t at = 0; at + tag.size() <= text.size(); ++at) {
+        if (!small_same(text.substr(at, tag.size()), tag))
+          continue;
+        if (!found || at < found->first)
+          found = std::pair<std::size_t, std::string_view>{at, tag};
+        break;
+      }
+    }
+    return found;
+  }
+
+  // Whether this text ends in the beginning of one of these tags: the longest
+  // such beginning, which is the most that can be held back for it.
+  [[nodiscard]] static std::size_t begun_tag_in(
+      std::string_view text, std::span<const std::string_view> tags) {
+    std::size_t longest = 0;
+    for (std::string_view tag : tags)
+      for (std::size_t at = 1; at < tag.size(); ++at)
+        if (text.size() >= at &&
+            small_same(text.substr(text.size() - at), tag.substr(0, at)))
+          longest = std::max(longest, at);
+    return longest;
+  }
+
+  // Every tag that opens thinking, whichever way a model writes it.
+  [[nodiscard]] static std::span<const std::string_view> opens() {
+    static constexpr std::array<std::string_view, 8> all{
+        "<think>", "<thinking>", "<reasoning>", "<analysis>", "<thought>",
+        "<|channel|>thought<|message|>", "<|channel|>reasoning<|message|>",
+        "<|channel|>analysis<|message|>"};
+    return std::span<const std::string_view>(all);
+  }
+  [[nodiscard]] static std::span<const std::string_view> every_shut() {
+    return std::span<const std::string_view>(shuts);
+  }
+
+  // One piece of what a wire called its own content: read for thinking first,
+  // and only then said as the answer it is.
+  void content_said(std::string_view piece) {
+    held_.append(piece);
+    for (;;) {
+      if (thinking_) {
+        const std::span<const std::string_view> wanted =
+            wanted_shut_.empty() ? every_shut()
+                                 : std::span<const std::string_view>(&wanted_shut_, 1);
+        if (const auto shut = whole_tag_in(held_, wanted)) {
+          thought_said(held_.substr(0, shut->first));
+          held_.erase(0, shut->first + shut->second.size());
+          thinking_ = false;
+          wanted_shut_ = {};
+          continue;
+        }
+        const std::size_t begun = begun_tag_in(held_, wanted);
+        if (begun != 0) {
+          const std::size_t upto = held_.size() - begun;
+          thought_said(held_.substr(0, upto));
+          held_.erase(0, upto);
+        } else {
+          thought_said(held_);
+          held_.clear();
+        }
+        return;
+      }
+      const auto opened = whole_tag_in(held_, opens());
+      const auto shut = whole_tag_in(held_, every_shut());
+      if (!opened && !shut) {
+        // Not a tag in sight: what may yet grow into one is held back, and
+        // the rest is said as the answer.
+        const std::size_t begun =
+            std::max(begun_tag_in(held_, opens()), begun_tag_in(held_, every_shut()));
+        if (begun != 0) {
+          const std::size_t upto = held_.size() - begun;
+          answer_said(held_.substr(0, upto));
+          held_.erase(0, upto);
+        } else {
+          answer_said(held_);
+          held_.clear();
+        }
+        return;
+      }
+      // Thinking that began without being opened -- everything written before
+      // the first tag that closes one was thought and not answer -- or opened
+      // as it should be. Whichever came first decides.
+      const bool opened_first = opened && (!shut || opened->first <= shut->first);
+      if (opened_first) {
+        answer_said(held_.substr(0, opened->first));
+        held_.erase(0, opened->first + opened->second.size());
+        thinking_ = true;
+        wanted_shut_ = shut_of(opened->second);
+        if (wanted_shut_.empty())
+          wanted_shut_ = channels_shut[0];
+        continue;
+      }
+      thought_said(held_.substr(0, shut->first));
+      held_.erase(0, shut->first + shut->second.size());
+    }
+  }
+
+  // Nothing more is coming: what is held back is said as whichever side of a
+  // tag it fell on, and nothing keeps waiting for a tag that will never be
+  // finished. A thought the wire left open is thought up to its last word.
+  void content_ended() {
+    if (thinking_) {
+      thought_said(held_);
+      held_.clear();
+      thinking_ = false;
+      wanted_shut_ = {};
+      tools_written_in(thought_);
+      return;
+    }
+    answer_said(held_);
+    held_.clear();
+    tools_written_in(text_);
+  }
+
+  [[nodiscard]] static std::string_view shut_of(std::string_view opened) {
+    for (const tag_pair &one : tagged)
+      if (small_same(opened, one.open))
+        return one.shut;
+    return {};
+  }
+
+  void thought_said(std::string_view piece) {
+    if (piece.empty())
+      return;
+    thought_.append(piece);
+    said_.push_back(event{.what = event::kind::thought, .said = std::string(piece)});
+  }
+
+  void answer_said(std::string_view piece) {
+    if (piece.empty())
+      return;
+    text_.append(piece);
+    said_.push_back(event{.what = event::kind::text, .said = std::string(piece)});
+    tools_written_in(text_);
+  }
+
+  // A tool asked for in the answer's own words: a tag written round a thing
+  // that names it and says what to call it with, which is how every model
+  // that was not given tools as fields of their own asks for them -- local
+  // ones most of all. Cut out of the answer where it was written, because it
+  // was never meant to be read there, and kept as the call it is.
+  void tools_written_in(std::string &whole) {
+    constexpr std::string_view opened = "<tool_call>";
+    constexpr std::string_view shut = "</tool_call>";
+    for (;;) {
+      const std::size_t at = whole.find(opened);
+      if (at == std::string::npos)
+        return;
+      const std::size_t inner = at + opened.size();
+      const std::size_t end = whole.find(shut, inner);
+      if (end == std::string::npos)
+        return; // a frame may have cut it: the next one finishes it
+      call_written(std::string_view(whole).substr(inner, end - inner));
+      whole.erase(at, end + shut.size() - at);
+    }
+  }
+
+  // One such thing, written in JSON: what it is called, and what it is called
+  // with. What it is called with may itself be a thing or a list, so it is
+  // taken as it was written -- from the quote that opens it to the brace that
+  // shuts it -- and not said again in a shape of this module's choosing.
+  void call_written(std::string_view inner) {
+    auto whole = json::read(inner);
+    if (!whole)
+      return;
+    const std::string_view name = text_in(&*whole, "name");
+    if (name.empty())
+      return;
+    tool_call kept;
+    kept.name = std::string(name);
+    if (const std::size_t at = inner.find("\"arguments\""); at != std::string_view::npos)
+      kept.arguments = std::string(said_value_of(inner, inner.find(':', at) + 1));
+    else if (const json::value *given = json::said(&*whole, "arguments"))
+      kept.arguments = json::text_of(*given).value_or(std::string_view());
+    calls_.push_back(kept);
+    said_.push_back(event{.what = event::kind::tool, .call = kept});
+  }
+
+  // What stands after "arguments":, whole -- as far as the brace or bracket
+  // it opened, whichever that was, and no account taken of anything inside
+  // a string of its own.
+  [[nodiscard]] static std::string_view said_value_of(std::string_view text,
+                                                     std::size_t at) {
+    while (at < text.size() &&
+           (text[at] == ' ' || text[at] == '\t' || text[at] == '\n' || text[at] == '\r'))
+      ++at;
+    if (at >= text.size())
+      return {};
+    if (text[at] == '"') {
+      const std::size_t shut_at = text.find('"', at + 1);
+      return shut_at == std::string_view::npos ? text.substr(at)
+                                               : text.substr(at, shut_at + 1 - at);
+    }
+    const char first = text[at];
+    if (first != '{' && first != '[')
+      return text.substr(at, text.find_first_of(", \n", at) - at);
+    const char wanted = first == '{' ? '}' : ']';
+    std::size_t deep = 0;
+    bool in_text = false;
+    for (std::size_t place = at; place < text.size(); ++place) {
+      const char one = text[place];
+      if (in_text) {
+        if (one == '\\')
+          ++place;
+        else if (one == '"')
+          in_text = false;
+        continue;
+      }
+      if (one == '"')
+        in_text = true;
+      else if (one == first)
+        ++deep;
+      else if (one == wanted && --deep == 0)
+        return text.substr(at, place + 1 - at);
+    }
+    return text.substr(at);
   }
 
   // Tool calls come as deltas over an index: which of them, what it is
@@ -208,6 +487,12 @@ private:
   }
 
   std::string kept_;
+  // What the thinking lexer holds: a beginning of a tag it has not settled
+  // yet, whether it is reading thought at this moment, and which tag is to
+  // shut the one it opened.
+  std::string held_;
+  bool thinking_ = false;
+  std::string_view wanted_shut_;
   std::vector<event> said_;
   std::string text_;
   std::string thought_;

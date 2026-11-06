@@ -204,4 +204,59 @@ SAID(provider, done_without_a_reason_stops_because_it_said_stop) {
   EXPECT_EQ(std::string(one.finish()), std::string("stop"));
 }
 
+// Thinking a wire carries in no field of its own but inside the answer,
+// wrapped in a tag: kept apart from what is said, and apart wherever the tag
+// itself is cut in two by the frame that carried it.
+SAID(provider, thinking_written_inside_the_answer_is_not_the_answer) {
+  provider::stream one;
+  one.feed("data: {\"choices\":[{\"delta\":{\"content\":\"<think>let me see</think>Hi\"}}]}\n\n");
+  EXPECT_EQ(said(one), std::string("Hi"));
+  EXPECT_EQ(std::string(one.thought()), std::string("let me see"));
+}
+
+SAID(provider, a_tag_cut_in_two_by_a_frame_is_whole_when_it_is_read) {
+  provider::stream one;
+  // The tag arrives in halves, each half at the edge of a frame, and the
+  // thought inside it is said before its tag is shut.
+  one.feed("data: {\"choices\":[{\"delta\":{\"content\":\"the <thi\"}}]}\n\ndata: "
+           "{\"choices\":[{\"delta\":{\"content\":\"nk>thou\"}}]}\n\n");
+  EXPECT_EQ(said(one), std::string("the "));
+  EXPECT_EQ(std::string(one.thought()), std::string("thou"));
+  one.feed("data: {\"choices\":[{\"delta\":{\"content\":\"ght</thi\"}}]}\n\n"
+           "data: {\"choices\":[{\"delta\":{\"content\":\"nk>Hi\"}}]}\n\n");
+  EXPECT_EQ(std::string(one.thought()), std::string("thought"));
+  EXPECT_EQ(said(one), std::string("the Hi"));
+}
+
+SAID(provider, thinking_that_never_opened_a_tag_is_thinking_until_it_closes_one) {
+  provider::stream one;
+  one.feed("data: {\"choices\":[{\"delta\":{\"content\":\"hmm...\"}}]}\n\n"
+           "data: {\"choices\":[{\"delta\":{\"content\":\"</think>Hi\"}}]}\n\n");
+  EXPECT_EQ(said(one), std::string("Hi"));
+  EXPECT_EQ(std::string(one.thought()), std::string("hmm..."));
+}
+
+SAID(provider, thought_left_open_when_the_stream_ends_is_thought) {
+  provider::stream one;
+  one.feed("data: {\"choices\":[{\"delta\":{\"content\":\"<think>let me see\"}}]}\n\n"
+           "data: [DONE]\n\n");
+  EXPECT_TRUE(said(one).empty());
+  EXPECT_EQ(std::string(one.thought()), std::string("let me see"));
+}
+
+// A tool asked for in the answer's own words, which is how every model that
+// was given no fields for them asks: cut out of the answer, and said as the
+// call it is.
+SAID(provider, a_tool_written_in_the_answer_is_a_call_and_not_text) {
+  provider::stream one;
+  one.feed("data: {\"choices\":[{\"delta\":{\"content\":\"<tool_call>{\\\"name\\\":"
+           "\\\"weather\\\",\\\"arguments\\\":{\\\"city\\\":\\\"Oslo\\\"}}"
+           "</tool_call>\"}}]}\n\n"
+           "data: {\"choices\":[{\"delta\":{},\"finish_reason\":\"stop\"}]}\n\n");
+  EXPECT_TRUE(said(one).empty());
+  EXPECT_EQ(one.calls().size(), std::size_t(1));
+  EXPECT_EQ(one.calls().front().name, std::string("weather"));
+  EXPECT_EQ(one.calls().front().arguments, std::string("{\"city\":\"Oslo\"}"));
+}
+
 int main() { return pchat::tests::run(); }
