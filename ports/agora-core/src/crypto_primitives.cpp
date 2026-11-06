@@ -244,7 +244,119 @@ void random_bytes(std::span<std::uint8_t> out) {
 
 namespace {
 
+#if defined(AGORA_CORE_FORCE_PORTABLE_U128) || !defined(__SIZEOF_INT128__)
+// Where the architecture has no 128-bit word of its own -- 32-bit ARM, where the
+// phone build compiles this file too -- the one type written out over two words:
+// widening, add, subtract, a product, shifts and a mask, each doing what the
+// native type does, wraparound included. AGORA_CORE_FORCE_PORTABLE_U128 asks for
+// it on a host that does have the native one, so a test reads this branch as
+// well as a 32-bit link does.
+struct u128 {
+    std::uint64_t lo = 0;
+    std::uint64_t hi = 0;
+
+    u128() = default;
+    // Every widening this file asks for comes from 64 bits, so one conversion
+    // covers an int, a uint64_t and an array element alike.
+    u128(std::uint64_t low_value) : lo(low_value) {}
+    u128(std::uint64_t low_value, std::uint64_t high_value) : lo(low_value), hi(high_value) {}
+
+    // The low word, as a cast to a narrower integer truncates.
+    explicit operator std::uint64_t() const { return lo; }
+
+    friend u128 operator+(u128 lhs, const u128& rhs) {
+        const std::uint64_t low = lhs.lo + rhs.lo;
+        const std::uint64_t carry = low < lhs.lo ? 1u : 0u;
+        lhs.lo = low;
+        lhs.hi = lhs.hi + rhs.hi + carry;
+        return lhs;
+    }
+
+    friend u128 operator-(u128 lhs, const u128& rhs) {
+        const std::uint64_t low = lhs.lo - rhs.lo;
+        const std::uint64_t borrow = lhs.lo < rhs.lo ? 1u : 0u;
+        lhs.lo = low;
+        lhs.hi = lhs.hi - rhs.hi - borrow;
+        return lhs;
+    }
+
+    // 64 x 64 -> 128 over halves no wider than 32 bits, so no product overflows
+    // before it is assembled.
+    static void wide(std::uint64_t a, std::uint64_t b, std::uint64_t& low,
+                     std::uint64_t& high) {
+        const std::uint64_t a_lo = a & 0xffffffffu;
+        const std::uint64_t a_hi = a >> 32;
+        const std::uint64_t b_lo = b & 0xffffffffu;
+        const std::uint64_t b_hi = b >> 32;
+        const std::uint64_t ll = a_lo * b_lo;
+        const std::uint64_t lh = a_lo * b_hi;
+        const std::uint64_t hl = a_hi * b_lo;
+        const std::uint64_t hh = a_hi * b_hi;
+        const std::uint64_t mid = (ll >> 32) + (lh & 0xffffffffu) + (hl & 0xffffffffu);
+        low = (ll & 0xffffffffu) | (mid << 32);
+        high = hh + (lh >> 32) + (hl >> 32) + (mid >> 32);
+    }
+
+    // The low 128 bits of the full product -- what the native type answers,
+    // since every sum the field code builds from this fits inside them.
+    friend u128 operator*(const u128& lhs, const u128& rhs) {
+        std::uint64_t low_low_low = 0;
+        std::uint64_t low_low_high = 0;
+        wide(lhs.lo, rhs.lo, low_low_low, low_low_high);
+        std::uint64_t low_high_low = 0;
+        std::uint64_t low_high_high = 0;
+        wide(lhs.lo, rhs.hi, low_high_low, low_high_high);
+        std::uint64_t high_low_low = 0;
+        std::uint64_t high_low_high = 0;
+        wide(lhs.hi, rhs.lo, high_low_low, high_low_high);
+        (void)low_high_high;
+        (void)high_low_high;
+        u128 out;
+        out.lo = low_low_low;
+        out.hi = low_low_high + low_high_low + high_low_low;
+        return out;
+    }
+
+    friend u128 operator<<(u128 value, std::uint64_t shift) {
+        if (shift == 0)
+            return value;
+        if (shift >= 128)
+            return u128(0, 0);
+        if (shift >= 64)
+            return u128(0, value.lo << (shift - 64));
+        return u128(value.lo << shift, (value.hi << shift) | (value.lo >> (64 - shift)));
+    }
+
+    friend u128 operator>>(const u128& value, std::uint64_t shift) {
+        if (shift == 0)
+            return value;
+        if (shift >= 128)
+            return u128(0, 0);
+        if (shift >= 64)
+            return u128(value.hi >> (shift - 64), 0);
+        return u128((value.lo >> shift) | (value.hi << (64 - shift)), value.hi >> shift);
+    }
+
+    u128& operator+=(const u128& rhs) {
+        *this = *this + rhs;
+        return *this;
+    }
+
+    // A mask wider than a word zero-extends into the full 128 bits, so the high
+    // word goes the way the native type takes it.
+    u128& operator&=(std::uint64_t mask) {
+        lo &= mask;
+        hi = 0;
+        return *this;
+    }
+
+    friend bool operator>=(const u128& lhs, const u128& rhs) {
+        return lhs.hi > rhs.hi || (lhs.hi == rhs.hi && lhs.lo >= rhs.lo);
+    }
+};
+#else
 using u128 = unsigned __int128;
+#endif
 
 constexpr std::uint64_t kMask51 = 0x7ffffffffffffULL;
 // p = 2^255 - 19, in five 51-bit limbs (limb0 = 2^51 - 19)

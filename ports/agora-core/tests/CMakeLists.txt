@@ -125,6 +125,20 @@ add_executable(agora_core_tests
     fuzz_parity_test.cpp
 )
 target_link_libraries(agora_core_tests PRIVATE agora_core_lib Threads::Threads SQLite::SQLite3)
+
+# The same known-answer tests against the portable 128-bit words: what a 32-bit
+# ARM phone compiles, forced on a host that has a native one, so the
+# architecture branch is read by a test and not only by a phone's link.
+add_executable(agora_portable_crypto_test
+    crypto_primitives_test.cpp
+    test_main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/crypto_primitives.cpp)
+target_compile_definitions(agora_portable_crypto_test
+    PRIVATE AGORA_CORE_FORCE_PORTABLE_U128=1)
+target_include_directories(agora_portable_crypto_test
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+target_link_libraries(agora_portable_crypto_test PRIVATE Threads::Threads)
+add_test(NAME agora_portable_crypto_test COMMAND agora_portable_crypto_test)
 target_include_directories(agora_core_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../src)
 
 # Fixtures: the shipped vocabulary and the tiktoken reference set live in the app tree, two
