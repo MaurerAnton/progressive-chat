@@ -287,6 +287,75 @@ struct knob_row : scene::Node {
   }
 };
 
+// How hard a model thinks before it answers, as a row: what it stands at
+// now, and a press either side of that moving it one step round the four
+// (pchat.config). Neither press says more than the step it was pressed for.
+struct effort_row : scene::Node {
+  nodes::Box<> fPlate{0u};
+  nodes::Text fName{"How hard it thinks", 15.0f, 0u};
+  nodes::Text fValue{"", 15.0f, 0u};
+  ask_box fLess{};
+  nodes::Text fLessMark{"\u2013", 16.0f, 0u, true};
+  ask_box fMore{};
+  nodes::Text fMoreMark{"+", 16.0f, 0u, true};
+
+  effort_row() {
+    this->apply({.height = settings_row_height, .cornerRadius = 14.0f});
+    fPlate.apply({.fill = true});
+    fName.apply({.anchor = scene::anchor::kCentreLeft,
+                 .origin = scene::anchor::kCentreLeft,
+                 .x = 16.0f,
+                 .autoSize = scene::axes::kBoth});
+    fValue.apply({.anchor = scene::anchor::kCentreRight,
+                  .origin = scene::anchor::kCentreRight,
+                  .x = -118.0f,
+                  .autoSize = scene::axes::kBoth});
+    fLess.apply({.anchor = scene::anchor::kCentreRight,
+                 .origin = scene::anchor::kCentreRight,
+                 .x = -60.0f,
+                 .width = 40.0f,
+                 .height = 30.0f,
+                 .cornerRadius = 10.0f});
+    fLessMark.apply({.anchor = scene::anchor::kCentreRight,
+                     .origin = scene::anchor::kCentre,
+                     .x = -80.0f,
+                     .autoSize = scene::axes::kBoth});
+    fMore.apply({.anchor = scene::anchor::kCentreRight,
+                 .origin = scene::anchor::kCentreRight,
+                 .x = -14.0f,
+                 .width = 40.0f,
+                 .height = 30.0f,
+                 .cornerRadius = 10.0f});
+    fMoreMark.apply({.anchor = scene::anchor::kCentreRight,
+                     .origin = scene::anchor::kCentre,
+                     .x = -34.0f,
+                     .autoSize = scene::axes::kBoth});
+  }
+
+  void again(app::requests *sink, const scene::Spec &spec, const paints &look,
+             effort now) {
+    this->apply(spec);
+    fPlate.setColour(look.field);
+    fName.setColour(look.text);
+    fValue.setText(std::string(said_how(now)));
+    fValue.setColour(look.dim);
+    fLess.again(sink, app::set_effort{stepped_of(now, -1)}, look.raised);
+    fMore.again(sink, app::set_effort{stepped_of(now, 1)}, look.raised);
+    fLessMark.setColour(look.text);
+    fMoreMark.setColour(look.text);
+  }
+
+  void forEachChild(auto &&f) {
+    f(fPlate);
+    f(fName);
+    f(fValue);
+    f(fLess);
+    f(fLessMark);
+    f(fMore);
+    f(fMoreMark);
+  }
+};
+
 // What the card holds: the seeds, the switches, and what else is said in
 // the page. Of its own node, and not drawn straight into the page, so that
 // what scrolls is these and not the card they are said in -- a page that
@@ -371,6 +440,10 @@ struct settings_rows : scene::Node {
   switch_row fLight;
   // Generation, drawn: one row for each of the five an answer is asked with.
   std::array<knob_row, asking_offered.size()> fKnobs;
+  // Thinking, drawn: that it is wanted at all, and how hard, under the name
+  // the page had left standing for the answerer's own generation.
+  switch_row fThinking;
+  effort_row fEffort;
   // The tools, drawn: a switch to each of the three, whether it is offered
   // to a model or not.
   std::array<switch_row, tool_names.size()> fTools;
@@ -412,6 +485,8 @@ struct settings_rows : scene::Node {
     // it, and each of these says it is drawn when it is.
     for (knob_row &one : fKnobs)
       one.setVisible(false);
+    fThinking.setVisible(false);
+    fEffort.setVisible(false);
     for (switch_row &one : fTools)
       one.setVisible(false);
     for (switch_row &one : fAnswerers)
@@ -535,6 +610,21 @@ struct settings_rows : scene::Node {
                                      const asking &how, float row_width,
                                      float base) {
     float at = base;
+    const auto row_at = [row_width](float y) {
+      return scene::Spec{.anchor = scene::anchor::kTopLeft,
+                         .x = 16.0f,
+                         .y = y,
+                         .relativeSize = scene::axes::kNone,
+                         .width = row_width,
+                         .height = settings_row_height,
+                         .cornerRadius = 14.0f,
+                         .visible = true};
+    };
+    fThinking.again(asked, row_at(at), look, "Think before answering",
+                    how.thinking, app::set_thinking{!how.thinking});
+    at += settings_row_stride;
+    fEffort.again(asked, row_at(at), look, how.how_hard);
+    at += settings_row_stride;
     for (std::size_t one = 0u; one < asking_offered.size(); ++one) {
       const asking_choice &said = asking_offered[one];
       fKnobs[one].again(asked,

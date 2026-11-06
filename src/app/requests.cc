@@ -111,6 +111,15 @@ struct set_generation {
   asking_what field = asking_what::temperature;
   double value = 0.0;
 };
+// Thinking before an answer, and how hard it is to think: the first two of
+// the things a three-dot menu says (design-doc.md, "The editor's row"), read
+// into what every wire is asked for from then on.
+struct set_thinking {
+  bool on = false;
+};
+struct set_effort {
+  effort how = effort::some;
+};
 // One of the tools this program owns, switched: on, and a model is told it
 // may ask for it; off, and no answer this program writes mentions it.
 struct set_tool {
@@ -135,7 +144,7 @@ using request = spl::variant<open_conversation, send_message, new_chat,
                              close_system_prompt, set_system_prompt,
                              toggle_more, open_design, close_design,
                              pick_seed, set_amoled, set_font_scale, pick_theme,
-                              set_generation, set_tool,
+                              set_generation, set_thinking, set_effort, set_tool,
                               set_answerer, copy_text>;
 
 class requests {
