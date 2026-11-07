@@ -121,6 +121,11 @@ struct bubble : nodes::Stack {
 // One of the six: a plate, its mark and what it is called, pressed either to
 // ask the program for something or to be left down -- which is what the one
 // that tells about an answer is, and no asking at all.
+inline scene::Node *said_fold = nullptr;
+inline scene::Node *said_words = nullptr;
+inline scene::Node *said_chip = nullptr;
+inline scene::Node *said_chip_words = nullptr;
+
 struct foot_chip : scene::Node {
   nodes::Box<> fPlate{0u};
   nodes::Icon fMark{shape::copy(), 0u};
@@ -167,6 +172,8 @@ struct foot_chip : scene::Node {
     fAsk = std::move(asking);
     fAsks = true;
     fDown = false;
+    said_chip = this;
+    said_chip_words = &fLabel;
     fMark.setShape(std::move(mark));
     fMark.setColour(look.faint);
     fMark.setVisible(true);
@@ -252,8 +259,25 @@ struct history_fold : nodes::Stack {
 
   [[nodiscard]] bool acceptsInput() const { return true; }
   [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+  using scene::Node::onPointer;
+  // diagnostic: what comes up from a press that landed on one of its own --
+  // the words of the fold, and not the fold itself.
+  void onPointer(scene::phase::bubble, const scene::pointer::up &release,
+                 scene::PointerReply &) {
+    std::printf("fold %u bubbled an up at %.0f,%.0f\n",
+                static_cast<unsigned>(this->fState.fId), release.x, release.y);
+  }
+  void onPointer(scene::phase::bubble, const scene::pointer::down &press,
+                 scene::PointerReply &) {
+    std::printf("fold %u bubbled a down at %.0f,%.0f\n",
+                static_cast<unsigned>(this->fState.fId), press.x, press.y);
+  }
+
   [[nodiscard]] bool onClick(float, float) {
     fOpen = !fOpen;
+    std::printf("fold %u said pressed, open %d\n",
+                static_cast<unsigned>(this->fState.fId),
+                static_cast<int>(fOpen));
     return true;
   }
 
@@ -266,10 +290,22 @@ struct history_fold : nodes::Stack {
   }
 
   void again(const paints &look, const thought &before, float widest) {
+    said_fold = this;
+    said_words = &fSummary;
     this->setVisible(true);
     this->apply({.autoSize = scene::axes::kBoth,
                  .maxWidth = widest,
                  .background = fOpen ? look.field : look.field & 0x80ffffffu});
+    static unsigned said = 0u;
+    if (said++ % 90u == 0u) {
+      const auto &box = this->fState.fBounds;
+      const auto &word = fSummary.fState.fBounds;
+      std::printf(
+          "fold %u box %.0f,%.0f %.0fx%.0f shift %.0f,%.0f summary %.0fx%.0f\n",
+          static_cast<unsigned>(this->fState.fId), box.fLeft, box.fTop,
+          box.width(), box.height(), this->fState.fShiftX,
+          this->fState.fShiftY, word.width(), word.height());
+    }
     fSummary.setText("Thought for " + took_of(before.took_ms) + " · " +
                      std::to_string(before.tool_calls) +
                      (before.tool_calls == 1 ? " tool call" : " tool calls"));
@@ -373,6 +409,23 @@ struct answer_row : nodes::Stack {
     // reached for a tool, what it was worth, and when. Nothing else names a
     // model anywhere on the screen, so this is the place it is said.
     std::string info;
+    static unsigned census = 0u;
+    if (census++ % 90u == 0u) {
+      const auto say = [](const char *what, const scene::Node &one) {
+        const auto &box = one.fState.fBounds;
+        std::printf("%s %.0f,%.0f %.0fx%.0f shift %.0f,%.0f  ", what,
+                    box.fLeft, box.fTop, box.width(), box.height(),
+                    one.fState.fShiftX, one.fState.fShiftY);
+      };
+      std::printf("census row: ");
+      say("row", *this);
+      say("fold", fFold);
+      say("summary", fFold.fSummary);
+      say("body", fBody);
+      say("foot", fFoot);
+      say("chip0", fFoot.fChips[0]);
+      std::printf("\n");
+    }
     if (!model.empty())
       info += std::string(model) + " · ";
     info +=

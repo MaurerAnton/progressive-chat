@@ -19,6 +19,7 @@ import skiff.model;
 import skiff.platform.events;
 import pchat.app.screens;
 import pchat.app.faces;
+import pchat.ui;
 import skia;
 import skiff.paint;
 import pchat.tokens;
@@ -109,6 +110,20 @@ struct program {
                             "a frame took %d ms", static_cast<int>(took));
     }
 #endif
+    if (pchat::ui::said_fold && pchat::ui::said_words) {
+      const auto &box = pchat::ui::said_fold->fState.fBounds;
+      const auto &word = pchat::ui::said_words->fState.fBounds;
+      std::printf("as laid out: fold %.0f,%.0f %.0fx%.0f words %.0f,%.0f %.0fx%.0f\n",
+                  box.fLeft, box.fTop, box.width(), box.height(), word.fLeft,
+                  word.fTop, word.width(), word.height());
+    }
+    if (pchat::ui::said_chip && pchat::ui::said_chip_words) {
+      const auto &box = pchat::ui::said_chip->fState.fBounds;
+      const auto &word = pchat::ui::said_chip_words->fState.fBounds;
+      std::printf("chip laid out: %.0f,%.0f %.0fx%.0f its words %.0f,%.0f %.0fx%.0f\n",
+                  box.fLeft, box.fTop, box.width(), box.height(), word.fLeft,
+                  word.fTop, word.width(), word.height());
+    }
     if (!told_ && skiff::paint::defaultFont() != nullptr) {
       told_ = true;
       keep_a_face();
