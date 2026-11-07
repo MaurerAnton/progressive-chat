@@ -70,12 +70,14 @@ build and the next.
       pressed open and read -- done 2026-11-07: `tools/probe_fold.mjs` presses
       it against the deployed page and reads what stands behind the line: shut,
       the thought is not in the room; pressed, it is; pressed again, it is
-      gone. Where a press lands is said with it -- the line's own words answer
-      nothing, and the pill answers only in a thumb's width at its left -- and
-      the reason stands where the page's font is chosen: the scene measures
-      every text at no width there, because the faces this program ships never
-      reach the window's font in a browser (`src/browser_host.cc` gives them a
-      directory of their own).
+      gone. Where a press lands is said with it, and what that found is a
+      fault rather than a habit: on the deployed page the pill answered only
+      in a thumb's width at its left and the line's own words said nothing,
+      because the scene sized a text by the children it does not have and the
+      box came out at no width at all -- every text sizing itself from what it
+      measures instead (`src/ui/*.cc`, the fields of forty-three `apply`
+      calls) is what puts the words back in their boxes, and a probe run over
+      that tree presses the words and sees the fold open.
 - [ ] **The editor's row is drawn as far as its name and its circle, and no
       further**: the design asks for a plus on its left that attaches (camera,
       gallery, videos, files) and three dots on its right that open thinking
