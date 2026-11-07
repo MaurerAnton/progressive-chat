@@ -13,15 +13,14 @@ module;
 export module pchat.app.program;
 
 import std;
+import skia;
 import skiff.scene;
+import skiff.paint;
 import skiff.bind;
 import skiff.model;
 import skiff.platform.events;
 import pchat.app.screens;
 import pchat.app.faces;
-import pchat.ui;
-import skia;
-import skiff.paint;
 import pchat.tokens;
 
 export namespace pchat::app {
@@ -76,10 +75,6 @@ struct program {
       font->setTypeface(std::move(face));
   }
 
-  // How many frames have gone by here: what is said every few hundred of
-  // them is said by counting these.
-  unsigned ticks_ = 0u;
-
   // Between events: what was asked for, done, and what the window shows drawn
   // again from the model. The size it lays itself out by is the one the last
   // frame left it.
@@ -110,28 +105,7 @@ struct program {
                             "a frame took %d ms", static_cast<int>(took));
     }
 #endif
-    if (pchat::ui::said_fold && pchat::ui::said_words) {
-      const auto &box = pchat::ui::said_fold->fState.fBounds;
-      const auto &word = pchat::ui::said_words->fState.fBounds;
-      std::printf("as laid out: fold %.0f,%.0f %.0fx%.0f words %.0f,%.0f %.0fx%.0f\n",
-                  box.fLeft, box.fTop, box.width(), box.height(), word.fLeft,
-                  word.fTop, word.width(), word.height());
-    }
-    if (pchat::ui::said_chip && pchat::ui::said_chip_words) {
-      const auto &box = pchat::ui::said_chip->fState.fBounds;
-      const auto &word = pchat::ui::said_chip_words->fState.fBounds;
-      std::printf("chip laid out: %.0f,%.0f %.0fx%.0f its words %.0f,%.0f %.0fx%.0f\n",
-                  box.fLeft, box.fTop, box.width(), box.height(), word.fLeft,
-                  word.fTop, word.width(), word.height());
-    }
     keep_a_face();
-    if (skiff::paint::defaultFont() != nullptr && ticks_++ % 240u == 0u) {
-      skia::SkFont *font = skiff::paint::defaultFont();
-      const skiff::paint::Painter words(nullptr, *font, false);
-      std::printf("the font has a face: %s; one line measures %.1f\n",
-                  font->getTypeface() ? "yes" : "no",
-                  words.measure("Thought for 1.9 s", 12.0f, false));
-    }
     const auto &bounds = view.window().root().fState.fBounds;
     if (bounds.width() > 1.0f && bounds.height() > 1.0f)
       view.sized(bounds.width(), bounds.height());
