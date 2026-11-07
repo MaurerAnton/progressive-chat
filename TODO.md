@@ -66,9 +66,16 @@ build and the next.
       of yet -- a picture asked about, a proxy asked through, a memory kept
       between conversations -- and drawing a row for something nothing does
       is how a stub is made.
-- [ ] What a model wrote to itself, folded above its answer, has never been
-      pressed open and read: `history_fold` keeps it (`src/ui/message_list.cc`)
-      and no probe has said whether a press opens it.
+- [x] What a model wrote to itself, folded above its answer, has never been
+      pressed open and read -- done 2026-11-07: `tools/probe_fold.mjs` presses
+      it against the deployed page and reads what stands behind the line: shut,
+      the thought is not in the room; pressed, it is; pressed again, it is
+      gone. Where a press lands is said with it -- the line's own words answer
+      nothing, and the pill answers only in a thumb's width at its left -- and
+      the reason stands where the page's font is chosen: the scene measures
+      every text at no width there, because the faces this program ships never
+      reach the window's font in a browser (`src/browser_host.cc` gives them a
+      directory of their own).
 - [ ] **The editor's row is drawn as far as its name and its circle, and no
       further**: the design asks for a plus on its left that attaches (camera,
       gallery, videos, files) and three dots on its right that open thinking
