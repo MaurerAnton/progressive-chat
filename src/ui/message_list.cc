@@ -16,8 +16,10 @@
 export module pchat.ui:message_list;
 
 import std;
+import skia;
 import skiff.scene;
 import skiff.nodes;
+import skiff.paint;
 import pchat.core;
 import pchat.logic.lists;
 import pchat.app.requests;
@@ -57,6 +59,25 @@ inline constexpr std::size_t foot_count = 6;
   }
   return std::to_string(took_ms) + " ms";
 }
+
+// How wide a line is in the face every piece of text here is drawn with, and
+// how tall one of its lines stands: asked of what measures them, which is the
+// font the window was handed. Nothing here counts characters, and nothing
+// guesses.
+//
+// Asked because a node holding words keeps a size of nothing where nothing
+// measured them -- a browser, whose font carries no face of this program's --
+// and a box as wide as the words in it is then a box of nothing at all: a
+// press on the words reaches no node, however wide they read on the page.
+[[nodiscard]] inline float words_wide(const std::string &line, float size) {
+  skia::SkFont *font = skiff::paint::defaultFont();
+  if (font == nullptr)
+    return 0.0f;
+  const skiff::paint::Painter said(nullptr, *font, false);
+  return said.measure(line, size, false);
+}
+[[nodiscard]] inline float line_tall(float size) { return size * 1.25f; }
+
 // ---- the reader's bubble --------------------------------------------------
 
 // A bubble: its own colour and corners behind two lines -- what was said, and
@@ -306,12 +327,22 @@ struct history_fold : nodes::Stack {
           box.width(), box.height(), this->fState.fShiftX,
           this->fState.fShiftY, word.width(), word.height());
     }
-    fSummary.setText("Thought for " + took_of(before.took_ms) + " · " +
-                     std::to_string(before.tool_calls) +
-                     (before.tool_calls == 1 ? " tool call" : " tool calls"));
+    const std::string line =
+        "Thought for " + took_of(before.took_ms) + " · " +
+        std::to_string(before.tool_calls) +
+        (before.tool_calls == 1 ? " tool call" : " tool calls");
+    fSummary.setText(line);
     fSummary.setColour(look.dim);
-    fSummary.apply(
-        {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
+    // Wide and tall as they were measured, never wider than the room: see
+    // what `words_wide` says of why they are said here at all.
+    const float room = widest - 24.0f;
+    const float wide = words_wide(line, 12.0f);
+    if (said % 90u == 0u)
+      std::printf("the summary measures %.1f, the room %.1f\n", wide, room);
+    fSummary.apply({.autoSize = scene::axes::kNone,
+                    .width = wide > 1.0f ? std::min(wide + 2.0f, room) : room,
+                    .height = line_tall(12.0f),
+                    .maxWidth = room});
     // What it wrote to itself, greentext: shown while it is pressed open.
     fThought.setText(before.said);
     fThought.setColour(look.thought);

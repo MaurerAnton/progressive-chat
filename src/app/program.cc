@@ -76,9 +76,9 @@ struct program {
       font->setTypeface(std::move(face));
   }
 
-  // Said once, the first frame: whether what measures every line has a face,
-  // and how wide it says one of the lines above an answer is.
-  bool told_ = false;
+  // How many frames have gone by here: what is said every few hundred of
+  // them is said by counting these.
+  unsigned ticks_ = 0u;
 
   // Between events: what was asked for, done, and what the window shows drawn
   // again from the model. The size it lays itself out by is the one the last
@@ -124,9 +124,8 @@ struct program {
                   box.fLeft, box.fTop, box.width(), box.height(), word.fLeft,
                   word.fTop, word.width(), word.height());
     }
-    if (!told_ && skiff::paint::defaultFont() != nullptr) {
-      told_ = true;
-      keep_a_face();
+    keep_a_face();
+    if (skiff::paint::defaultFont() != nullptr && ticks_++ % 240u == 0u) {
       skia::SkFont *font = skiff::paint::defaultFont();
       const skiff::paint::Painter words(nullptr, *font, false);
       std::printf("the font has a face: %s; one line measures %.1f\n",
