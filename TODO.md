@@ -51,12 +51,10 @@ build and the next.
 - [ ] The back end: `src/app/sample.cc` answers for now, so nothing that
       is counted -- tokens, tool calls, how long an answer took -- is
       counted for real.
-- [ ] Copy to the clipboard only keeps the text in the program
-      (`copied_`); nothing carries it to the host's own clipboard.
-      Written again on 2026-11-06: it is given to the machine's own
-      clipboard now (`scene::setClipboardText`), which no probe has read
-      back yet -- a page kept in a browser is asked for its clipboard by
-      permission and nobody has asked.
+- [x] Copy to the clipboard carries it to the machine's own clipboard --
+      read back on 2026-11-07: a page kept in a browser, asked for its
+      clipboard by permission, keeps the whole answer the Copy chip was
+      pressed on and nothing that was in it before (`tools/probe_copied.mjs`).
 - [ ] Three of the eight settings groups still stand named and empty:
       Multimodal, Network, and Memory & Data. What is drawn today under the
       others is Appearance (the theme, its type and its dark), what answers
