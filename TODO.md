@@ -66,9 +66,16 @@ build and the next.
       of yet -- a picture asked about, a proxy asked through, a memory kept
       between conversations -- and drawing a row for something nothing does
       is how a stub is made.
-- [ ] What a model wrote to itself, folded above its answer, has never been
-      pressed open and read: `history_fold` keeps it (`src/ui/message_list.cc`)
-      and no probe has said whether a press opens it.
+- [x] What a model wrote to itself, folded above its answer, is pressed open
+      and read: `history_fold` keeps it (`src/ui/message_list.cc`), and a probe
+      of the page in a browser says a press anywhere in the line opens it and
+      shuts it again. Nothing opened it before because nothing there measured
+      the words: what that costs, and what is said instead, is written under
+      *What nothing measures reads as nothing wide* in `docs/skiff-notes.md`.
+- [ ] Where nothing measures a line there are surely more than one node whose
+      size came of nothing: six chips and the fold above an answer were the
+      two found, both now said their size, and nothing else pressable has
+      been probed the way they were.
 - [ ] **The editor's row is drawn as far as its name and its circle, and no
       further**: the design asks for a plus on its left that attaches (camera,
       gallery, videos, files) and three dots on its right that open thinking
