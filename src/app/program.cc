@@ -19,6 +19,8 @@ import skiff.model;
 import skiff.platform.events;
 import pchat.app.screens;
 import pchat.app.faces;
+import skia;
+import skiff.paint;
 import pchat.tokens;
 
 export namespace pchat::app {
@@ -54,6 +56,29 @@ struct program {
   [[nodiscard]] window_scene &window() noexcept { return view.window(); }
   [[nodiscard]] skiff::scene::detail::PlainPaint &painting() noexcept { return paint; }
 
+  // Nothing is measured where the font carries no face, and a browser -- no
+  // system whose faces could be asked for the ones this program ships, so
+  // none is put on it -- measures every line as no wider than nothing: every
+  // box that is as wide as the words in it becomes a box of nothing at all,
+  // and a press on those words reaches no node. Kept from skiff's own
+  // stand-in face, which is what all of this asks where the program's own
+  // were never loaded.
+  void keep_a_face() {
+    skia::SkFont *font = skiff::paint::defaultFont();
+    if (font == nullptr || font->getTypeface() != nullptr)
+      return;
+    const auto kept = skia::SkFontMgr_New_Custom_Directory("");
+    if (kept == nullptr)
+      return;
+    if (skia::Sp<skia::SkTypeface> face =
+            kept->matchFamilyStyle(nullptr, skia::SkFontStyle()))
+      font->setTypeface(std::move(face));
+  }
+
+  // Said once, the first frame: whether what measures every line has a face,
+  // and how wide it says one of the lines above an answer is.
+  bool told_ = false;
+
   // Between events: what was asked for, done, and what the window shows drawn
   // again from the model. The size it lays itself out by is the one the last
   // frame left it.
@@ -84,6 +109,15 @@ struct program {
                             "a frame took %d ms", static_cast<int>(took));
     }
 #endif
+    if (!told_ && skiff::paint::defaultFont() != nullptr) {
+      told_ = true;
+      keep_a_face();
+      skia::SkFont *font = skiff::paint::defaultFont();
+      const skiff::paint::Painter words(nullptr, *font, false);
+      std::printf("the font has a face: %s; one line measures %.1f\n",
+                  font->getTypeface() ? "yes" : "no",
+                  words.measure("Thought for 1.9 s", 12.0f, false));
+    }
     const auto &bounds = view.window().root().fState.fBounds;
     if (bounds.width() > 1.0f && bounds.height() > 1.0f)
       view.sized(bounds.width(), bounds.height());
