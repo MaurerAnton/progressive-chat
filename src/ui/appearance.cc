@@ -42,8 +42,7 @@ struct seed_row : scene::Node {
                 .x = 16.0f});
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
-                 .x = 56.0f,
-                 .autoSize = scene::axes::kBoth});
+                 .x = 56.0f});
     fTick.apply({.width = 18.0f,
                  .height = 18.0f,
                  .anchor = scene::anchor::kCentreRight,

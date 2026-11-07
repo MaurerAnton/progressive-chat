@@ -129,8 +129,7 @@ struct switch_row : scene::Node {
     fPlate.apply({.fill = true});
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
-                 .x = 16.0f,
-                 .autoSize = scene::axes::kBoth});
+                 .x = 16.0f});
     fTrack.apply({.width = 42.0f,
                   .height = 24.0f,
                   .cornerRadius = 12.0f,
@@ -225,14 +224,12 @@ struct knob_row : scene::Node {
     fPlate.apply({.fill = true});
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
-                 .x = 16.0f,
-                 .autoSize = scene::axes::kBoth});
+                 .x = 16.0f});
     // What it stands at, right of its name and left of the two presses: not
     // centred, because a number that grows is read where it began.
     fValue.apply({.anchor = scene::anchor::kCentreRight,
                   .origin = scene::anchor::kCentreRight,
-                  .x = -118.0f,
-                  .autoSize = scene::axes::kBoth});
+                  .x = -118.0f});
     fLess.apply({.anchor = scene::anchor::kCentreRight,
                  .origin = scene::anchor::kCentreRight,
                  .x = -60.0f,
@@ -241,8 +238,7 @@ struct knob_row : scene::Node {
                  .cornerRadius = 10.0f});
     fLessMark.apply({.anchor = scene::anchor::kCentreRight,
                      .origin = scene::anchor::kCentre,
-                     .x = -80.0f,
-                     .autoSize = scene::axes::kBoth});
+                     .x = -80.0f});
     fMore.apply({.anchor = scene::anchor::kCentreRight,
                  .origin = scene::anchor::kCentreRight,
                  .x = -14.0f,
@@ -251,8 +247,7 @@ struct knob_row : scene::Node {
                  .cornerRadius = 10.0f});
     fMoreMark.apply({.anchor = scene::anchor::kCentreRight,
                      .origin = scene::anchor::kCentre,
-                     .x = -34.0f,
-                     .autoSize = scene::axes::kBoth});
+                     .x = -34.0f});
   }
 
   void again(app::requests *sink, const scene::Spec &spec, const paints &look,
@@ -306,12 +301,10 @@ struct about_row : scene::Node {
                  .cornerRadius = 14.0f});
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
-                 .x = 16.0f,
-                 .autoSize = scene::axes::kBoth});
+                 .x = 16.0f});
     fSaid.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
-                 .x = 190.0f,
-                 .autoSize = scene::axes::kBoth});
+                 .x = 190.0f});
   }
 
   [[nodiscard]] bool acceptsInput() const { return true; }
@@ -387,13 +380,11 @@ struct settings_rows : scene::Node {
   settings_rows() {
     fHeading.apply({.anchor = scene::anchor::kTopLeft,
                     .x = 20.0f,
-                    .y = 24.0f,
-                    .autoSize = scene::axes::kBoth});
+                    .y = 24.0f});
     for (group_name &one : *fGroups) {
       one.name.setText(std::string{});
       one.name.apply({.anchor = scene::anchor::kTopLeft,
                       .x = 20.0f,
-                      .autoSize = scene::axes::kBoth,
                       .visible = false});
     }
     for (auto &group : *fItems)
@@ -402,7 +393,6 @@ struct settings_rows : scene::Node {
         one.name.apply({.anchor = scene::anchor::kCentreLeft,
                         .origin = scene::anchor::kCentreLeft,
                         .x = 32.0f,
-                        .autoSize = scene::axes::kBoth,
                         .visible = false});
       }
     for (std::size_t at = 0; at < max_seeds; ++at)
@@ -642,8 +632,7 @@ struct settings_rows : scene::Node {
     fRead.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
                  .x = 32.0f,
-                 .y = top + 156.0f + row_height / 2.0f,
-                 .autoSize = scene::axes::kBoth});
+                 .y = top + 156.0f + row_height / 2.0f});
     // Where the rest of the page begins: under the row that offers the
     // design, and the room left between it and the next group.
     return top + 156.0f + settings_row_height + settings_group_gap;
@@ -668,7 +657,6 @@ struct settings_rows : scene::Node {
       head.name.apply({.anchor = scene::anchor::kTopLeft,
                        .x = 20.0f,
                        .y = at,
-                       .autoSize = scene::axes::kBoth,
                        .visible = true});
       at += settings_group_stride;
       for (std::size_t one = 0u; one < max_settings_items; ++one) {
@@ -683,7 +671,6 @@ struct settings_rows : scene::Node {
                          .origin = scene::anchor::kCentreLeft,
                          .x = 32.0f,
                          .y = at + settings_row_height / 2.0f,
-                         .autoSize = scene::axes::kBoth,
                          .visible = true});
         at += settings_row_stride;
         // Under one of its items a group says more than its name: what it

@@ -34,8 +34,7 @@ using compose::row;
   return compose::column(compose::vbox(0.0f, {.width = size, .height = size, .cornerRadius = size / 2.0f,
                                               .background = look.avatar}),
                          caption(std::string(1, first), size * 0.44f, look.on_avatar, true,
-                                 {.anchor = scene::anchor::kCentre, .origin = scene::anchor::kCentre,
-                                  .autoSize = scene::axes::kBoth}));
+                                 {.anchor = scene::anchor::kCentre, .origin = scene::anchor::kCentre}));
 }
 
 // A plate rounded all the way round: a pill with its label centred in it.
@@ -47,8 +46,7 @@ using compose::row;
     made.cornerRadius = std::max(made.height.value_or(pill_radius * 2.0f) / 2.0f, 1.0f);
   return compose::column(compose::vbox(0.0f, made),
                          caption(std::move(label), size, text, bold,
-                                 {.anchor = scene::anchor::kCentre, .origin = scene::anchor::kCentre,
-                                  .autoSize = scene::axes::kBoth}));
+                                 {.anchor = scene::anchor::kCentre, .origin = scene::anchor::kCentre}));
 }
 
 // A badge: how much is unread, in a circle of the accent.
@@ -56,8 +54,7 @@ using compose::row;
   const scene::Spec spec{.width = size, .height = size, .cornerRadius = size / 2.0f, .background = colour};
   return compose::column(compose::vbox(0.0f, spec),
                          caption(count > 99 ? "99+" : std::to_string(count), size * 0.52f, on_colour, true,
-                                 {.anchor = scene::anchor::kCentre, .origin = scene::anchor::kCentre,
-                                  .autoSize = scene::axes::kBoth}));
+                                 {.anchor = scene::anchor::kCentre, .origin = scene::anchor::kCentre}));
 }
 
 // Two lines, one above the other: what a row in a list says.

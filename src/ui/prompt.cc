@@ -161,15 +161,13 @@ struct prompt_screen : scene::Node {
     fHead.setColour(look.text);
     fHead.apply({.anchor = scene::anchor::kTopCentre,
                  .origin = scene::anchor::kTopCentre,
-                 .y = above + 22.0f,
-                 .autoSize = scene::axes::kBoth});
+                 .y = above + 22.0f});
     fSaid.setText("Told to every model that answers here, before anything "
                   "else is said to it.");
     fSaid.setColour(look.faint);
     fSaid.apply({.anchor = scene::anchor::kTopCentre,
                  .origin = scene::anchor::kTopCentre,
-                 .y = above + 56.0f,
-                 .autoSize = scene::axes::kBoth});
+                 .y = above + 56.0f});
     fClosePlate.again(asked, app::close_system_prompt{}, look.raised);
     fClosePlate.apply({.width = 36.0f,
                        .height = 36.0f,

@@ -44,8 +44,7 @@ struct bar_pill : scene::Node {
                  .x = 12.0f});
     fLabel.apply({.anchor = scene::anchor::kCentreLeft,
                   .origin = scene::anchor::kCentreLeft,
-                  .x = 36.0f,
-                  .autoSize = scene::axes::kBoth});
+                  .x = 36.0f});
   }
 
   void again(const paints &look, scene::Colour plate, std::string_view label) {
@@ -90,8 +89,7 @@ struct answerer_bubble : scene::Node {
     fPlate.apply({.fill = true});
     fName.apply({.anchor = scene::anchor::kCentreLeft,
                  .origin = scene::anchor::kCentreLeft,
-                 .x = 12.0f,
-                 .autoSize = scene::axes::kBoth});
+                 .x = 12.0f});
   }
 
   void again(const paints &look, const scene::Spec &where,
@@ -173,8 +171,7 @@ struct more_row : scene::Node {
     fPlate.apply({.fill = true});
     fLabel.apply({.anchor = scene::anchor::kCentreLeft,
                   .origin = scene::anchor::kCentreLeft,
-                  .x = 14.0f,
-                  .autoSize = scene::axes::kBoth});
+                  .x = 14.0f});
   }
 
   void again(app::requests *sink, const paints &look, float top,
@@ -300,12 +297,10 @@ struct top_bar : scene::Node {
     fTokens.apply({.anchor = scene::anchor::kTopRight,
                    .origin = scene::anchor::kCentreRight,
                    .x = -(edge + bar_press_width + bar_gap),
-                   .y = top_bar_height / 2.0f,
-                   .autoSize = scene::axes::kBoth});
+                   .y = top_bar_height / 2.0f});
     fTitle.apply({.anchor = scene::anchor::kTopCentre,
                   .origin = scene::anchor::kTopCentre,
-                  .y = 14.0f,
-                  .autoSize = scene::axes::kBoth});
+                  .y = 14.0f});
   }
 
   void again(app::requests *sink, const paints &look, bool menu, bool narrow,
@@ -397,7 +392,6 @@ struct top_bar : scene::Node {
                               (answerer_bubble_width + bar_gap)),
                    .y = top_bar_height / 2.0f,
                    .relativeSize = scene::axes::kNone,
-                   .autoSize = scene::axes::kBoth,
                    .visible = true});
   }
 

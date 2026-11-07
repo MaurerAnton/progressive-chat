@@ -81,8 +81,7 @@ struct composer : scene::Node {
     fModel.apply({.anchor = scene::anchor::kTopLeft,
                   .origin = scene::anchor::kCentreLeft,
                   .x = 18.0f,
-                  .y = 22.0f,
-                  .autoSize = scene::axes::kBoth});
+                  .y = 22.0f});
     fGauge.apply({.width = 18.0f,
                   .height = 18.0f,
                   .anchor = scene::anchor::kTopRight,

@@ -77,9 +77,8 @@ struct bubble : nodes::Stack {
                  .padding = scene::Margin{bubble_pad_y, bubble_pad_x,
                                           bubble_pad_y, bubble_pad_x}});
     fStack = {.direction = nodes::direction::vertical{}, .spacingY = 2.0f};
-    fBody.apply({.autoSize = scene::axes::kBoth});
     fTime.apply(
-        {.autoSize = scene::axes::kBoth, .alignSelf = scene::align::kEnd});
+        {.alignSelf = scene::align::kEnd});
   }
 
   void blank() {
@@ -104,8 +103,7 @@ struct bubble : nodes::Stack {
     fBody.setText(std::string(said));
     fBody.setColour(look.on_sent);
     fBody.setFontSize(look.size);
-    fBody.apply({.autoSize = scene::axes::kBoth,
-                 .maxWidth = widest - 2.0f * bubble_pad_x});
+    fBody.apply({.maxWidth = widest - 2.0f * bubble_pad_x});
     fTime.setText(std::string(when));
     fTime.setColour(look.on_sent & 0xb0ffffffu);
   }
@@ -142,8 +140,7 @@ struct foot_chip : scene::Node {
                  .x = 7.0f});
     fLabel.apply({.anchor = scene::anchor::kCentreLeft,
                   .origin = scene::anchor::kCentreLeft,
-                  .x = 24.0f,
-                  .autoSize = scene::axes::kBoth});
+                  .x = 24.0f});
   }
 
   [[nodiscard]] bool acceptsInput() const { return true; }
@@ -245,8 +242,6 @@ struct history_fold : nodes::Stack {
                  .cornerRadius = 10.0f,
                  .padding = scene::Margin{8.0f, 12.0f, 8.0f, 12.0f}});
     fStack = {.direction = nodes::direction::vertical{}, .spacingY = 6.0f};
-    fSummary.apply({.autoSize = scene::axes::kBoth});
-    fThought.apply({.autoSize = scene::axes::kBoth});
     fThought.setVisible(false);
   }
 
@@ -275,14 +270,14 @@ struct history_fold : nodes::Stack {
                      (before.tool_calls == 1 ? " tool call" : " tool calls"));
     fSummary.setColour(look.dim);
     fSummary.apply(
-        {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
+        {.maxWidth = widest - 24.0f});
     // What it wrote to itself, greentext: shown while it is pressed open.
     fThought.setText(before.said);
     fThought.setColour(look.thought);
     fThought.setMonospace(true);
     fThought.setVisible(fOpen && !before.said.empty());
     fThought.apply(
-        {.autoSize = scene::axes::kBoth, .maxWidth = widest - 24.0f});
+        {.maxWidth = widest - 24.0f});
   }
 
   void forEachChild(auto &&f) {
@@ -340,7 +335,6 @@ struct answer_row : nodes::Stack {
     fStack = {.direction = nodes::direction::vertical{},
               .spacingY = answer_gap};
     fFoot.apply({.fillX = true, .autoSize = scene::axes::kY});
-    fInfo.apply({.autoSize = scene::axes::kBoth});
     fInfo.setVisible(false);
     this->blank();
   }
@@ -366,7 +360,7 @@ struct answer_row : nodes::Stack {
     fBody.setText(said.text);
     fBody.setColour(look.text);
     fBody.setFontSize(look.size);
-    fBody.apply({.autoSize = scene::axes::kY, .fillX = true});
+    fBody.apply({.fillX = true});
     fFoot.again(sink, look, said);
     // What About tells: what answered, and what this answer came to -- the
     // model that keeps this chat, then how long it thought, how often it

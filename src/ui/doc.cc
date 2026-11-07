@@ -105,7 +105,6 @@ struct doc_body : nodes::Stack {
       line.setBold(bold);
       line.setColour(said.kind == logic::doc_kind::gap ? look.dim : look.text);
       line.apply({.fillX = true,
-                  .autoSize = scene::axes::kY,
                   .maxWidth = breadth,
                   .visible = true});
     }

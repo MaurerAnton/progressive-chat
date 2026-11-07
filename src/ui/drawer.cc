@@ -75,17 +75,14 @@ struct conversation_row : scene::Node {
     fTitle.apply({.anchor = scene::anchor::kTopLeft,
                   .x = edge + avatar + gap,
                   .y = 14.0f,
-                  .autoSize = scene::axes::kBoth,
                   .maxWidth = 160.0f});
     fWhen.apply({.anchor = scene::anchor::kTopRight,
                  .origin = scene::anchor::kTopRight,
                  .x = -edge,
-                 .y = 16.0f,
-                 .autoSize = scene::axes::kBoth});
+                 .y = 16.0f});
     fSaid.apply({.anchor = scene::anchor::kTopLeft,
                  .x = edge + avatar + gap,
                  .y = 38.0f,
-                 .autoSize = scene::axes::kBoth,
                  .maxWidth = 190.0f});
     fBadge.apply({.width = 20.0f,
                   .height = 20.0f,
@@ -97,8 +94,7 @@ struct conversation_row : scene::Node {
     fCount.apply({.anchor = scene::anchor::kTopRight,
                   .origin = scene::anchor::kCentre,
                   .x = -edge - 10.0f,
-                  .y = 48.0f,
-                  .autoSize = scene::axes::kBoth});
+                  .y = 48.0f});
   }
 
   // A row is pressed to open what it names: said as a request, and answered
@@ -190,8 +186,7 @@ struct drawer_screen : scene::Node {
     fPaper.apply({.fill = true});
     fHeading.apply({.anchor = scene::anchor::kTopLeft,
                     .x = edge,
-                    .y = edge,
-                    .autoSize = scene::axes::kBoth});
+                    .y = edge});
     fSearch.apply({.anchor = scene::anchor::kTopLeft,
                    .x = edge,
                    .y = edge + 34.0f,
@@ -214,8 +209,7 @@ struct drawer_screen : scene::Node {
                          .y = edge + 18.0f});
     fNone.apply({.anchor = scene::anchor::kTopLeft,
                  .x = edge,
-                 .y = edge + 86.0f,
-                 .autoSize = scene::axes::kBoth});
+                 .y = edge + 86.0f});
     fNone.setVisible(false);
   }
 
