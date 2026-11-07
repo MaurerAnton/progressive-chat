@@ -51,12 +51,10 @@ build and the next.
 - [ ] The back end: `src/app/sample.cc` answers for now, so nothing that
       is counted -- tokens, tool calls, how long an answer took -- is
       counted for real.
-- [ ] Copy to the clipboard only keeps the text in the program
-      (`copied_`); nothing carries it to the host's own clipboard.
-      Written again on 2026-11-06: it is given to the machine's own
-      clipboard now (`scene::setClipboardText`), which no probe has read
-      back yet -- a page kept in a browser is asked for its clipboard by
-      permission and nobody has asked.
+- [x] Copy to the clipboard carries it to the machine's own clipboard --
+      read back on 2026-11-07: a page kept in a browser, asked for its
+      clipboard by permission, keeps the whole answer the Copy chip was
+      pressed on and nothing that was in it before (`tools/probe_copied.mjs`).
 - [ ] Three of the eight settings groups still stand named and empty:
       Multimodal, Network, and Memory & Data. What is drawn today under the
       others is Appearance (the theme, its type and its dark), what answers
@@ -66,9 +64,16 @@ build and the next.
       of yet -- a picture asked about, a proxy asked through, a memory kept
       between conversations -- and drawing a row for something nothing does
       is how a stub is made.
-- [ ] What a model wrote to itself, folded above its answer, has never been
-      pressed open and read: `history_fold` keeps it (`src/ui/message_list.cc`)
-      and no probe has said whether a press opens it.
+- [x] What a model wrote to itself, folded above its answer, is pressed open
+      and read: `history_fold` keeps it (`src/ui/message_list.cc`), and a probe
+      of the page in a browser says a press anywhere in the line opens it and
+      shuts it again. Nothing opened it before because nothing there measured
+      the words: what that costs, and what is said instead, is written under
+      *What nothing measures reads as nothing wide* in `docs/skiff-notes.md`.
+- [ ] Where nothing measures a line there are surely more than one node whose
+      size came of nothing: six chips and the fold above an answer were the
+      two found, both now said their size, and nothing else pressable has
+      been probed the way they were.
 - [ ] **The editor's row is drawn as far as its name and its circle, and no
       further**: the design asks for a plus on its left that attaches (camera,
       gallery, videos, files) and three dots on its right that open thinking

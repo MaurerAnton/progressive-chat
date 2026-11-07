@@ -13,7 +13,9 @@ module;
 export module pchat.app.program;
 
 import std;
+import skia;
 import skiff.scene;
+import skiff.paint;
 import skiff.bind;
 import skiff.model;
 import skiff.platform.events;
@@ -54,6 +56,25 @@ struct program {
   [[nodiscard]] window_scene &window() noexcept { return view.window(); }
   [[nodiscard]] skiff::scene::detail::PlainPaint &painting() noexcept { return paint; }
 
+  // Nothing is measured where the font carries no face, and a browser -- no
+  // system whose faces could be asked for the ones this program ships, so
+  // none is put on it -- measures every line as no wider than nothing: every
+  // box that is as wide as the words in it becomes a box of nothing at all,
+  // and a press on those words reaches no node. Kept from skiff's own
+  // stand-in face, which is what all of this asks where the program's own
+  // were never loaded.
+  void keep_a_face() {
+    skia::SkFont *font = skiff::paint::defaultFont();
+    if (font == nullptr || font->getTypeface() != nullptr)
+      return;
+    const auto kept = skia::SkFontMgr_New_Custom_Directory("");
+    if (kept == nullptr)
+      return;
+    if (skia::Sp<skia::SkTypeface> face =
+            kept->matchFamilyStyle(nullptr, skia::SkFontStyle()))
+      font->setTypeface(std::move(face));
+  }
+
   // Between events: what was asked for, done, and what the window shows drawn
   // again from the model. The size it lays itself out by is the one the last
   // frame left it.
@@ -84,6 +105,7 @@ struct program {
                             "a frame took %d ms", static_cast<int>(took));
     }
 #endif
+    keep_a_face();
     const auto &bounds = view.window().root().fState.fBounds;
     if (bounds.width() > 1.0f && bounds.height() > 1.0f)
       view.sized(bounds.width(), bounds.height());

@@ -87,6 +87,41 @@ that asks the program itself wants `using Answer = void;`, for an answer of
 another type is looked for by nothing in a tree with no frames around it and
 does not compile.
 
+## What nothing measures reads as nothing wide
+
+`nodes::Text` asks the width of its words of `skiff::paint::defaultFont()`
+through `paint::Painter::measure`, and that asks the font itself. Where the
+font carries no typeface -- which is what a browser has, no system there
+being asked for the faces this program ships, and `load_fonts` leaving the
+font empty when the directory it would ask carries none -- every measurement
+comes back nothing: `SkFont::measureText` says none where there is no face.
+
+Nothing else notices. The DOM mirror writes no `font-family`, the browser
+sets the width by its own `max-content` and its own line height, and the page
+reads as it should: only the scene's own numbers are a nothing for every line
+in it. So every node that is as wide as the words in it (`autoSize`, both
+axes, which is how a chip and the fold above an answer are made) becomes a
+box of its padding alone -- a chip of 31 where its words want 44, a fold of
+24 where its words want 160.
+
+What it costs: a press asks `mirror.toScene(handle, x, y)` for the point an
+element's own place in the page comes to in the scene, and the scene looks
+for that point in a node whose bounds contain it. The box being narrower
+than the words read, nearly every press on those words is a press into
+nothing, and no node is ever asked: the fold did not open, whichever of its
+words was pressed, and the leftmost pixels -- inside the padding, inside the
+collapsed bounds -- were the only ones that ever did anything. Read first as
+a fault in the fold, in the press, and in the hit test, one after another.
+
+What is said instead, and where it was found out: the font is given a face
+once there is one to give it, every frame, from the stand-in skiff keeps
+(`SkFontMgr_New_Custom_Directory("")`), so that what measures text measures
+it; and each node whose size comes of its words is told the size itself,
+asked of the same measure (`words_wide` in `src/ui/message_list.cc`), rather
+than left to keep a size nobody put in it. Nothing counts characters, and
+where even that measure says nothing, what a letter of a fixed pitch would
+come to in the size asked is what `liteAdvance` keeps.
+
 ## Nothing else that has surprised this program yet
 
 Written down when it does, with what it cost and what is said instead.

@@ -16,8 +16,10 @@
 export module pchat.ui:message_list;
 
 import std;
+import skia;
 import skiff.scene;
 import skiff.nodes;
+import skiff.paint;
 import pchat.core;
 import pchat.logic.lists;
 import pchat.app.requests;
@@ -57,6 +59,29 @@ inline constexpr std::size_t foot_count = 6;
   }
   return std::to_string(took_ms) + " ms";
 }
+
+// How wide a line is in the face every piece of text here is drawn with, and
+// how tall one of its lines stands: asked of what measures them, which is the
+// font the window was handed. Nothing here counts characters, and nothing
+// guesses.
+//
+// Asked because a node holding words keeps a size of nothing where nothing
+// measured them -- a browser, whose font carries no face of this program's --
+// and a box as wide as the words in it is then a box of nothing at all: a
+// press on the words reaches no node, however wide they read on the page.
+[[nodiscard]] inline float words_wide(const std::string &line, float size) {
+  skia::SkFont *font = skiff::paint::defaultFont();
+  if (font == nullptr || line.empty())
+    return 0.0f;
+  const skiff::paint::Painter said(nullptr, *font, false);
+  const float wide = said.measure(line, size, false);
+  // Nothing came of it where the font carries no face of this program's:
+  // then what a letter of a fixed pitch would come to in this size, which is
+  // the advance skiff itself keeps for a face it cannot read.
+  return wide > 1.0f ? wide : size * 0.55f * static_cast<float>(line.size());
+}
+[[nodiscard]] inline float line_tall(float size) { return size * 1.25f; }
+
 // ---- the reader's bubble --------------------------------------------------
 
 // A bubble: its own colour and corners behind two lines -- what was said, and
@@ -154,6 +179,17 @@ struct foot_chip : scene::Node {
     }
     return true;
   }
+  // Wide and tall as its words say they are, which is what no measurement
+  // inside one gives it in a browser: a chip as narrow as nothing no press on
+  // the words of it ever reaches. See `words_wide`.
+  void wide_as_the_words(nodes::Text &one, const std::string &what,
+                         float size) {
+    const float wide = words_wide(what, size);
+    one.apply({.autoSize = scene::axes::kNone,
+               .width = wide > 1.0f ? wide + 2.0f : 0.0f,
+               .height = line_tall(size)});
+  }
+
   // Left down or not: what the one that tells about an answer answers with,
   // and what its row reads to know whether to show what it knows.
   [[nodiscard]] bool down() const noexcept { return fDown; }
@@ -169,6 +205,7 @@ struct foot_chip : scene::Node {
     fMark.setVisible(true);
     fLabel.setText(std::string(label));
     fLabel.setColour(look.faint);
+    this->wide_as_the_words(fLabel, std::string(label), 11.0f);
     fPlate.setColour(0u);
   }
 
@@ -181,6 +218,7 @@ struct foot_chip : scene::Node {
     fMark.setVisible(true);
     fLabel.setText(std::string(label));
     fLabel.setColour(fDown ? look.primary : look.faint);
+    this->wide_as_the_words(fLabel, std::string(label), 11.0f);
     fPlate.setColour(fDown ? look.field : 0u);
   }
 
@@ -247,6 +285,7 @@ struct history_fold : nodes::Stack {
 
   [[nodiscard]] bool acceptsInput() const { return true; }
   [[nodiscard]] bool hoverChangesAppearance() const { return true; }
+  // The press that opens it opens the greentext with it, or shuts both.
   [[nodiscard]] bool onClick(float, float) {
     fOpen = !fOpen;
     return true;
@@ -265,19 +304,35 @@ struct history_fold : nodes::Stack {
     this->apply({.autoSize = scene::axes::kBoth,
                  .maxWidth = widest,
                  .background = fOpen ? look.field : look.field & 0x80ffffffu});
-    fSummary.setText("Thought for " + took_of(before.took_ms) + " · " +
-                     std::to_string(before.tool_calls) +
-                     (before.tool_calls == 1 ? " tool call" : " tool calls"));
+    const std::string line =
+        "Thought for " + took_of(before.took_ms) + " · " +
+        std::to_string(before.tool_calls) +
+        (before.tool_calls == 1 ? " tool call" : " tool calls");
+    fSummary.setText(line);
     fSummary.setColour(look.dim);
-    fSummary.apply(
-        {.maxWidth = widest - 24.0f});
+    // Wide and tall as they were measured, never wider than the room: see
+    // what `words_wide` says of why they are said here at all.
+    const float room = widest - 24.0f;
+    const float wide = words_wide(line, 12.0f);
+    fSummary.apply({.autoSize = scene::axes::kNone,
+                    .width = wide > 1.0f ? std::min(wide + 2.0f, room) : room,
+                    .height = line_tall(12.0f),
+                    .maxWidth = room});
     // What it wrote to itself, greentext: shown while it is pressed open.
     fThought.setText(before.said);
     fThought.setColour(look.thought);
     fThought.setMonospace(true);
     fThought.setVisible(fOpen && !before.said.empty());
-    fThought.apply(
-        {.maxWidth = widest - 24.0f});
+    // As many lines as what was written comes to in the room, each one line
+    // tall: the same reason the summary is sized here, and for the same want
+    // -- that a press anywhere in it is a press on the fold.
+    const float said_wide = words_wide(before.said, 12.0f);
+    const float lines = std::max(1.0f, std::ceil(said_wide / room));
+    fThought.apply({.autoSize = scene::axes::kNone,
+                    .width = said_wide > 1.0f ? std::min(said_wide + 2.0f, room)
+                                              : room,
+                    .height = lines * line_tall(12.0f),
+                    .maxWidth = room});
   }
 
   void forEachChild(auto &&f) {
