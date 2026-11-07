@@ -208,7 +208,7 @@ struct foot_chip : scene::Node {
     fMark.setVisible(true);
     fLabel.setText(std::string(label));
     fLabel.setColour(look.faint);
-    this->wide_as_the_words(fLabel, what, 11.0f);
+    this->wide_as_the_words(fLabel, std::string(label), 11.0f);
     fPlate.setColour(0u);
   }
 
